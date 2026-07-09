@@ -61,6 +61,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/ast/**/*.ts', 'src/expression-state.ts', 'src/tokenizer/tokenizer.ts', 'src/spel-expression-parser.ts'],
+    rules: {
+      // Non-null assertions on array index access that is always in-bounds
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+  {
     ignores: ['dist/', 'coverage/', 'node_modules/'],
   },
 );

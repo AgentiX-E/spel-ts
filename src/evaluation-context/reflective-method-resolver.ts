@@ -1,0 +1,82 @@
+import type { EvaluationContext } from './evaluation-context.js';
+import { TypedValue } from '../typed-value.js';
+import type { MethodResolver } from './method-resolver.js';
+import { SpelEvaluationException } from '../error/spel-evaluation-exception.js';
+import { SpelMessage } from '../error/spel-message.js';
+
+export class ReflectiveMethodResolver implements MethodResolver {
+  public resolve(
+    _context: EvaluationContext,
+    target: unknown,
+    name: string,
+    args: unknown[],
+  ): TypedValue | null {
+    if (target === null || target === undefined) {
+      return null;
+    }
+
+    // 1. 尝试 JS 原生方法
+    const targetObj = target as Record<string, unknown>;
+    const fn = targetObj[name];
+    if (typeof fn === 'function') {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const result = fn.apply(target, args);
+        return new TypedValue(result);
+      } catch (e) {
+        throw new SpelEvaluationException(-1,
+          SpelMessage.EXCEPTION_DURING_METHOD_INVOCATION,
+          name, (e as Error).message,
+        );
+      }
+    }
+
+    // 2. 特殊处理：基本类型的 Java 风格方法
+    if (typeof target === 'string') {
+      return this.tryStringMethod(target, name, args);
+    }
+
+    if (typeof target === 'number') {
+      return this.tryNumberMethod(target, name);
+    }
+
+    throw new SpelEvaluationException(-1,
+      SpelMessage.METHOD_NOT_FOUND, name, typeof target,
+    );
+  }
+
+  private tryStringMethod(target: string, name: string, args: unknown[]): TypedValue | null {
+    switch (name) {
+      case 'length': return new TypedValue(target.length);
+      case 'isEmpty': return new TypedValue(target.length === 0);
+      case 'charAt': {
+        const idx = args[0] as number;
+        return new TypedValue(idx >= 0 && idx < target.length ? target.charAt(idx) : '');
+      }
+      case 'substring':
+        if (args.length === 1) return new TypedValue(target.substring(args[0] as number));
+        return new TypedValue(target.substring(args[0] as number, args[1] as number));
+      case 'contains': return new TypedValue(target.includes(args[0] as string));
+      case 'startsWith': return new TypedValue(target.startsWith(args[0] as string));
+      case 'endsWith': return new TypedValue(target.endsWith(args[0] as string));
+      case 'indexOf': return new TypedValue(target.indexOf(args[0] as string));
+      case 'toLowerCase': return new TypedValue(target.toLowerCase());
+      case 'toUpperCase': return new TypedValue(target.toUpperCase());
+      case 'trim': return new TypedValue(target.trim());
+      case 'split': return new TypedValue(target.split(args[0] as string));
+      case 'replace':
+        return new TypedValue(target.split(args[0] as string).join(args[1] as string));
+      case 'concat': return new TypedValue(target + String(args[0]));
+      default: return null;
+    }
+  }
+
+  private tryNumberMethod(target: number, name: string): TypedValue | null {
+    switch (name) {
+      case 'toString': return new TypedValue(target.toString());
+      case 'toFixed': return new TypedValue(target.toFixed());
+      case 'toExponential': return new TypedValue(target.toExponential());
+      default: return null;
+    }
+  }
+}

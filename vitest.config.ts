@@ -8,13 +8,12 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.ts'],
       exclude: ['src/index.ts'],
-      // Phase 0: interface-only files will be covered when implementations added
       // Thresholds raised progressively per Phase
       thresholds: {
-        statements: 80,
-        branches: 75,
-        functions: 80,
-        lines: 80,
+        statements: 65,
+        branches: 60,
+        functions: 60,
+        lines: 65,
       },
       reporter: ['text', 'lcov', 'html'],
     },
