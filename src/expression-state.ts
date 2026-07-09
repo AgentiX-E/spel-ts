@@ -88,6 +88,11 @@ export class ExpressionState {
    * 从 scopeStack 栈顶向下搜索，然后委托给 context
    */
   public lookupVariable(name: string): TypedValue {
+    // #this is always the current iteration element
+    if (name === 'this' && this.headIndexStack.length > 0) {
+      return this.headIndexStack[this.headIndexStack.length - 1]!;
+    }
+
     // 从栈顶向下搜索
     for (let i = this.scopeStack.length - 1; i >= 0; i--) {
       const scope = this.scopeStack[i]!;

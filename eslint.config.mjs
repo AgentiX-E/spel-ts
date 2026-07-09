@@ -68,6 +68,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/ast/operator/**/*.ts', 'src/ast/collection/**/*.ts', 'src/ast/control-flow/**/*.ts', 'src/ast/reference/indexer.ts'],
+    rules: {
+      // Constructors delegate different param types (operatorName string) to parent
+      '@typescript-eslint/no-useless-constructor': 'off',
+    },
+  },
+  {
     ignores: ['dist/', 'coverage/', 'node_modules/'],
   },
 );

@@ -25,9 +25,11 @@ export { ReflectiveMethodResolver } from './evaluation-context/reflective-method
 // ===== 类型系统 =====
 export type { TypeDescriptor } from './type/type-descriptor.js';
 export type { TypeLocator } from './type/type-locator.js';
+export { StandardTypeLocator } from './type/standard-type-locator.js';
 
 // ===== Bean 系统 =====
 export type { BeanResolver } from './bean/bean-resolver.js';
+export { DefaultBeanResolver } from './bean/default-bean-resolver.js';
 
 // ===== 桥接层 =====
 export { SpelTypeConverter } from './bridge/type-coercion.js';
