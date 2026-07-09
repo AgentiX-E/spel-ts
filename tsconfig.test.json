@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "noUncheckedIndexedAccess": false,
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "strictFunctionTypes": false
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
 }

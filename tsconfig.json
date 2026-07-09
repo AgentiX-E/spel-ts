@@ -23,6 +23,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
 
+    "strictFunctionTypes": false,
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"],

@@ -1,0 +1,24 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/api",
+  "exclude": ["**/node_modules/**", "**/tests/**", "**/*.test.ts"],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "plugin": [],
+  "readme": "README.md",
+  "name": "@agentix-e/spel-ts",
+  "includeVersion": true,
+  "skipErrorChecking": true,
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "categorizeByGroup": true,
+  "visibilityFilters": {
+    "protected": true,
+    "private": false,
+    "inherited": true,
+    "external": false
+  }
+}
