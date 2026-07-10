@@ -22,7 +22,14 @@ export class Projection extends SpelNodeImpl {
     }
 
     if (!Array.isArray(targetValue) && !(targetValue instanceof Set) && !(targetValue instanceof Map)) {
-      throw new SpelEvaluationException(this.startPos, SpelMessage.PROJECTION_NOT_SUPPORTED_ON_TYPE, typeof targetValue);
+      // Spring SpEL: non-collection is wrapped in single-element array for projection
+      state.pushHeadIndex(new TypedValue(targetValue));
+      try {
+        const projected = this.children[1]!.getValue(state).getValue();
+        return new TypedValue([projected]);
+      } finally {
+        state.popHeadIndex();
+      }
     }
 
     const collection = targetValue instanceof Map

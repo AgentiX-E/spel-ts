@@ -20,6 +20,7 @@ export type { MethodResolver } from './evaluation-context/method-resolver.js';
 export { MapAccessor } from './evaluation-context/map-accessor.js';
 export { ArrayAccessor } from './evaluation-context/array-accessor.js';
 export { ReflectivePropertyAccessor } from './evaluation-context/reflective-property-accessor.js';
+export { TypeDescriptorAccessor } from './evaluation-context/type-descriptor-accessor.js';
 export { ReflectiveMethodResolver } from './evaluation-context/reflective-method-resolver.js';
 
 // ===== 类型系统 =====

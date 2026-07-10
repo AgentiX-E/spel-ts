@@ -8,6 +8,7 @@ import { SpelTypeConverter } from './bridge/type-coercion.js';
 import { MapAccessor } from './evaluation-context/map-accessor.js';
 import { ArrayAccessor } from './evaluation-context/array-accessor.js';
 import { ReflectivePropertyAccessor } from './evaluation-context/reflective-property-accessor.js';
+import { TypeDescriptorAccessor } from './evaluation-context/type-descriptor-accessor.js';
 import { ReflectiveMethodResolver } from './evaluation-context/reflective-method-resolver.js';
 
 export class StandardEvaluationContext implements EvaluationContext {
@@ -26,6 +27,7 @@ export class StandardEvaluationContext implements EvaluationContext {
 
     this.propertyAccessors.push(new MapAccessor());
     this.propertyAccessors.push(new ArrayAccessor());
+    this.propertyAccessors.push(new TypeDescriptorAccessor());
     this.propertyAccessors.push(new ReflectivePropertyAccessor());
 
     this.methodResolvers.push(new ReflectiveMethodResolver());

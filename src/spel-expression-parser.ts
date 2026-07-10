@@ -44,6 +44,7 @@ import { OpMultiply } from './ast/operator/op-multiply.js';
 import { OpDivide } from './ast/operator/op-divide.js';
 import { OpModulus } from './ast/operator/op-modulus.js';
 import { OpPower } from './ast/operator/op-power.js';
+import { RangeOperator } from './ast/operator/range-operator.js';
 import { OpEQ } from './ast/operator/op-eq.js';
 import { OpNE } from './ast/operator/op-ne.js';
 import { OpLT } from './ast/operator/op-lt.js';
@@ -207,6 +208,13 @@ class InternalSpelExpressionParser {
    */
   private eatRelationalExpression(): SpelNodeImpl {
     const left = this.eatSumExpression();
+
+    // Range operator: a..b
+    if (this.peek().kind === TokenKind.DOTDOT) {
+      const dotdotToken = this.advance();
+      const right = this.eatSumExpression();
+      return new RangeOperator(dotdotToken.startPos, right.endPos, left, right);
+    }
 
     const kind = this.peek().kind;
     if (this.isRelationalOp(kind)) {
@@ -453,8 +461,15 @@ class InternalSpelExpressionParser {
           if (nullSafe && nextNode instanceof PropertyOrFieldReference) {
             nextNode.nullSafe = true;
           }
-          // Check for subsequent (args) or [index]
-          nextNode = this.eatMethodOrIndexer(nextNode, nextToken);
+          // Check for [index] or (args) after property name
+          if (this.peek().kind === TokenKind.LBRACKET) {
+            this.advance();
+            const idx = this.eatExpression();
+            this.expect(TokenKind.RBRACKET);
+            nextNode = new Indexer(nextNode.startPos, this.pos, nextNode, idx);
+          } else if (this.peek().kind === TokenKind.LPAREN) {
+            nextNode = this.eatMethodCallForName(nextToken.startPos, nextToken.literal!);
+          }
           node = new CompoundExpression(node.startPos, nextNode.endPos, node, nextNode);
           continue;
         }

@@ -244,10 +244,11 @@ describe('Coverage: Projection and Selection', () => {
     expect(() => parser.parseExpression('#nullList.![#this]').getValueWithContext(ctx)).toThrow();
   });
 
-  it('projection on non-collection throws', () => {
+  it('projection on non-collection wraps, not throws', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('notAList', 42);
-    expect(() => parser.parseExpression('#notAList.![#this]').getValueWithContext(ctx)).toThrow();
+    const result = parser.parseExpression('#notAList.![#this]').getValueWithContext(ctx);
+    expect(result).toEqual([42]);
   });
 
   it('projection on Set', () => {

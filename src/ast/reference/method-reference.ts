@@ -28,6 +28,23 @@ export class MethodReference extends SpelNodeImpl {
       }
     }
 
+    // Fallback: try property accessor chain (e.g., TypeDescriptor.staticMethods)
+    for (const accessor of context.getPropertyAccessors()) {
+      if (accessor.canRead(context, target, this.methodName)) {
+        const propValue = accessor.read(context, target, this.methodName).getValue();
+        if (typeof propValue === 'function') {
+          try {
+            return new TypedValue((propValue as (...a: unknown[]) => unknown)(...argValues));
+          } catch (e) {
+            throw new SpelEvaluationException(this.startPos,
+              SpelMessage.EXCEPTION_DURING_METHOD_INVOCATION,
+              this.methodName, (e as Error).message);
+          }
+        }
+        break;
+      }
+    }
+
     // Also try function registry
     try {
       const fn = state.lookupFunction(this.methodName);

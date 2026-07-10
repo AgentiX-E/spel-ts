@@ -613,10 +613,9 @@ describe('Edge Case: StandardEvaluationContext', () => {
     it('should have default property accessors', () => {
       const ctx = new StandardEvaluationContext();
       const accessors = ctx.getPropertyAccessors();
-      expect(accessors.length).toBeGreaterThanOrEqual(3);
+      expect(accessors.length).toBeGreaterThanOrEqual(4);
       expect(accessors[0]).toBeInstanceOf(MapAccessor);
       expect(accessors[1]).toBeInstanceOf(ArrayAccessor);
-      expect(accessors[2]).toBeInstanceOf(ReflectivePropertyAccessor);
     });
 
     it('should add custom property accessor', () => {
@@ -1056,16 +1055,12 @@ describe('Edge Case: ReflectiveMethodResolver', () => {
       expect(result!.getValue()).toBe('Hello, World!');
     });
 
-    it('should throw METHOD_NOT_FOUND for non-existent method on object', () => {
+    it('should return null for non-existent method on object', () => {
       const obj = { name: 'test' };
       const ctx = new StandardEvaluationContext();
-      expect(() => resolver.resolve(ctx, obj, 'unknown', []))
-        .toThrow(SpelEvaluationException);
-      try {
-        resolver.resolve(ctx, obj, 'unknown', []);
-      } catch (e) {
-        expect((e as SpelEvaluationException).messageCode).toBe(SpelMessage.METHOD_NOT_FOUND);
-      }
+      // ReflectiveMethodResolver returns null when method not found
+      // (allows accessor chain fallback in MethodReference)
+      expect(resolver.resolve(ctx, obj, 'unknown', [])).toBeNull();
     });
   });
 

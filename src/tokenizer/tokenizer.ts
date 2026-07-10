@@ -119,6 +119,21 @@ export class Tokenizer {
         return new Token(TokenKind.LITERAL_HEX, start, this.pos, text,
           parseInt(text, 16));
       }
+      // 八进制: 0[0-7]+
+      if (next >= 48 /* '0' */ && next <= 55 /* '7' */) {
+        this.pos += 2;
+        while (this.pos < this.maxPos) {
+          const octCh = this.expression.charCodeAt(this.pos);
+          if (octCh >= 48 && octCh <= 55) {
+            this.pos++;
+          } else {
+            break;
+          }
+        }
+        const text = this.expression.slice(start, this.pos);
+        return new Token(TokenKind.LITERAL_INT, start, this.pos, text,
+          parseInt(text, 8));
+      }
     }
 
     // 整数部分

@@ -33,16 +33,17 @@ export class ReflectiveMethodResolver implements MethodResolver {
 
     // 2. 特殊处理：基本类型的 Java 风格方法
     if (typeof target === 'string') {
-      return this.tryStringMethod(target, name, args);
+      const strResult = this.tryStringMethod(target, name, args);
+      if (strResult !== null) return strResult;
     }
 
     if (typeof target === 'number') {
-      return this.tryNumberMethod(target, name);
+      const numResult = this.tryNumberMethod(target, name);
+      if (numResult !== null) return numResult;
     }
 
-    throw new SpelEvaluationException(-1,
-      SpelMessage.METHOD_NOT_FOUND, name, typeof target,
-    );
+    // Not found — return null so accessor chain or other resolvers can try
+    return null;
   }
 
   private tryStringMethod(target: string, name: string, args: unknown[]): TypedValue | null {
