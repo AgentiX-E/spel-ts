@@ -206,6 +206,7 @@ export class Tokenizer {
     this.pos++; // 跳过开始引号
 
     const parts: string[] = [];
+    let foundClosingQuote = false;
     while (this.pos < this.maxPos) {
       const ch = this.expression.charCodeAt(this.pos);
 
@@ -217,6 +218,7 @@ export class Tokenizer {
           this.pos += 2; // 跳过两个引号
         } else {
           this.pos++; // 跳过结束引号
+          foundClosingQuote = true;
           break;
         }
       } else {
@@ -226,8 +228,11 @@ export class Tokenizer {
     }
 
     // 检查是否到达末尾而字符串未结束
-    if (this.pos > this.maxPos || (this.pos === this.maxPos && parts.length > 0)) {
-      // 实际上如果循环正常退出（到达末尾），我们需要检查最后一个字符
+    if (!foundClosingQuote) {
+      throw new SpelParseException(
+        start,
+        SpelMessage.UNTERMINATED_STRING_LITERAL,
+      );
     }
 
     const value = parts.join('');

@@ -23,6 +23,8 @@ import { PropertyOrFieldReference } from './ast/reference/property-or-field-refe
 import { Indexer } from './ast/reference/indexer.js';
 import { MethodReference } from './ast/reference/method-reference.js';
 import { ConstructorReference } from './ast/reference/constructor-reference.js';
+import { BeanReference } from './ast/reference/bean-reference.js';
+import { TypeReference } from './ast/reference/type-reference.js';
 
 // AST Control Flow Nodes
 import { Ternary } from './ast/control-flow/ternary.js';
@@ -32,7 +34,7 @@ import { Assign } from './ast/control-flow/assign.js';
 // AST Collection Nodes
 import { InlineList } from './ast/collection/inline-list.js';
 import { InlineMap } from './ast/collection/inline-map.js';
-import { Selection } from './ast/collection/selection.js';
+import { Selection, SelectMode } from './ast/collection/selection.js';
 import { Projection } from './ast/collection/projection.js';
 
 // AST Operator Nodes
@@ -433,7 +435,10 @@ class InternalSpelExpressionParser {
           if (kind === TokenKind.PROJECTION) {
             node = new Projection(selToken.startPos, this.pos, false, node, predicate);
           } else {
-            node = new Selection(selToken.startPos, this.pos, false, node, predicate);
+            const mode = kind === TokenKind.SELECT_FIRST ? SelectMode.FIRST
+              : kind === TokenKind.SELECT_LAST ? SelectMode.LAST
+              : SelectMode.ALL;
+            node = new Selection(selToken.startPos, this.pos, false, node, predicate, mode);
           }
           continue;
         }
@@ -470,7 +475,10 @@ class InternalSpelExpressionParser {
           if (selToken.kind === TokenKind.PROJECTION) {
             node = new Projection(selToken.startPos, this.pos, false, node, predicate);
           } else {
-            node = new Selection(selToken.startPos, this.pos, false, node, predicate);
+            const mode = selToken.kind === TokenKind.SELECT_FIRST ? SelectMode.FIRST
+              : selToken.kind === TokenKind.SELECT_LAST ? SelectMode.LAST
+              : SelectMode.ALL;
+            node = new Selection(selToken.startPos, this.pos, false, node, predicate, mode);
           }
           continue;
         }
@@ -564,8 +572,9 @@ class InternalSpelExpressionParser {
         return this.eatVariableOrFunction();
       }
 
-      // Bean reference: @bean
-      case TokenKind.AT: {
+      // Bean reference: @bean or &@factoryBean
+      case TokenKind.AT:
+      case TokenKind.AMP_AT: {
         return this.eatBeanReference();
       }
 
@@ -688,7 +697,10 @@ class InternalSpelExpressionParser {
           if (selToken.kind === TokenKind.PROJECTION) {
             node = new Projection(selToken.startPos, this.pos, false, node, predicate);
           } else {
-            node = new Selection(selToken.startPos, this.pos, false, node, predicate);
+            const mode = selToken.kind === TokenKind.SELECT_FIRST ? SelectMode.FIRST
+              : selToken.kind === TokenKind.SELECT_LAST ? SelectMode.LAST
+              : SelectMode.ALL;
+            node = new Selection(selToken.startPos, this.pos, false, node, predicate, mode);
           }
           continue;
         }
@@ -746,6 +758,11 @@ class InternalSpelExpressionParser {
    */
   private eatBeanReference(): SpelNodeImpl {
     const atToken = this.advance();
+    // &@ factory bean prefix
+    let isFactoryBean = false;
+    if (atToken.kind === TokenKind.AMP_AT) {
+      isFactoryBean = true;
+    }
     const nameToken = this.expect(TokenKind.IDENTIFIER);
 
     // Check for method call: @bean.method(args)
@@ -758,17 +775,17 @@ class InternalSpelExpressionParser {
         this.expect(TokenKind.RPAREN);
         // Build: #beanRef.name.method => @bean name accessed via bean resolver then method called
         // For Phase 2, return as compound: beanRef.method(args)
-        const varRef = new VariableReference(atToken.startPos, nameToken.endPos, nameToken.literal!);
+        const beanRef = new BeanReference(atToken.startPos, nameToken.endPos, nameToken.literal!, isFactoryBean);
         const methodRef = new MethodReference(methodToken.startPos, this.pos, methodToken.literal!, ...args);
-        return new CompoundExpression(atToken.startPos, this.pos, varRef, methodRef);
+        return new CompoundExpression(atToken.startPos, this.pos, beanRef, methodRef);
       }
       // @bean.property
-      const varRef = new VariableReference(atToken.startPos, nameToken.endPos, nameToken.literal!);
+      const beanRef = new BeanReference(atToken.startPos, nameToken.endPos, nameToken.literal!, isFactoryBean);
       const propRef = new PropertyOrFieldReference(methodToken.startPos, methodToken.endPos, methodToken.literal!);
-      return new CompoundExpression(atToken.startPos, this.pos, varRef, propRef);
+      return new CompoundExpression(atToken.startPos, this.pos, beanRef, propRef);
     }
 
-    return new VariableReference(atToken.startPos, nameToken.endPos, nameToken.literal!);
+    return new BeanReference(atToken.startPos, nameToken.endPos, nameToken.literal!, isFactoryBean);
   }
 
   // ==================== TYPE ====================
@@ -780,9 +797,7 @@ class InternalSpelExpressionParser {
     this.advance(); // consume '(' after T
     const typeName = this.eatQualifiedIdentifier();
     this.expect(TokenKind.RPAREN);
-
-    // TypeReference is represented as a special PropertyOrFieldReference
-    return new PropertyOrFieldReference(this.pos, this.pos, `T(${typeName})`);
+    return new TypeReference(this.pos, this.pos, typeName);
   }
 
   /**

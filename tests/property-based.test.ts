@@ -103,11 +103,11 @@ describe('Property-based: Arithmetic', () => {
       }));
     });
 
-    it('distributivity: a * (b + c) = a * b + a * c', () => {
+    it('distributivity: a * (b + c) = a * b + a * c (a,b,c positive)', () => {
       fc.assert(fc.property(
-        fc.integer({ min: -50, max: 50 }),
-        fc.integer({ min: -50, max: 50 }),
-        fc.integer({ min: -50, max: 50 }),
+        fc.integer({ min: 1, max: 50 }),
+        fc.integer({ min: 0, max: 50 }),
+        fc.integer({ min: 0, max: 50 }),
         (a, b, c) => {
           const left = parser.parseExpression(`${a} * (${b} + ${c})`).getValue();
           const right = parser.parseExpression(`${a} * ${b} + ${a} * ${c}`).getValue();

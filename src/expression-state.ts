@@ -93,6 +93,11 @@ export class ExpressionState {
       return this.headIndexStack[this.headIndexStack.length - 1]!;
     }
 
+    // #root is always the root context object
+    if (name === 'root') {
+      return this.context.getRootObject();
+    }
+
     // 从栈顶向下搜索
     for (let i = this.scopeStack.length - 1; i >= 0; i--) {
       const scope = this.scopeStack[i]!;
@@ -146,8 +151,8 @@ export class ExpressionState {
 
   // ===== Bean 查找 (委派给 BeanResolver) =====
 
-  public resolveBean(beanName: string): unknown {
-    return this.context.getBeanResolver().resolve(beanName);
+  public resolveBean(beanName: string, isFactoryBean = false): unknown {
+    return this.context.getBeanResolver().resolve(beanName, isFactoryBean);
   }
 
   // ===== 创建子状态 =====
