@@ -51,7 +51,7 @@
     "url": "https://github.com/AgentiX-E/spel-ts/issues"
   },
   "homepage": "https://github.com/AgentiX-E/spel-ts#readme",
-  "packageManager": "pnpm@10.23.0",
+  "packageManager": "pnpm@10",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
