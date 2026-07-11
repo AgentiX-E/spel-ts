@@ -6,9 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   quality:
-    name: Lint & Typecheck & Test
+    name: Lint & Typecheck & Test & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -37,16 +42,53 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Build TypeDoc
+      - name: Build TypeDoc API docs
         run: pnpm docs
 
-      - name: Prepare Pages artifact
+      - name: Prepare GitHub Pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          mkdir -p pages/coverage pages/api
-          cp -r coverage/* pages/coverage/ 2>/dev/null || true
-          cp -r docs/api/* pages/api/ 2>/dev/null || true
-          cp -r coverage/lcov-report pages/coverage/ 2>/dev/null || true
+          mkdir -p pages
+          # Coverage report
+          if [ -d coverage ]; then cp -r coverage pages/coverage; fi
+          # TypeDoc API docs
+          if [ -d docs/api ]; then cp -r docs/api pages/api; fi
+          # Root index
+          cat > pages/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>@agentix-e/spel-ts — Documentation</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 800px; margin: 48px auto; padding: 0 24px; line-height: 1.6; background: #0d1117; color: #c9d1d9; }
+              h1 { font-size: 2rem; border-bottom: 2px solid #30363d; padding-bottom: 12px; }
+              a { color: #58a6ff; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin: 16px 0; }
+              .card h2 { margin: 0 0 8px 0; font-size: 1.25rem; }
+              .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #238636; color: #fff; }
+            </style>
+          </head>
+          <body>
+            <h1>@agentix-e/spel-ts</h1>
+            <p>Pure TypeScript Spring Expression Language (SpEL) evaluator.</p>
+            <div class="card">
+              <h2><a href="./api/">API Reference</a> <span class="badge">TypeDoc</span></h2>
+              <p>Complete API documentation generated from source code.</p>
+            </div>
+            <div class="card">
+              <h2><a href="./coverage/">Coverage Report</a> <span class="badge">Istanbul</span></h2>
+              <p>Test coverage report with per-file line and branch details.</p>
+            </div>
+            <p style="margin-top: 32px;">
+              <a href="https://github.com/AgentiX-E/spel-ts">GitHub Repository</a> ·
+              <a href="https://www.npmjs.com/package/@agentix-e/spel-ts">npm Package</a>
+            </p>
+          </body>
+          </html>
+          HTML
 
       - name: Upload Pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -54,15 +96,11 @@ jobs:
         with:
           path: pages
 
-  deploy:
-    name: Deploy to Pages
+  deploy-pages:
+    name: Deploy to GitHub Pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: quality
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
