@@ -71,13 +71,13 @@ export class SpelExpressionParser {
   }
 
   public parseExpression(expressionString: string): SpelExpression {
-    const parser = new InternalSpelExpressionParser(expressionString, this.configuration);
+    const parser = new InternalSpelExpressionParser(expressionString);
     const ast = parser.parse();
     return new SpelExpression(expressionString, ast);
   }
 
   public parseRaw(expressionString: string): SpelNodeImpl {
-    const parser = new InternalSpelExpressionParser(expressionString, this.configuration);
+    const parser = new InternalSpelExpressionParser(expressionString);
     return parser.parse();
   }
 }
@@ -94,7 +94,7 @@ class InternalSpelExpressionParser {
   private pos = 0;
   private readonly expressionString: string;
 
-  constructor(expressionString: string, _configuration: SpelParserConfiguration) {
+  constructor(expressionString: string) {
     this.expressionString = expressionString;
   }
 
@@ -145,13 +145,6 @@ class InternalSpelExpressionParser {
     // Ternary: ? expr : expr
     if (this.peek().kind === TokenKind.QMARK) {
       this.advance(); // consume '?'
-
-      // Also check for elvis at this position (redundant but safe)
-      if (this.peek().kind === TokenKind.ELVIS) {
-        const elvisToken = this.advance();
-        const right = this.eatConditionalExpression();
-        return new Elvis(elvisToken.startPos, right.endPos, left, right);
-      }
 
       const trueExpr = this.eatExpression();
       this.expect(TokenKind.COLON);
@@ -528,14 +521,6 @@ class InternalSpelExpressionParser {
       break;
     }
 
-    return node;
-  }
-
-  /**
-   * Handle method call or indexer after PropertyOrFieldReference
-   */
-  private eatMethodOrIndexer(node: SpelNodeImpl, _token: Token): SpelNodeImpl {
-    // Check for (args) or [index] after the node
     return node;
   }
 
