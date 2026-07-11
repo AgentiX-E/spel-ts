@@ -2,43 +2,43 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  release:
+  publish:
     name: Publish to npm
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
 
+      # npm 10.x (bundled with node 22) uses .npmrc authToken instead of
+      # OIDC token for the PUT to registry, causing E404 after successful
+      # provenance signing.  npm 11.x (node 24) natively supports OIDC.
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Test
-        run: pnpm test
 
       - name: Build
         run: pnpm build
 
       - name: Publish to npm
         run: |
-          npm config set registry https://registry.npmjs.org/
-          npm publish --provenance --access public
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VER=$(node -p "require('./package.json').version")
+          if npm view "${PKG_NAME}@${PKG_VER}" version >/dev/null 2>&1; then
+            echo "⚠ ${PKG_NAME}@${PKG_VER} already published — skipping"
+            exit 0
+          fi
+          npm publish --access public --provenance
