@@ -1,26 +1,26 @@
 /**
- * 对标 Spring SpelParserConfiguration
+ * Parallels Spring SpelParserConfiguration
  *
- * SpEL 解析器的配置选项。
+ * SpEL parser configuration options.
  */
 export class SpelParserConfiguration {
   /**
-   * 是否自动转换 null 引用为 NullLiteral
+   * Auto-convert null references to NullLiteral
    */
   public readonly autoGrowNullReferences: boolean;
 
   /**
-   * 是否自动增长集合（索引不存在时自动扩展）
+   * Auto-grow collections (expand when index does not exist)
    */
   public readonly autoGrowCollections: boolean;
 
   /**
-   * 最大自动增长大小
+   * Maximum auto-grow size
    */
   public readonly maximumAutoGrowSize: number;
 
   /**
-   * 整数是否作为长整型处理
+   * Treat integers as long
    */
   public readonly treatIntegersAsLong: boolean;
 

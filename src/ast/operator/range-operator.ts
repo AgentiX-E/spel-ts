@@ -3,9 +3,9 @@ import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
 
 /**
- * 范围运算符 `..` — 对标 Spring OpRange
+ * Range operator `..` — parallels Spring OpRange
  *
- * a..b 生成从 a 到 b (含) 的整数序列
+ * a..b generates an integer sequence from a to b (inclusive)
  */
 export class RangeOperator extends SpelNodeImpl {
   constructor(startPos: number, endPos: number, left: SpelNodeImpl, right: SpelNodeImpl) {

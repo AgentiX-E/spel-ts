@@ -4,7 +4,7 @@ import { TokenKind } from '../src/tokenizer/token-kind.js';
 import { Token } from '../src/tokenizer/token.js';
 
 describe('Tokenizer', () => {
-  // ===== 测试组 1: 空白处理 =====
+  // ===== Test Group 1: Whitespace Handling =====
   describe('whitespace handling', () => {
     it('should handle empty string', () => {
       const tokens = new Tokenizer('').tokenize();
@@ -37,7 +37,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 2: 标识符 =====
+  // ===== Test Group 2: Identifiers =====
   describe('identifiers', () => {
     it('should tokenize simple identifier', () => {
       const tokens = new Tokenizer('foo').tokenize();
@@ -66,7 +66,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 3: 关键字 =====
+  // ===== Test Group 3: Keywords =====
   describe('keywords', () => {
     const keywordCases: [string, TokenKind, unknown][] = [
       ['null', TokenKind.LITERAL_NULL, null],
@@ -110,7 +110,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 4: 数字字面量 =====
+  // ===== Test Group 4: Number Literals =====
   describe('number literals', () => {
     it('should tokenize int: 0', () => {
       const tokens = new Tokenizer('0').tokenize();
@@ -197,7 +197,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 5: 字符串字面量 =====
+  // ===== Test Group 5: String Literals =====
   describe('string literals', () => {
     it("should tokenize single-quoted: 'hello'", () => {
       const tokens = new Tokenizer("'hello'").tokenize();
@@ -234,7 +234,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 6: 单字符运算符 =====
+  // ===== Test Group 6: Single-char Operators =====
   describe('single-character operators', () => {
     const singleOps: [string, TokenKind][] = [
       ['+', TokenKind.PLUS],
@@ -264,7 +264,7 @@ describe('Tokenizer', () => {
     }
   });
 
-  // ===== 测试组 7: 多字符运算符 =====
+  // ===== Test Group 7: Multi-char Operators =====
   describe('multi-character operators', () => {
     const multiOps: [string, TokenKind][] = [
       ['++', TokenKind.INC],
@@ -295,7 +295,7 @@ describe('Tokenizer', () => {
     }
   });
 
-  // ===== 测试组 8: 复合表达式 =====
+  // ===== Test Group 8: Compound Expressions =====
   describe('compound expressions', () => {
     it('should tokenize a + b', () => {
       const tokens = new Tokenizer('a + b').tokenize();
@@ -353,7 +353,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 9: 负数与一元运算符 =====
+  // ===== Test Group 9: Negative and Unary =====
   describe('negative numbers and unary', () => {
     it('should tokenize -5 as MINUS + INT', () => {
       const tokens = new Tokenizer('-5').tokenize();
@@ -373,7 +373,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 10: 位置追踪 =====
+  // ===== Test Group 10: Position Tracking =====
   describe('position tracking', () => {
     it('should track startPos correctly for simple expression', () => {
       const tokens = new Tokenizer('a + b').tokenize();
@@ -388,7 +388,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 11: 边界情况 =====
+  // ===== Test Group 11: Edge Cases =====
   describe('edge cases', () => {
     it('should handle just EOF', () => {
       const tokenizer = new Tokenizer('');
@@ -404,7 +404,7 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== 测试组 12: Token 类方法 =====
+  // ===== Test Group 12: Token Class Methods =====
   describe('Token class', () => {
     it('should correctly identify literal tokens', () => {
       const intToken = new Token(TokenKind.LITERAL_INT, 0, 1, '42', 42);

@@ -61,7 +61,7 @@ import { OpInc } from './ast/operator/op-inc.js';
 import { OpDec } from './ast/operator/op-dec.js';
 
 /**
- * 对标 Spring SpelExpressionParser — 公开 API 入口
+ * Parallels Spring SpelExpressionParser — public API entry point
  */
 export class SpelExpressionParser {
   private readonly configuration: SpelParserConfiguration;
@@ -83,9 +83,9 @@ export class SpelExpressionParser {
 }
 
 /**
- * 对标 Spring InternalSpelExpressionParser
+ * Parallels Spring InternalSpelExpressionParser
  *
- * 递归下降解析器 — 按 Spring SpEL 操作符优先级链：
+ * Recursive descent parser — following Spring SpEL operator precedence chain:
  *   Assignment → Conditional → Or → And → Equality → Relational
  *   → Additive → Multiplicative → Power → Unary → Primary
  */
@@ -393,7 +393,7 @@ export class InternalSpelExpressionParser {
   }
 
   /**
-   * 后缀: primary (++ | -- | .identifier | .selector | [index] | (args))
+   * Postfix: primary (++ | -- | .identifier | .selector | [index] | (args))
    */
   private eatPostfixOrPrimary(): SpelNodeImpl {
     let node = this.eatPrimaryExpression();
@@ -733,7 +733,7 @@ export class InternalSpelExpressionParser {
   // ==================== VARIABLE / FUNCTION ====================
 
   /**
-   * #var 或 #func(args)
+   * #var or #func(args)
    */
   private eatVariableOrFunction(): SpelNodeImpl {
     const hashToken = this.advance(); // '#'
@@ -791,7 +791,7 @@ export class InternalSpelExpressionParser {
   // ==================== TYPE ====================
 
   /**
-   * T(Type) 类型引用
+   * T(Type) type reference
    */
   private eatTypeReference(): SpelNodeImpl {
     this.advance(); // consume '(' after T
@@ -801,7 +801,7 @@ export class InternalSpelExpressionParser {
   }
 
   /**
-   * new Type(args...) 构造器引用
+   * new Type(args...) constructor reference
    */
   private eatConstructorReference(): SpelNodeImpl {
     const newToken = this.advance(); // consume 'new'
@@ -876,7 +876,7 @@ export class InternalSpelExpressionParser {
   // ==================== HELPERS ====================
 
   /**
-   * 消费逗号分隔的表达式列表
+   * Consume comma-separated expression list
    */
   private eatExpressionList(): SpelNodeImpl[] {
     const args: SpelNodeImpl[] = [];
@@ -892,7 +892,7 @@ export class InternalSpelExpressionParser {
   }
 
   /**
-   * 消费完整的限定标识符 (java.lang.String)
+   * Consume fully qualified identifier (java.lang.String)
    */
   private eatQualifiedIdentifier(): string {
     const parts: string[] = [];

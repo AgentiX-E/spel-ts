@@ -1,19 +1,19 @@
-// ===== 核心 API =====
+// ===== Core API =====
 export { TypedValue } from './typed-value.js';
 export { SpelExpressionParser } from './spel-expression-parser.js';
 export { SpelExpression } from './spel-expression.js';
 export { StandardEvaluationContext } from './standard-evaluation-context.js';
 export { SpelParserConfiguration } from './spel-parser-configuration.js';
 
-// ===== 错误 =====
+// ===== Errors =====
 export { SpelMessage } from './error/spel-message.js';
 export { SpelParseException } from './error/spel-parse-exception.js';
 export { SpelEvaluationException } from './error/spel-evaluation-exception.js';
 
-// ===== 工具 =====
+// ===== Utilities =====
 export { LRUCache } from './util/lru-cache.js';
 
-// ===== 求值上下文 =====
+// ===== Evaluation Context =====
 export type { EvaluationContext } from './evaluation-context/evaluation-context.js';
 export type { PropertyAccessor } from './evaluation-context/property-accessor.js';
 export type { MethodResolver } from './evaluation-context/method-resolver.js';
@@ -23,23 +23,23 @@ export { ReflectivePropertyAccessor } from './evaluation-context/reflective-prop
 export { TypeDescriptorAccessor } from './evaluation-context/type-descriptor-accessor.js';
 export { ReflectiveMethodResolver } from './evaluation-context/reflective-method-resolver.js';
 
-// ===== 类型系统 =====
+// ===== Type System =====
 export type { TypeDescriptor } from './type/type-descriptor.js';
 export type { TypeLocator } from './type/type-locator.js';
 export { StandardTypeLocator } from './type/standard-type-locator.js';
 
-// ===== Bean 系统 =====
+// ===== Bean System =====
 export type { BeanResolver } from './bean/bean-resolver.js';
 export { DefaultBeanResolver } from './bean/default-bean-resolver.js';
 
-// ===== 桥接层 =====
+// ===== Bridge Layer =====
 export { SpelTypeConverter } from './bridge/type-coercion.js';
 
-// ===== 词法分析 =====
+// ===== Lexical Analysis =====
 export { CharFlag, getCharFlag, isLetter, isDigit, isHexDigit, isWhitespace, isOperator, isQuote, isIdentifierStart, isIdentifierPart } from './tokenizer/char-flags.js';
 export { TokenKind } from './tokenizer/token-kind.js';
 export { Token } from './tokenizer/token.js';
 export { Tokenizer } from './tokenizer/tokenizer.js';
 
-// ===== AST 节点 (高级用法) =====
+// ===== AST Nodes (advanced usage) =====
 export { SpelNodeImpl, Literal, Operator } from './ast/spel-node.js';

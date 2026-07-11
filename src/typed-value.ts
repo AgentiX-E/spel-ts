@@ -1,7 +1,7 @@
 /**
- * 对标 Spring TypedValue
+ * Parallels Spring TypedValue
  *
- * 封装求值结果的值及其类型描述符，是整个求值管道中的核心数据载体。
+ * Wraps evaluation result with type descriptor; core data carrier in the evaluation pipeline.
  */
 export class TypedValue {
   private readonly value: unknown;
@@ -13,21 +13,21 @@ export class TypedValue {
   }
 
   /**
-   * 获取原始值
+   * Get raw value
    */
   public getValue(): unknown {
     return this.value;
   }
 
   /**
-   * 获取类型描述符
+   * Get type descriptor
    */
   public getTypeDescriptor(): unknown {
     return this.typeDescriptor;
   }
 
   /**
-   * 是否为 null
+   * Whether is null
    */
   public isNull(): boolean {
     return this.value === null || this.value === undefined;
@@ -38,7 +38,7 @@ export class TypedValue {
   }
 
   /**
-   * TypedValue.NULL 单例，表示 null 类型值
+   * TypedValue.NULL singleton, represents null-typed value
    */
   public static readonly NULL = new TypedValue(null);
 }

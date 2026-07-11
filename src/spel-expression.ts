@@ -5,9 +5,9 @@ import { StandardEvaluationContext } from './standard-evaluation-context.js';
 import type { TypedValue } from './typed-value.js';
 
 /**
- * 对标 Spring SpelExpression
+ * Parallels Spring SpelExpression
  *
- * 编译后的 SpEL 表达式，持有 AST 根节点。
+ * Compiled SpEL expression, holds the AST root node.
  */
 export class SpelExpression {
   public readonly expressionString: string;
@@ -19,7 +19,7 @@ export class SpelExpression {
   }
 
   /**
-   * 在给定 EvaluationContext 中求值
+   * Evaluate in the given EvaluationContext
    */
   public getValueWithContext(context: EvaluationContext): unknown {
     const state = new ExpressionState(context);
@@ -28,7 +28,7 @@ export class SpelExpression {
   }
 
   /**
-   * 以给定 root 对象求值（创建默认 context）
+   * Evaluate with given root object (creates default context)
    */
   public getValue(rootObject?: unknown): unknown {
     const context = new StandardEvaluationContext(rootObject);
@@ -36,7 +36,7 @@ export class SpelExpression {
   }
 
   /**
-   * 获取 TypedValue（含类型信息）
+   * Get TypedValue (includes type information)
    */
   public getTypedValue(context: EvaluationContext): TypedValue {
     const state = new ExpressionState(context);
@@ -44,7 +44,7 @@ export class SpelExpression {
   }
 
   /**
-   * 获取值类型
+   * Get value type
    */
   public getValueType(context: EvaluationContext): unknown {
     const state = new ExpressionState(context);
@@ -52,7 +52,7 @@ export class SpelExpression {
   }
 
   /**
-   * 是否可写
+   * Whether is writable
    */
   public isWritable(context: EvaluationContext): boolean {
     const state = new ExpressionState(context);
@@ -60,7 +60,7 @@ export class SpelExpression {
   }
 
   /**
-   * 设置值
+   * Set value
    */
   public setValue(context: EvaluationContext, newValue: unknown): void {
     const state = new ExpressionState(context);
@@ -68,14 +68,14 @@ export class SpelExpression {
   }
 
   /**
-   * 获取表达式字符串
+   * Get expression string
    */
   public getExpressionString(): string {
     return this.expressionString;
   }
 
   /**
-   * 获取 AST 调试表示
+   * Get AST debug representation
    */
   public toStringAST(): string {
     return this.ast.toStringAST();

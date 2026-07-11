@@ -1,9 +1,9 @@
 import type { SpelMessage } from './spel-message.js';
 
 /**
- * 对标 Spring SpelEvaluationException
+ * Parallels Spring SpelEvaluationException
  *
- * 表达式求值阶段的异常。包含位置信息和错误码。
+ * Exception during evaluation. Contains position and error code.
  */
 export class SpelEvaluationException extends Error {
   public position: number;
@@ -20,7 +20,7 @@ export class SpelEvaluationException extends Error {
   }
 
   /**
-   * 带表达式字符串的完整错误消息
+   * Full error message with expression string
    */
   public toDetailedString(expressionString: string): string {
     return `SpelEvaluationException at position ${this.position.toString()} in "${expressionString}": ` +

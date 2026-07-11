@@ -15,7 +15,7 @@ export class ReflectiveMethodResolver implements MethodResolver {
       return null;
     }
 
-    // 1. 尝试 JS 原生方法
+    // 1. Try JS native method
     const targetObj = target as Record<string, unknown>;
     const fn = targetObj[name];
     if (typeof fn === 'function') {
@@ -31,7 +31,7 @@ export class ReflectiveMethodResolver implements MethodResolver {
       }
     }
 
-    // 2. 特殊处理：基本类型的 Java 风格方法
+    // 2. Special handling: primitive type Java-style methods
     if (typeof target === 'string') {
       const strResult = this.tryStringMethod(target, name, args);
       if (strResult !== null) return strResult;

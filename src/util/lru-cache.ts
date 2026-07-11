@@ -1,10 +1,10 @@
 /**
- * 泛型 LRU 缓存
+ * Generic LRU cache
  *
- * 用于 OperatorMatches 和 JavaRegexConverter 中的正则缓存。
- * 当缓存达到容量上限时，淘汰最久未使用的条目。
+ * Used for regex caching in OperatorMatches and JavaRegexConverter.
+ * Evicts least recently used entry when capacity limit is reached.
  *
- * @param capacity 最大缓存条目数
+ * @param capacity maximum number of cached entries
  */
 export class LRUCache<K, V> {
   private readonly capacity: number;
@@ -16,13 +16,13 @@ export class LRUCache<K, V> {
   }
 
   /**
-   * 获取缓存值。若存在则将其标记为最近使用。
+   * Get cached value. If present, marks it as recently used.
    */
   public get(key: K): V | undefined {
     if (!this.map.has(key)) {
       return undefined;
     }
-    // Map 迭代顺序即插入顺序，删除再插入以移至末尾
+    // Map iteration order = insertion order; delete+reinsert to move to end
     const value = this.map.get(key)!;
     this.map.delete(key);
     this.map.set(key, value);
@@ -30,10 +30,10 @@ export class LRUCache<K, V> {
   }
 
   /**
-   * 设置缓存值。若超出容量则淘汰最久未使用的条目。
+   * Set cached value. Evicts least recently used entry if capacity exceeded.
    */
   public set(key: K, value: V): void {
-    // 容量为 0 时不存储任何内容
+    // Capacity 0 stores nothing
     if (this.capacity === 0) {
       return;
     }
@@ -41,7 +41,7 @@ export class LRUCache<K, V> {
     if (this.map.has(key)) {
       this.map.delete(key);
     } else if (this.map.size >= this.capacity) {
-      // 淘汰最旧的条目 (Map 迭代的第一个)
+      // Evict oldest entry (first in Map iteration)
       const oldestKey = this.map.keys().next().value;
       if (oldestKey !== undefined) {
         this.map.delete(oldestKey);
@@ -51,28 +51,28 @@ export class LRUCache<K, V> {
   }
 
   /**
-   * 检查键是否存在
+   * Check if key exists
    */
   public has(key: K): boolean {
     return this.map.has(key);
   }
 
   /**
-   * 删除指定键
+   * Delete specified key
    */
   public delete(key: K): boolean {
     return this.map.delete(key);
   }
 
   /**
-   * 清空缓存
+   * Clear cache
    */
   public clear(): void {
     this.map.clear();
   }
 
   /**
-   * 当前缓存条目数
+   * Current cache entry count
    */
   public get size(): number {
     return this.map.size;

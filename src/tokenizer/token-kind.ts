@@ -1,11 +1,11 @@
 /**
- * TokenKind — 对标 Spring TokenKind 的简化枚举
+ * TokenKind — simplified enum paralleling Spring TokenKind
  *
- * 每个 Token 类型在此枚举中有一个值。
- * 注意：部分语义（如 isKeyword）直接在 Token 类中判定。
+ * Each token type has one value in this enum.
+ * Note: some semantics (e.g. isKeyword) are determined in the Token class directly.
  */
 export enum TokenKind {
-  // 字面量
+  // Literals
   LITERAL_INT,
   LITERAL_LONG,
   LITERAL_FLOAT,
@@ -15,43 +15,43 @@ export enum TokenKind {
   LITERAL_BOOLEAN,
   LITERAL_NULL,
 
-  // 标识符
+  // Identifiers
   IDENTIFIER,
 
-  // 运算符
+  // Operators
   PLUS,          // +
   MINUS,         // -
   STAR,          // *
   SLASH,         // /
   PERCENT,       // %
   MOD,           // mod
-  POWER,         // ^ 或 **
+  POWER,         // ^ or **
 
   INC,           // ++
   DEC,           // --
 
-  // 比较/关系
-  EQ,            // == 或 eq
-  NE,            // != 或 ne
-  LT,            // < 或 lt
-  LE,            // <= 或 le
-  GT,            // > 或 gt
-  GE,            // >= 或 ge
+  // Comparison/Relational
+  EQ,            // == or eq
+  NE,            // != or ne
+  LT,            // < or lt
+  LE,            // <= or le
+  GT,            // > or gt
+  GE,            // >= or ge
 
-  // 逻辑
-  AND,           // && 或 and
-  OR,            // || 或 or
-  NOT,           // ! 或 not
+  // Logical
+  AND,           // && or and
+  OR,            // || or or
+  NOT,           // ! or not
 
-  // 赋值
+  // Assignment
   ASSIGN,        // =
 
-  // 特殊运算符
+  // Special operators
   MATCHES,       // matches
   BETWEEN,       // between
   INSTANCEOF,    // instanceof
 
-  // 分隔符
+  // Delimiters
   LPAREN,        // (
   RPAREN,        // )
   LBRACKET,      // [
@@ -68,18 +68,18 @@ export enum TokenKind {
   AT,            // @
   AMP_AT,        // &@
 
-  // 投影/选择
+  // Projection/Selection
   PROJECTION,    // .![
   SELECTION,     // .?[
-  SELECT_FIRST,  // .$[ 或 .^[
+  SELECT_FIRST,  // .$[ or .^[
   SELECT_LAST,   // .*[
 
-  // 类型引用
-  TYPE_START,    // T(  (内部使用)
+  // Type reference
+  TYPE_START,    // T( (internal use)
 
-  // 控制
+  // Control
   NEW,           // new
-  DOTDOT,        // .. (保留)
+  DOTDOT,        // .. (reserved)
 
   EOF,
 }

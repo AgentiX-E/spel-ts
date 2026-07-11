@@ -3,7 +3,7 @@ import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
 
 /**
- * 类型引用节点 — 对标 Spring TypeReference
+ * Type reference node — parallels Spring TypeReference
  */
 export class TypeReference extends SpelNodeImpl {
   private readonly typeName: string;

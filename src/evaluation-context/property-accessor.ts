@@ -2,35 +2,35 @@ import type { EvaluationContext } from './evaluation-context.js';
 import type { TypedValue } from '../typed-value.js';
 
 /**
- * 对标 Spring PropertyAccessor
+ * Parallels Spring PropertyAccessor
  *
- * 属性访问器接口，用于读取/写入目标对象的属性。
- * 多个 Accessor 构成责任链，按注册顺序尝试。
+ * Property accessor interface for reading/writing target object properties.
+ * Multiple Accessors form a chain of responsibility, tried in registration order.
  */
 export interface PropertyAccessor {
   /**
-   * 返回此 Accessor 可以处理的目标类型。
-   * 返回 null 表示通用处理。
+   * Return target types this Accessor can handle.
+   * Return null for generic handling.
    */
   getSpecificTargetClasses(): (new (...args: unknown[]) => unknown)[] | null;
 
   /**
-   * 是否可读取指定目标对象的指定属性
+   * Whether the specified property can be read from the target object
    */
   canRead(context: EvaluationContext, target: unknown, name: string): boolean;
 
   /**
-   * 读取属性值
+   * Read property value
    */
   read(context: EvaluationContext, target: unknown, name: string): TypedValue;
 
   /**
-   * 是否可写入
+   * Whether it can be written
    */
   canWrite(context: EvaluationContext, target: unknown, name: string): boolean;
 
   /**
-   * 写入属性值
+   * Write property value
    */
   write(context: EvaluationContext, target: unknown, name: string, newValue: unknown): void;
 }

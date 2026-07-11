@@ -5,7 +5,7 @@ import { SpelEvaluationException } from '../../error/spel-evaluation-exception.j
 import { SpelMessage } from '../../error/spel-message.js';
 
 /**
- * Bean 引用节点 — 对标 Spring BeanReference
+ * Bean reference node — parallels Spring BeanReference
  */
 export class BeanReference extends SpelNodeImpl {
   private readonly beanName: string;

@@ -4,10 +4,10 @@ import { TypedValue } from '../typed-value.js';
 import type { TypeDescriptor } from '../type/type-descriptor.js';
 
 /**
- * TypeDescriptor 属性访问器
+ * TypeDescriptor property accessor
  *
- * 处理 T(Type).staticMethod 和 T(Type).staticField 访问，
- * 将 PropertyAccessor 链扩展到 TypeDescriptor 对象。
+ * Handles T(Type).staticMethod and T(Type).staticField access,
+ * Extends the PropertyAccessor chain to TypeDescriptor objects.
  */
 export class TypeDescriptorAccessor implements PropertyAccessor {
   public getSpecificTargetClasses(): null {

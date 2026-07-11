@@ -1,28 +1,28 @@
 /**
- * 类型描述符，对标 Spring TypeDescriptor
+ * Type descriptor, parallels Spring TypeDescriptor
  */
 export interface TypeDescriptor {
-  /** 类型名称 (如 'java.lang.String') */
+  /** Type name (e.g. 'java.lang.String') */
   readonly name: string;
 
-  /** JS 构造函数 */
+  /** JS constructor */
   readonly constructor: new (...args: unknown[]) => unknown;
 
-  /** 静态方法 */
+  /** Static methods */
   readonly staticMethods: Record<string, (...args: unknown[]) => unknown>;
 
-  /** 静态字段 */
+  /** Static fields */
   readonly staticFields: Record<string, unknown>;
 
-  /** 类型检查 */
+  /** Type check */
   isInstance(value: unknown): boolean;
 
-  /** 创建实例 */
+  /** Create instance */
   newInstance(...args: unknown[]): unknown;
 
-  /** 调用静态方法 */
+  /** Call static method */
   callStaticMethod(name: string, ...args: unknown[]): unknown;
 
-  /** 获取静态字段 */
+  /** Get static field */
   getStaticField(name: string): unknown;
 }

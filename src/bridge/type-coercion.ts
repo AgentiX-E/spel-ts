@@ -2,21 +2,21 @@ import { SpelEvaluationException } from '../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 
 /**
- * 对标 Spring TypeConverter / SpelTypeConverter
+ * Parallels Spring TypeConverter / SpelTypeConverter
  *
- * 类型强制转换，处理 SpEL 中的隐式类型转换。
+ * Type coercion, handles implicit type conversion in SpEL.
  */
 export class SpelTypeConverter {
   /**
-   * 尝试将值转换为目标类型
+   * Try converting value to target type
    */
   public convertValue(value: unknown, targetType: new (...args: unknown[]) => unknown): unknown {
-    // null → null (任何类型)
+    // null → null (any type)
     if (value === null || value === undefined) {
       return null;
     }
 
-    // 已匹配类型
+    // Already matching type
     if (typeof value === 'string' && targetType === String) return value;
     if (typeof value === 'number' && targetType === Number) return value;
     if (typeof value === 'boolean' && targetType === Boolean) return value;
@@ -58,7 +58,7 @@ export class SpelTypeConverter {
       return String(value);
     }
 
-    // Number → Boolean (非零为真)
+    // Number → Boolean (non-zero is truthy)
     if (typeof value === 'number' && targetType === Boolean) {
       return value !== 0;
     }
@@ -68,7 +68,7 @@ export class SpelTypeConverter {
       return value ? 1 : 0;
     }
 
-    // 无法转换 — 此时 value 必然是 object/function 等非基础类型
+    // Cannot convert — value must be object/function at this point
     const typeLabel = typeof value;
     const valueStr = typeLabel;
     throw new SpelEvaluationException(
@@ -80,7 +80,7 @@ export class SpelTypeConverter {
   }
 
   /**
-   * 判断是否可以转换
+   * Check if conversion is possible
    */
   public canConvert(value: unknown, targetType: new (...args: unknown[]) => unknown): boolean {
     if (value === null || value === undefined) return true;

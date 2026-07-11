@@ -1,5 +1,5 @@
 /**
- * Phase 4: Coverage completion — 验证所有审计发现修复 + 覆盖率提升至 95%+
+ * Phase 4: Coverage completion — verify all audit fixes + push coverage to 95%+
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
@@ -37,10 +37,10 @@ describe('Phase 4: Bean References (@bean / &@factoryBean)', () => {
     beanResolver.registerFactory('myFactory', () => 'factoryResult');
     ctx.setBeanResolver(beanResolver);
 
-    // 目前 &@ 前缀在 tokenizer 中，但 parser 将其识别为 AT
-    // BeanReference 的 isFactoryBean 标志由 eatBeanReference 中从 atToken.kind === AMP_AT 设置
-    // 由于 tokenizer 将 &@ 两个字符合并为 AMP_AT，parser 的 case AMP_AT 会触发 eatBeanReference
-    // eatBeanReference 检测 atToken.kind === AMP_AT 并设置 isFactoryBean = true
+    // Currently &@ prefix is in tokenizer, but parser recognizes it as AT
+    // BeanReference isFactoryBean flag is set from atToken.kind === AMP_AT in eatBeanReference
+    // Since tokenizer merges &@ chars into AMP_AT, parser case AMP_AT triggers eatBeanReference
+    // eatBeanReference detects atToken.kind === AMP_AT and sets isFactoryBean = true
     const result = parser.parseExpression('&@myFactory').getValueWithContext(ctx);
     expect(result).toBe('factoryResult');
   });

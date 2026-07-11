@@ -5,24 +5,24 @@ import { SpelMessage } from './error/spel-message.js';
 import type { TypeDescriptor } from './type/type-descriptor.js';
 
 /**
- * 对标 Spring ExpressionState
+ * Parallels Spring ExpressionState
  *
- * 管理表达式求值过程中的所有状态：
- * - scopeStack: 当前变量上下文的栈 (用于 #var 查找)
- * - headIndexStack: #this 引用栈 (用于 collection selection/projection)
- * - EvaluationContext: 委托的全局上下文
+ * Manages all state during expression evaluation：
+ * - scopeStack: stack of current variable contexts (for #var lookup)
+ * - headIndexStack: #this reference stack (for collection selection/projection)
+ * - EvaluationContext: delegated global context
  */
 export class ExpressionState {
   private readonly context: EvaluationContext;
 
   /**
-   * scopeStack: 栈顶为当前活动作用域
-   * 每个作用域是 Map<string, TypedValue>
+   * scopeStack: Top of stack is current active scope
+   * Each scope is a Map<string, TypedValue>
    */
   private readonly scopeStack: Map<string, TypedValue>[] = [];
 
   /**
-   * headIndexStack: 跟踪嵌套的迭代上下文中的 #this 引用
+   * headIndexStack: Track #this references in nested iteration contexts
    */
   private readonly headIndexStack: TypedValue[] = [];
 
@@ -30,7 +30,7 @@ export class ExpressionState {
     this.context = context;
   }
 
-  // ===== scopeStack 管理 =====
+  // ===== scopeStack Management =====
 
   public pushScope(scope: Map<string, TypedValue>): void {
     this.scopeStack.push(scope);
@@ -49,7 +49,7 @@ export class ExpressionState {
     return this.scopeStack[this.scopeStack.length - 1];
   }
 
-  // ===== headIndexStack 管理 =====
+  // ===== headIndexStack Management =====
 
   public pushHeadIndex(value: TypedValue): void {
     this.headIndexStack.push(value);
@@ -65,8 +65,8 @@ export class ExpressionState {
   }
 
   /**
-   * 获取当前 #this 值
-   * headIndexStack 栈顶为当前最内层 #this
+   * Get current #this value
+   * headIndexStack top is current innermost #this
    */
   public getThis(): TypedValue {
     if (this.headIndexStack.length > 0) {
@@ -75,17 +75,17 @@ export class ExpressionState {
     return this.context.getRootObject();
   }
 
-  // ===== #root 解析 =====
+  // ===== #root Resolution =====
 
   public getRoot(): TypedValue {
     return this.context.getRootObject();
   }
 
-  // ===== 变量查找 =====
+  // ===== Variable Lookup =====
 
   /**
-   * 查找变量 #varName
-   * 从 scopeStack 栈顶向下搜索，然后委托给 context
+   * Lookup variable #varName
+   * Search from scopeStack top-down, then delegate to context
    */
   public lookupVariable(name: string): TypedValue {
     // #this is always the current iteration element
@@ -98,14 +98,14 @@ export class ExpressionState {
       return this.context.getRootObject();
     }
 
-    // 从栈顶向下搜索
+    // Search from stack top downward
     for (let i = this.scopeStack.length - 1; i >= 0; i--) {
       const scope = this.scopeStack[i]!;
       if (scope.has(name)) {
         return scope.get(name)!;
       }
     }
-    // 委托给 context
+    // Delegate to context
     const result = this.context.lookupVariable(name);
     if (result != null) {
       return result;
@@ -116,10 +116,10 @@ export class ExpressionState {
   }
 
   /**
-   * 设置变量 #varName = value
+   * Set variable #varName = value
    */
   public setVariable(name: string, value: unknown): void {
-    // 从栈顶向下搜索
+    // Search from stack top downward
     for (let i = this.scopeStack.length - 1; i >= 0; i--) {
       const scope = this.scopeStack[i]!;
       if (scope.has(name)) {
@@ -127,11 +127,11 @@ export class ExpressionState {
         return;
       }
     }
-    // 设置在 context
+    // Set in context
     this.context.setVariable(name, value);
   }
 
-  // ===== 函数查找 =====
+  // ===== Function Lookup =====
 
   public lookupFunction(name: string): (...args: unknown[]) => unknown {
     const fn = this.context.lookupFunction(name);
@@ -143,36 +143,36 @@ export class ExpressionState {
     );
   }
 
-  // ===== 类型查找 (委派给 TypeLocator) =====
+  // ===== Type Lookup (Delegate to TypeLocator) =====
 
   public findType(typeName: string): TypeDescriptor {
     return this.context.getTypeLocator().findType(typeName);
   }
 
-  // ===== Bean 查找 (委派给 BeanResolver) =====
+  // ===== Bean Lookup (Delegate to BeanResolver) =====
 
   public resolveBean(beanName: string, isFactoryBean = false): unknown {
     return this.context.getBeanResolver().resolve(beanName, isFactoryBean);
   }
 
-  // ===== 创建子状态 =====
+  // ===== Create Child State =====
 
   /**
-   * 创建一个以给定 rootObject 为根上下文的子状态
-   * 用于 CompoundExpression 中的属性链导航
+   * Create a child state with given rootObject as root context
+   * Used for property chain navigation in CompoundExpression
    */
   public createChildState(rootObject: unknown): ExpressionState {
     const child = new ExpressionState(
       this.context.createChildContext(rootObject),
     );
-    // 继承 scopeStack
+    // Inherit scopeStack
     for (const scope of this.scopeStack) {
       child.scopeStack.push(scope);
     }
     return child;
   }
 
-  // ===== 上下文访问 =====
+  // ===== Context access =====
 
   public getEvaluationContext(): EvaluationContext {
     return this.context;

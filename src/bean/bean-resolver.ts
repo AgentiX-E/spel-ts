@@ -1,24 +1,24 @@
 /**
- * Bean 解析器接口，对标 Spring BeanResolver
+ * Bean resolver interface, parallels Spring BeanResolver
  */
 export interface BeanResolver {
   /**
-   * 解析 @beanName 引用
+   * Resolve @beanName reference
    *
-   * @param name Bean 名称
-   * @param isFactoryBean 是否为 &@bean (工厂 Bean)
-   * @returns Bean 实例
-   * @throws SpelEvaluationException 如果 Bean 不存在
+   * @param name Bean name
+   * @param isFactoryBean whether this is &@bean (factory Bean)
+   * @returns Bean instance
+   * @throws SpelEvaluationException if Bean does not exist
    */
   resolve(name: string, isFactoryBean?: boolean): unknown;
 
   /**
-   * 注册 Bean
+   * Register Bean
    */
   register(name: string, bean: unknown): void;
 
   /**
-   * 检查 Bean 是否已注册
+   * Check if Bean is registered
    */
   has(name: string): boolean;
 }

@@ -6,7 +6,7 @@ import { SpelMessage } from '../error/spel-message.js';
 
 export class ReflectivePropertyAccessor implements PropertyAccessor {
   public getSpecificTargetClasses(): null {
-    return null; // 通用处理
+    return null; // Generic handling
   }
 
   public canRead(_context: EvaluationContext, target: unknown, name: string): boolean {

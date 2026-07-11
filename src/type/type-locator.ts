@@ -1,25 +1,25 @@
 import type { TypeDescriptor } from './type-descriptor.js';
 
 /**
- * 类型定位器，对标 Spring TypeLocator
+ * Type locator, parallels Spring TypeLocator
  *
- * 用于解析 T(java.lang.String) 中的类型名称。
- * 纯 Registry 模式 — 不使用 globalThis/window fallback。
+ * Used to resolve type names in T(java.lang.String).
+ * Pure Registry pattern — no globalThis/window fallback.
  */
 export interface TypeLocator {
   /**
-   * 查找类型
-   * @throws SpelEvaluationException 如果类型未注册
+   * Find type
+   * @throws SpelEvaluationException if type is not registered
    */
   findType(typeName: string): TypeDescriptor;
 
   /**
-   * 注册类型
+   * Register type
    */
   registerType(name: string, descriptor: TypeDescriptor): void;
 
   /**
-   * 检查类型是否已注册
+   * Check if type is registered
    */
   hasType(name: string): boolean;
 }

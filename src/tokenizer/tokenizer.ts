@@ -5,10 +5,10 @@ import { SpelParseException } from '../error/spel-parse-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 
 /**
- * 对标 Spring Tokenizer
+ * Parallels Spring Tokenizer
  *
- * SpEL 词法分析器，将表达式字符串拆分成 Token 序列。
- * 使用字符分类表实现 O(1) 字符类型查询。
+ * SpEL lexer: decomposes expression string into Token sequence.
+ * O(1) character type queries via character classification table.
  */
 export class Tokenizer {
   private readonly expression: string;
@@ -21,34 +21,34 @@ export class Tokenizer {
   }
 
   /**
-   * 主词法分析循环——返回下一个 Token
+   * Main lexical analysis loop — returns next Token
    */
   public nextToken(): Token {
     while (this.pos < this.maxPos) {
       const ch = this.expression.charCodeAt(this.pos);
 
-      // 跳过空白
+      // Skip whitespace
       if (isWhitespace(ch)) {
         this.pos++;
         continue;
       }
 
-      // 标识符 / 关键字
+      // Identifier / keyword
       if (isLetter(ch) || ch === 95 /* _ */ || ch === 36 /* $ */) {
         return this.eatIdentifier();
       }
 
-      // 数字字面量
+      // Number literal
       if (isDigit(ch)) {
         return this.eatNumberLiteral();
       }
 
-      // 字符串字面量
+      // String literal
       if (ch === 39 /* ' */ || ch === 34 /* " */) {
         return this.eatStringLiteral(ch);
       }
 
-      // 操作符和分隔符
+      // Operators and delimiters
       return this.eatOperatorOrDelimiter();
     }
 
@@ -56,7 +56,7 @@ export class Tokenizer {
   }
 
   /**
-   * 消费标识符或关键字
+   * Consume identifier or keyword
    */
   private eatIdentifier(): Token {
     const start = this.pos;
@@ -75,7 +75,7 @@ export class Tokenizer {
   }
 
   /**
-   * 将标识符字符串分类为 Token：关键字或普通标识符
+   * Classify identifier string as Token: keyword or plain identifier
    */
   private identifierOrKeyword(start: number, text: string): Token {
     switch (text) {
@@ -101,12 +101,12 @@ export class Tokenizer {
   }
 
   /**
-   * 消费数字字面量 (支持 int, long, float, double, hex)
+   * Consume number literal (int, long, float, double, hex)
    */
   private eatNumberLiteral(): Token {
     const start = this.pos;
 
-    // 十六进制 0x 或 0X
+    // Hexadecimal 0x or 0X
     if (this.expression.charCodeAt(this.pos) === 48 /* '0' */ &&
         this.pos + 1 < this.maxPos) {
       const next = this.expression.charCodeAt(this.pos + 1);
@@ -119,7 +119,7 @@ export class Tokenizer {
         return new Token(TokenKind.LITERAL_HEX, start, this.pos, text,
           parseInt(text, 16));
       }
-      // 八进制: 0[0-7]+
+      // Octal: 0[0-7]+
       if (next >= 48 /* '0' */ && next <= 55 /* '7' */) {
         this.pos += 2;
         while (this.pos < this.maxPos) {
@@ -136,19 +136,19 @@ export class Tokenizer {
       }
     }
 
-    // 整数部分
+    // Integer part
     while (this.pos < this.maxPos && isDigit(this.expression.charCodeAt(this.pos))) {
       this.pos++;
     }
 
     let isFloat = false;
 
-    // 小数部分
+    // Fractional part
     if (this.pos < this.maxPos && this.expression.charCodeAt(this.pos) === 46 /* '.' */) {
-      // 检查不是范围运算符 ..
+      // Check not range operator ..
       if (this.pos + 1 < this.maxPos &&
           this.expression.charCodeAt(this.pos + 1) === 46) {
-        // 这是 .. 运��符，不消费
+        // This is .. operator, do not consume
       } else {
         isFloat = true;
         this.pos++;
@@ -158,7 +158,7 @@ export class Tokenizer {
       }
     }
 
-    // 指数部分
+    // Exponent part
     if (this.pos < this.maxPos) {
       const ch = this.expression.charCodeAt(this.pos);
       if (ch === 69 /* 'E' */ || ch === 101 /* 'e' */) {
@@ -176,7 +176,7 @@ export class Tokenizer {
       }
     }
 
-    // 后缀
+    // Suffix
     let kind = TokenKind.LITERAL_INT;
     if (this.pos < this.maxPos) {
       const suffix = this.expression.charCodeAt(this.pos);
@@ -212,13 +212,13 @@ export class Tokenizer {
   }
 
   /**
-   * 消费字符串字面量 (支持 '' 转义)
+   * Consume string literal (supports '' escaping)
    */
   private eatStringLiteral(quote: number): Token {
     const start = this.pos;
     const quoteChar = String.fromCharCode(quote);
 
-    this.pos++; // 跳过开始引号
+    this.pos++; // Skip opening quote
 
     const parts: string[] = [];
     let foundClosingQuote = false;
@@ -226,13 +226,13 @@ export class Tokenizer {
       const ch = this.expression.charCodeAt(this.pos);
 
       if (ch === quote) {
-        // 检查是否是转义引号 '' 或 ""
+        // Check for escaped quote '' or ""
         if (this.pos + 1 < this.maxPos &&
             this.expression.charCodeAt(this.pos + 1) === quote) {
           parts.push(quoteChar);
-          this.pos += 2; // 跳过两个引号
+          this.pos += 2; // Skip two quotes
         } else {
-          this.pos++; // 跳过结束引号
+          this.pos++; // Skip closing quote
           foundClosingQuote = true;
           break;
         }
@@ -242,7 +242,7 @@ export class Tokenizer {
       }
     }
 
-    // 检查是否到达末尾而字符串未结束
+    // Check if end of expression reached without closing string
     if (!foundClosingQuote) {
       throw new SpelParseException(
         start,
@@ -256,16 +256,16 @@ export class Tokenizer {
   }
 
   /**
-   * 消费操作符和分隔符——核心多字符匹配
+   * Consume operators and delimiters — core multi-char matching
    */
   private eatOperatorOrDelimiter(): Token {
     const start = this.pos;
     const ch = this.expression.charCodeAt(this.pos);
 
-    this.pos++; // 先消费一个字符
+    this.pos++; // Consume one character first
 
     switch (ch) {
-      // 单字符
+      // Single character
       case 42: // *
         if (this.matchNext(42)) { // **
           this.pos++;
@@ -366,7 +366,7 @@ export class Tokenizer {
       }
 
       case 46: { // .
-        // 检查是否是 .![  .?[  .$[  .^[  .*[ 或 ..
+        // Check for .![ .?[ .$[ .^[ .*[ or ..
         if (this.pos < this.maxPos) {
           const next = this.expression.charCodeAt(this.pos);
           if (next === 46) { // ..
@@ -416,7 +416,7 @@ export class Tokenizer {
   }
 
   /**
-   * 检查当前位置字符是否匹配预期
+   * Check if current position character matches expected
    */
   private matchNext(expected: number): boolean {
     return this.pos < this.maxPos &&
@@ -424,7 +424,7 @@ export class Tokenizer {
   }
 
   /**
-   * 获取所有 Token (用于调试和测试)
+   * Get all tokens (for debugging and testing)
    */
   public tokenize(): Token[] {
     const tokens: Token[] = [];
@@ -432,7 +432,7 @@ export class Tokenizer {
     while ((token = this.nextToken()).kind !== TokenKind.EOF) {
       tokens.push(token);
     }
-    tokens.push(token); // 包含 EOF
+    tokens.push(token); // Include EOF
     return tokens;
   }
 }

@@ -6,88 +6,88 @@ import type { BeanResolver } from '../bean/bean-resolver.js';
 import type { SpelTypeConverter } from '../bridge/type-coercion.js';
 
 /**
- * 对标 Spring EvaluationContext
+ * Parallels Spring EvaluationContext
  *
- * 表达式求值的全局上下文，管理变量、函数、类型定位器、Bean 解析器等。
+ * Global evaluation context: manages variables, functions, type locator, bean resolver, etc.
  */
 export interface EvaluationContext {
   /**
-   * 获取根对象
+   * Get root object
    */
   getRootObject(): TypedValue;
 
   /**
-   * 设置根对象
+   * Set root object
    */
   setRootObject(obj: unknown): void;
 
   /**
-   * 查找变量。返回 null 表示未找到。
+   * Lookup variable. Returns null if not found.
    */
   lookupVariable(name: string): TypedValue | null;
 
   /**
-   * 设置变量
+   * Set variable
    */
   setVariable(name: string, value: unknown): void;
 
   /**
-   * 查找函数。返回 null 表示未找到。
+   * Lookup function. Returns null if not found.
    */
   lookupFunction(name: string): ((...args: unknown[]) => unknown) | null;
 
   /**
-   * 注册函数
+   * Register function
    */
   registerFunction(name: string, fn: (...args: unknown[]) => unknown): void;
 
   /**
-   * 获取 PropertyAccessor 链
+   * Get PropertyAccessor chain
    */
   getPropertyAccessors(): PropertyAccessor[];
 
   /**
-   * 添加 PropertyAccessor
+   * Add PropertyAccessor
    */
   addPropertyAccessor(accessor: PropertyAccessor): void;
 
   /**
-   * 获取 MethodResolver 链
+   * Get MethodResolver chain
    */
   getMethodResolvers(): MethodResolver[];
 
   /**
-   * 添加 MethodResolver
+   * Add MethodResolver
    */
   addMethodResolver(resolver: MethodResolver): void;
 
   /**
-   * 获取 TypeLocator
+   * Get TypeLocator
    */
   getTypeLocator(): TypeLocator;
 
   /**
-   * 设置 TypeLocator
+   * Set TypeLocator
    */
   setTypeLocator(typeLocator: TypeLocator): void;
 
   /**
-   * 获取 BeanResolver
+   * Get BeanResolver
    */
   getBeanResolver(): BeanResolver;
 
   /**
-   * 设置 BeanResolver
+   * Set BeanResolver
    */
   setBeanResolver(beanResolver: BeanResolver): void;
 
   /**
-   * 获取 TypeConverter
+   * Get TypeConverter
    */
   getTypeConverter(): SpelTypeConverter;
 
   /**
-   * 创建子上下文（用于属性链导航）
+   * Create child context (for property chain navigation)
    */
   createChildContext(rootObject: unknown): EvaluationContext;
 }

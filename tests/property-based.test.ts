@@ -1,8 +1,8 @@
 /**
- * Phase 3: Property-based Tests — 算术/比较/逻辑代数性质验证
+ * Phase 3: Property-based Tests — Arithmetic/Comparison/Logical Algebraic Property Verification
  *
- * 使用 fast-check 生成随机输入，验证 SpEL 表达式求值满足数学性质。
- * 对标 Spring SpEL 语义。
+ * Uses fast-check to generate random inputs, verifying SpEL evaluation satisfies mathematical properties.
+ * Parallels Spring SpEL semantics.
  */
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
@@ -17,7 +17,7 @@ describe('Property-based: Arithmetic', () => {
   const nonNegZero = fc.float({ noNaN: true, noDefaultInfinity: true })
     .filter(x => !Object.is(x, -0));
 
-  // ===== 加法性质 =====
+  // ===== Addition Properties =====
   describe('addition properties', () => {
     it('commutativity: a + b = b + a', () => {
       fc.assert(fc.property(safeInt, safeInt, (a, b) => {
@@ -49,7 +49,7 @@ describe('Property-based: Arithmetic', () => {
     });
   });
 
-  // ===== 减法性质 =====
+  // ===== Subtraction Properties =====
   describe('subtraction properties', () => {
     it('self-inverse: a - a = 0', () => {
       fc.assert(fc.property(safeInt, (a) => {
@@ -73,7 +73,7 @@ describe('Property-based: Arithmetic', () => {
     });
   });
 
-  // ===== 乘法性质 =====
+  // ===== Multiplication Properties =====
   describe('multiplication properties', () => {
     it('commutativity: a * b = b * a', () => {
       fc.assert(fc.property(safeInt, safeInt, (a, b) => {
@@ -117,7 +117,7 @@ describe('Property-based: Arithmetic', () => {
     });
   });
 
-  // ===== 除法性质 =====
+  // ===== Division Properties =====
   describe('division properties', () => {
     it('identity: a / 1 = a', () => {
       fc.assert(fc.property(safeInt, (a) => {
@@ -142,7 +142,7 @@ describe('Property-based: Arithmetic', () => {
     });
   });
 
-  // ===== 模运算性质 =====
+  // ===== Modulo Properties =====
   describe('modulo properties', () => {
     it('a % n < |n| for |a| < 1000, n > 0', () => {
       fc.assert(fc.property(
