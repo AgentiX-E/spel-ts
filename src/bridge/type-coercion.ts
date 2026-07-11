@@ -68,18 +68,9 @@ export class SpelTypeConverter {
       return value ? 1 : 0;
     }
 
-    // 无法转换
+    // 无法转换 — 此时 value 必然是 object/function 等非基础类型
     const typeLabel = typeof value;
-    let valueStr: string;
-    if (typeof value === 'string') {
-      valueStr = value;
-    } else if (typeof value === 'number') {
-      valueStr = String(value);
-    } else if (typeof value === 'boolean') {
-      valueStr = String(value);
-    } else {
-      valueStr = typeLabel;
-    }
+    const valueStr = typeLabel;
     throw new SpelEvaluationException(
       -1,
       SpelMessage.TYPE_CONVERSION_ERROR,

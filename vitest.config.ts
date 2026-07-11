@@ -22,12 +22,12 @@ export default defineConfig({
       // Internal implementation details (tested via public API)
       'src/ast/reference/constructor-reference.ts',
     ],
-    // Phase 6: 93%+ across all dimensions with full Spring SpEL syntax
+    // Phase 7: 93.5%+ — remaining ~6% in unreachable parser branches
     thresholds: {
-      statements: 93,
-      branches: 91,
-      functions: 93,
-      lines: 93,
+      statements: 93.5,
+      branches: 92.5,
+      functions: 94,
+      lines: 93.5,
     },
       reporter: ['text', 'lcov', 'html'],
     },
