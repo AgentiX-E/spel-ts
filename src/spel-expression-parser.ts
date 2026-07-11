@@ -89,7 +89,7 @@ export class SpelExpressionParser {
  *   Assignment → Conditional → Or → And → Equality → Relational
  *   → Additive → Multiplicative → Power → Unary → Primary
  */
-class InternalSpelExpressionParser {
+export class InternalSpelExpressionParser {
   private tokens: Token[] = [];
   private pos = 0;
   private readonly expressionString: string;

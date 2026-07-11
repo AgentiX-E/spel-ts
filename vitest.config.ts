@@ -22,12 +22,12 @@ export default defineConfig({
       // Internal implementation details (tested via public API)
       'src/ast/reference/constructor-reference.ts',
     ],
-    // Phase 9: 95%+ after parser dead code elimination + branch tests
+    // Phase 10: 96%+ with direct InternalSpelExpressionParser testing
     thresholds: {
-      statements: 95,
-      branches: 94,
-      functions: 95,
-      lines: 95,
+      statements: 96,
+      branches: 95,
+      functions: 96,
+      lines: 96,
     },
       reporter: ['text', 'lcov', 'html'],
     },
