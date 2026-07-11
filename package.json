@@ -28,7 +28,7 @@
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
     "typecheck": "tsc --noEmit",
-    "docs": "typedoc",
+    "docs": "CI=true npx typedoc",
     "prepublishOnly": "pnpm build && pnpm test && pnpm lint"
   },
   "keywords": [
