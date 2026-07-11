@@ -1,8 +1,8 @@
 /**
- * 字符分类标志位 — 使用位掩码实现 O(1) 字符类型查询
+ * Character classification flags — O(1) lookup via pre-computed bitmask table
  *
- * 对标 Spring Tokenizer 中的字符分类机制。
- * 使用 Uint8Array 预计算表，ASCII 范围内 O(1) 查询。
+ * Parallels Spring Tokenizer character classification.
+ * Uint8Array pre-computed table for O(1) ASCII range queries.
  */
 
 export enum CharFlag {
@@ -16,7 +16,7 @@ export enum CharFlag {
   DOLLAR = 1 << 6, // $
   DOT = 1 << 7, // .
   EXPONENT = 1 << 8, // e, E
-  SIGN = 1 << 9, // +, - (用于数字上下文)
+  SIGN = 1 << 9, // +, - (for numeric context)
 }
 
 // Uint16Array: CharFlag range includes EXPONENT (256) and SIGN (512),
@@ -74,32 +74,32 @@ function buildCharTable(): void {
   }
 }
 
-// 模块初始化时构建字符表
+// Build character table at module initialization
 buildCharTable();
 
 /**
- * 获取字符的标志位掩码
+ * Get character flag bitmask
  */
 export function getCharFlag(ch: number): number {
   return (ch >= 0 && ch < 128) ? CHAR_FLAG_TABLE[ch]! : CharFlag.NONE;
 }
 
 /**
- * 检查是否为字母 (a-z, A-Z)
+ * Check if character is a letter (a-z, A-Z)
  */
 export function isLetter(ch: number): boolean {
   return (getCharFlag(ch) & CharFlag.LETTER) !== 0;
 }
 
 /**
- * 检查是否为数字 (0-9)
+ * Check if character is a digit (0-9)
  */
 export function isDigit(ch: number): boolean {
   return (getCharFlag(ch) & CharFlag.DIGIT) !== 0;
 }
 
 /**
- * 检查是否为十六进制数字 (0-9, a-f, A-F)
+ * Check if character is a hex digit (0-9, a-f, A-F)
  */
 export function isHexDigit(ch: number): boolean {
   return isDigit(ch) ||
@@ -108,28 +108,28 @@ export function isHexDigit(ch: number): boolean {
 }
 
 /**
- * 检查是否为空白字符
+ * Check if character is whitespace
  */
 export function isWhitespace(ch: number): boolean {
   return (getCharFlag(ch) & CharFlag.WHITESPACE) !== 0;
 }
 
 /**
- * 检查是否为操作符字符
+ * Check if character is an operator
  */
 export function isOperator(ch: number): boolean {
   return (getCharFlag(ch) & CharFlag.OPERATOR) !== 0;
 }
 
 /**
- * 检查是否为引号字符
+ * Check if character is a quote
  */
 export function isQuote(ch: number): boolean {
   return (getCharFlag(ch) & CharFlag.QUOTE) !== 0;
 }
 
 /**
- * 检查字符是否为标识符的有效起始字符 (字母, _, $)
+ * Check if character is a valid identifier start (letter, _, $)
  */
 export function isIdentifierStart(ch: number): boolean {
   const flag = getCharFlag(ch);
@@ -137,7 +137,7 @@ export function isIdentifierStart(ch: number): boolean {
 }
 
 /**
- * 检查字符是否为标识符的有效后续字符 (字母, 数字, _, $)
+ * Check if character is a valid identifier part (letter, digit, _, $)
  */
 export function isIdentifierPart(ch: number): boolean {
   const flag = getCharFlag(ch);

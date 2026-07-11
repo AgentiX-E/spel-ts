@@ -1,9 +1,9 @@
 import { TokenKind } from './token-kind.js';
 
 /**
- * 对标 Spring Token
+ * Parallels Spring Token
  *
- * 词法分析产生的 Token，包含位置、类型和可选的文本/附加数据。
+ * Token produced by lexical analysis with position, kind, and optional text/payload.
  */
 export class Token {
   public readonly kind: TokenKind;
