@@ -41,7 +41,7 @@ jobs:
         run: pnpm build
 
       - name: Build TypeDoc API docs
-        run: pnpm docs
+        run: npx typedoc
 
       - name: Prepare GitHub Pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
