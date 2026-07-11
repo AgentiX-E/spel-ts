@@ -47,11 +47,6 @@ export class TypeDescriptorAccessor implements PropertyAccessor {
       return new TypedValue(ctor[name]);
     }
 
-    // Name field on TypeDescriptor itself
-    if (name === 'name') {
-      return new TypedValue(td.name);
-    }
-
     return TypedValue.NULL;
   }
 

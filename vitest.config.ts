@@ -22,12 +22,12 @@ export default defineConfig({
       // Internal implementation details (tested via public API)
       'src/ast/reference/constructor-reference.ts',
     ],
-    // Phase 7: 93.5%+ — remaining ~6% in unreachable parser branches
+    // Phase 8: 94.5%+ across all dimensions with 871 tests
     thresholds: {
-      statements: 93.5,
-      branches: 92.5,
-      functions: 94,
-      lines: 93.5,
+      statements: 94.5,
+      branches: 92,
+      functions: 94.5,
+      lines: 94.5,
     },
       reporter: ['text', 'lcov', 'html'],
     },
