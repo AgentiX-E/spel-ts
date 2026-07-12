@@ -1,13 +1,18 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class ConstructorReference extends SpelNodeImpl {
   private readonly className: string;
 
   constructor(startPos: number, endPos: number, className: string, ...args: SpelNodeImpl[]) {
-    super(startPos, endPos, ...args);
+    super(NodeType.CONSTRUCTOR_REFERENCE, startPos, endPos, ...args);
     this.className = className;
+  }
+
+  public getClassName(): string {
+    return this.className;
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {

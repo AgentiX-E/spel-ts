@@ -3,10 +3,11 @@ import { TypedValue } from '../../typed-value.js';
 import { SpelEvaluationException } from '../../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../../error/spel-message.js';
 import { Operator } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class OpDec extends Operator {
   constructor(operatorName: string, startPos: number, endPos: number, ...operands: import('../spel-node.js').SpelNodeImpl[]) {
-    super(operatorName, startPos, endPos, ...operands);
+    super(NodeType.OP_DEC, operatorName, startPos, endPos, ...operands);
   }
 
   public override getValueInternal(state: ExpressionState): TypedValue {

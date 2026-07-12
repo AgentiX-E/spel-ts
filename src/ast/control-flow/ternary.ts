@@ -1,11 +1,12 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class Ternary extends SpelNodeImpl {
   constructor(startPos: number, endPos: number,
     condition: SpelNodeImpl, trueExpr: SpelNodeImpl, falseExpr: SpelNodeImpl) {
-    super(startPos, endPos, condition, trueExpr, falseExpr);
+    super(NodeType.TERNARY, startPos, endPos, condition, trueExpr, falseExpr);
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {

@@ -1,6 +1,7 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 /** Selection mode: controls which matching elements are returned */
 export const enum SelectMode {
@@ -18,9 +19,17 @@ export class Selection extends SpelNodeImpl {
 
   constructor(startPos: number, endPos: number, nullSafe: boolean,
     target: SpelNodeImpl, predicate: SpelNodeImpl, mode: SelectMode = SelectMode.ALL) {
-    super(startPos, endPos, target, predicate);
+    super(NodeType.SELECTION, startPos, endPos, target, predicate);
     this.nullSafe = nullSafe;
     this.mode = mode;
+  }
+
+  public getSelectMode(): SelectMode {
+    return this.mode;
+  }
+
+  public isNullSafe(): boolean {
+    return this.nullSafe;
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {

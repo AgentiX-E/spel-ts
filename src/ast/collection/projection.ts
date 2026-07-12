@@ -3,14 +3,19 @@ import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
 import { SpelEvaluationException } from '../../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../../error/spel-message.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class Projection extends SpelNodeImpl {
   private readonly nullSafe: boolean;
 
   constructor(startPos: number, endPos: number, nullSafe: boolean,
     target: SpelNodeImpl, projection: SpelNodeImpl) {
-    super(startPos, endPos, target, projection);
+    super(NodeType.PROJECTION, startPos, endPos, target, projection);
     this.nullSafe = nullSafe;
+  }
+
+  public isNullSafe(): boolean {
+    return this.nullSafe;
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {
