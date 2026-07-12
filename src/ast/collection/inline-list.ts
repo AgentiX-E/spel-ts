@@ -1,10 +1,11 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class InlineList extends SpelNodeImpl {
   constructor(startPos: number, endPos: number, ...elements: SpelNodeImpl[]) {
-    super(startPos, endPos, ...elements);
+    super(NodeType.INLINE_LIST, startPos, endPos, ...elements);
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {

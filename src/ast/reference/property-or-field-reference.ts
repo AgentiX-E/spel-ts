@@ -3,14 +3,20 @@ import { TypedValue } from '../../typed-value.js';
 import { SpelEvaluationException } from '../../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../../error/spel-message.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class PropertyOrFieldReference extends SpelNodeImpl {
   private readonly name: string;
   public nullSafe = false;
 
   constructor(startPos: number, endPos: number, name: string) {
-    super(startPos, endPos);
+    super(NodeType.PROPERTY_OR_FIELD_REFERENCE, startPos, endPos);
     this.name = name;
+  }
+
+  /** Get the property/field name */
+  public getName(): string {
+    return this.name;
   }
 
   public override isWritable(_state: ExpressionState): boolean {

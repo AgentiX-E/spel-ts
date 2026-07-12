@@ -1,6 +1,7 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 import { SpelEvaluationException } from '../../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../../error/spel-message.js';
 
@@ -8,8 +9,12 @@ export class MethodReference extends SpelNodeImpl {
   private readonly methodName: string;
 
   constructor(startPos: number, endPos: number, methodName: string, ...args: SpelNodeImpl[]) {
-    super(startPos, endPos, ...args);
+    super(NodeType.METHOD_REFERENCE, startPos, endPos, ...args);
     this.methodName = methodName;
+  }
+
+  public getMethodName(): string {
+    return this.methodName;
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {

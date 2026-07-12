@@ -2,22 +2,31 @@ import type { ExpressionState } from '../expression-state.js';
 import type { TypedValue } from '../typed-value.js';
 import { SpelEvaluationException } from '../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
+import { NodeType } from '../language/node-type.js';
 
 export abstract class SpelNodeImpl {
   protected children: SpelNodeImpl[];
 
   constructor(
+    nodeType: NodeType,
     startPos: number,
     endPos: number,
     ...children: SpelNodeImpl[]
   ) {
+    this.nodeType = nodeType;
     this.startPos = startPos;
     this.endPos = endPos;
     this.children = children;
   }
 
+  public readonly nodeType: NodeType;
   public readonly startPos: number;
   public readonly endPos: number;
+
+  /** Get the canonical node type for this AST node */
+  public getNodeType(): NodeType {
+    return this.nodeType;
+  }
 
   public getValue(state: ExpressionState): TypedValue {
     try {
@@ -68,12 +77,32 @@ export abstract class SpelNodeImpl {
     return this.children.length;
   }
 
+  /** Check if any direct child is of the given node type */
+  public hasChildOfType(type: NodeType): boolean {
+    return this.children.some(c => c.nodeType === type);
+  }
+
+  /** Get all direct children of the given node type */
+  public getChildrenOfType(type: NodeType): SpelNodeImpl[] {
+    return this.children.filter(c => c.nodeType === type);
+  }
+
   public abstract toStringAST(): string;
 }
 
 export abstract class Literal extends SpelNodeImpl {
-  constructor(startPos: number, endPos: number, protected readonly literalValue: string) {
-    super(startPos, endPos);
+  constructor(
+    nodeType: NodeType,
+    startPos: number,
+    endPos: number,
+    protected readonly literalValue: string,
+  ) {
+    super(nodeType, startPos, endPos);
+  }
+
+  /** Get the raw literal value string representation */
+  public getLiteralValue(): string {
+    return this.literalValue;
   }
 
   public abstract override getValueInternal(state: ExpressionState): TypedValue;
@@ -83,9 +112,20 @@ export abstract class Literal extends SpelNodeImpl {
 export abstract class Operator extends SpelNodeImpl {
   protected readonly operatorName: string;
 
-  constructor(operatorName: string, startPos: number, endPos: number, ...operands: SpelNodeImpl[]) {
-    super(startPos, endPos, ...operands);
+  constructor(
+    nodeType: NodeType,
+    operatorName: string,
+    startPos: number,
+    endPos: number,
+    ...operands: SpelNodeImpl[]
+  ) {
+    super(nodeType, startPos, endPos, ...operands);
     this.operatorName = operatorName;
+  }
+
+  /** Get the operator symbol/name (e.g., '+', '==', 'and') */
+  public getOperatorName(): string {
+    return this.operatorName;
   }
 
   public toStringAST(): string {

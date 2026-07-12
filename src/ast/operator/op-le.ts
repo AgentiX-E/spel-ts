@@ -1,10 +1,11 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Operator } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class OpLE extends Operator {
   constructor(operatorName: string, startPos: number, endPos: number, ...operands: import('../spel-node.js').SpelNodeImpl[]) {
-    super(operatorName, startPos, endPos, ...operands);
+    super(NodeType.OP_LE, operatorName, startPos, endPos, ...operands);
   }
 
   public override getValueInternal(state: ExpressionState): TypedValue {

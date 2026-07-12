@@ -1,12 +1,13 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class Identifier extends SpelNodeImpl {
   private readonly name: string;
 
   constructor(startPos: number, endPos: number, name: string) {
-    super(startPos, endPos);
+    super(NodeType.IDENTIFIER, startPos, endPos);
     this.name = name;
   }
 

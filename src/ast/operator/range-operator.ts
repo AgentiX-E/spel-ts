@@ -1,6 +1,7 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 /**
  * Range operator `..` — parallels Spring OpRange
@@ -9,7 +10,7 @@ import { SpelNodeImpl } from '../spel-node.js';
  */
 export class RangeOperator extends SpelNodeImpl {
   constructor(startPos: number, endPos: number, left: SpelNodeImpl, right: SpelNodeImpl) {
-    super(startPos, endPos, left, right);
+    super(NodeType.RANGE_OPERATOR, startPos, endPos, left, right);
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {

@@ -9,6 +9,7 @@ import {
   StandardTypeLocator,
   DefaultBeanResolver,
   SpelMessage,
+  NodeType,
 } from '../src/index.js';
 import { OpInc } from '../src/ast/operator/op-inc.js';
 import { OpDec } from '../src/ast/operator/op-dec.js';
@@ -74,7 +75,7 @@ describe('Coverage: SpelNodeImpl base class', () => {
 
   it('getValue wraps unknown errors in SpelEvaluationException', () => {
     class BrokenNode extends SpelNodeImpl {
-      constructor() { super(0, 1); }
+      constructor() { super(NodeType.VARIABLE_REFERENCE, 0, 1); }
       toStringAST(): string { return 'BROKEN'; }
       getValueInternal(): TypedValue {
         throw new Error('unexpected crash');

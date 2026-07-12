@@ -1,12 +1,23 @@
 import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
-import { SpelNodeImpl } from '../spel-node.js';
 import { SpelEvaluationException } from '../../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../../error/spel-message.js';
+import { SpelNodeImpl } from '../spel-node.js';
+import { NodeType } from '../../language/node-type.js';
 
 export class Indexer extends SpelNodeImpl {
   constructor(startPos: number, endPos: number, target: SpelNodeImpl, index: SpelNodeImpl) {
-    super(startPos, endPos, target, index);
+    super(NodeType.INDEXER, startPos, endPos, target, index);
+  }
+
+  /** Get the target node being indexed */
+  public getTarget(): SpelNodeImpl {
+    return this.children[0]!;
+  }
+
+  /** Get the index/key node */
+  public getIndex(): SpelNodeImpl {
+    return this.children[1]!;
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {
@@ -41,9 +52,10 @@ export class Indexer extends SpelNodeImpl {
     if (Array.isArray(target)) {
       const idx = Number(index);
       if (idx >= 0 && idx < target.length) {
-        target[idx] = newValue;
+        (target as unknown[])[idx] = newValue;
+        return;
       }
-      return;
+      throw new SpelEvaluationException(this.startPos, SpelMessage.INDEX_OUT_OF_BOUNDS, String(idx));
     }
 
     if (target instanceof Map) {
@@ -53,10 +65,13 @@ export class Indexer extends SpelNodeImpl {
 
     if (typeof target === 'object' && target !== null) {
       (target as Record<string, unknown>)[String(index)] = newValue;
+      return;
     }
+
+    throw new SpelEvaluationException(this.startPos, SpelMessage.INDEXING_NOT_SUPPORTED_FOR_TYPE, typeof target);
   }
 
   public toStringAST(): string {
-    return `${this.children[0]!.toStringAST()}[${this.children[1]!.toStringAST()}]`;
+    return this.getTarget().toStringAST() + '[' + this.getIndex().toStringAST() + ']';
   }
 }
