@@ -107,7 +107,8 @@ export class SpelDiagnosticEngine {
     const selfCompPattern = /#(\w+)\s*(==|!=|eq|ne)\s*#\1/g;
     let scMatch: RegExpExecArray | null;
     while ((scMatch = selfCompPattern.exec(expression)) !== null) {
-      const isNeq = scMatch[2] === '!=' || scMatch[2].toLowerCase() === 'ne';
+      const op = scMatch[2] ?? '';
+      const isNeq = op === '!=' || op.toLowerCase() === 'ne';
       diagnostics.push({
         severity: DiagnosticSeverity.WARNING,
         message: isNeq
