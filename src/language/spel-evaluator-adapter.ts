@@ -7,7 +7,7 @@ import type { FormatOptions } from './spel-formatter.js';
 import { SpelExpressionParser } from '../spel-expression-parser.js';
 import { SpelParseException } from '../error/spel-parse-exception.js';
 import { StandardEvaluationContext } from '../standard-evaluation-context.js';
-import { SpelReferenceExtractor } from './reference-extractor.js';
+import { SpelReferenceExtractor, SpelReferenceKind } from './reference-extractor.js';
 import { SpelDiagnosticEngine } from './diagnostic-engine.js';
 import { SpelCompletionEngine } from './completion-engine.js';
 import { SpelFormatter } from './spel-formatter.js';
@@ -57,17 +57,18 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
     const refs = SpelReferenceExtractor.extract(expression);
     const missingRefs = refs.filter(ref => {
       switch (ref.kind) {
-        case 'variable':
+        case SpelReferenceKind.VARIABLE:
           return ref.name !== 'root' && ref.name !== 'this' &&
-            !(ref.name in (contextSchema.variables ?? {}));
-        case 'root_property':
-          return contextSchema.root ? !(ref.name in (contextSchema.root.fields ?? {})) : false;
-        case 'bean': case 'bean_factory':
-          return !(ref.name in (contextSchema.beans ?? {}));
-        case 'type':
-          return !(ref.name in (contextSchema.types ?? {}));
-        case 'function':
-          return !(ref.name in (contextSchema.functions ?? {}));
+            !(ref.name in contextSchema.variables);
+        case SpelReferenceKind.ROOT_PROPERTY:
+          return contextSchema.root ? !(ref.name in contextSchema.root.fields) : false;
+        case SpelReferenceKind.BEAN:
+        case SpelReferenceKind.BEAN_FACTORY:
+          return !(ref.name in contextSchema.beans);
+        case SpelReferenceKind.TYPE:
+          return !(ref.name in contextSchema.types);
+        case SpelReferenceKind.FUNCTION:
+          return !(ref.name in contextSchema.functions);
         default: return false;
       }
     });
@@ -86,16 +87,18 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
   static #extractContextSchema(ctx: StandardEvaluationContext): ContextSchema | null {
     try {
       const schema: ContextSchema = { root: null, variables: {}, beans: {}, types: {}, functions: {} };
-      const rootObj = (ctx as unknown as { getRootObject?: () => { getValue?: () => unknown } }).getRootObject?.()?.getValue?.();
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      const rootObj = (ctx as unknown as { getRootObject?: () => { getValue?: () => unknown; }; }).getRootObject?.()?.getValue?.();
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (rootObj && typeof rootObj === 'object' && rootObj !== null) {
-        const fields: Record<string, { type: string }> = {};
+        const fields: Record<string, { type: string; }> = {};
         for (const key of Object.keys(rootObj)) {
           fields[key] = { type: typeof (rootObj as Record<string, unknown>)[key] };
         }
         schema.root = {
           name: 'root',
-          type: (rootObj as { constructor?: { name?: string } }).constructor?.name ?? 'object',
-          fields: fields as Record<string, { type: 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'map' }>,
+          type: (rootObj as { constructor?: { name?: string; }; }).constructor?.name ?? 'object',
+          fields: fields as Record<string, { type: 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'map'; }>,
           methods: {},
         };
       }

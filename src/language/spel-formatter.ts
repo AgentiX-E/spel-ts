@@ -15,6 +15,7 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
   maxLineWidth: 120,
 };
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class SpelFormatter {
   static format(expression: string, options?: FormatOptions): string {
     const opts = { ...DEFAULT_OPTIONS, ...options };
@@ -35,7 +36,7 @@ export class SpelFormatter {
     let inString: string | null = null;
     let result = '';
     for (let i = 0; i < expression.length; i++) {
-      const ch = expression[i]!;
+      const ch = expression[i] ?? '';
       const prev = result[result.length - 1];
       if ((ch === "'" || ch === '"') && (i === 0 || expression[i - 1] !== '\\')) {
         if (inString === null) { inString = ch; }

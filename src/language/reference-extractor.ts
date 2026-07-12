@@ -26,6 +26,7 @@ export interface SpelReference {
   nodeType: NodeType;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class SpelReferenceExtractor {
   static extract(expression: string): SpelReference[] {
     try {
@@ -45,8 +46,9 @@ export class SpelReferenceExtractor {
           case NodeType.VARIABLE_REFERENCE: {
             const varRef = node as unknown as VariableReference;
             const name = typeof varRef.getVariableName === 'function' ? varRef.getVariableName() : '';
+            const parent = ancestors[ancestors.length - 1];
             const isFunction = ancestors.length > 0 &&
-              ancestors[ancestors.length - 1]!.nodeType === NodeType.METHOD_REFERENCE;
+              parent?.nodeType === NodeType.METHOD_REFERENCE;
             refs.push({
               kind: isFunction ? SpelReferenceKind.FUNCTION : SpelReferenceKind.VARIABLE,
               name, path: [name],
@@ -98,6 +100,7 @@ export class SpelReferenceExtractor {
     return refs;
   }
 
+  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   static #extractFallback(expression: string): SpelReference[] {
     const refs: SpelReference[] = [];
     const varRegex = /#(\w+(?:\.\w+)*)/g;
@@ -136,4 +139,5 @@ export class SpelReferenceExtractor {
     }
     return refs;
   }
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 }

@@ -34,7 +34,7 @@ export interface SpelEvaluator {
    * Evaluate an expression with given runtime context.
    * Optional — used for semantic validation and test evaluation.
    */
-  evaluate?(expression: string, context: Record<string, unknown>): unknown | Promise<unknown>;
+  evaluate?(expression: string, context: Record<string, unknown>): unknown;
 
   /**
    * Extract all structured references from an expression

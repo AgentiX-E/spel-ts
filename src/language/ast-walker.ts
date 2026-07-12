@@ -28,7 +28,7 @@ export interface AstVisitor {
    * @param ancestors Path from root to parent (current node NOT included)
    * @returns `false` to skip traversing this node's children, otherwise continue
    */
-  enterNode?: (node: SpelNodeImpl, ancestors: SpelNodeImpl[]) => boolean | void;
+  enterNode?: (node: SpelNodeImpl, ancestors: SpelNodeImpl[]) => boolean | undefined;
 
   /**
    * Called when leaving a node (post-order).
@@ -45,6 +45,7 @@ export interface AstVisitor {
  * Designed to be the single traversal utility used by editors,
  * validators, formatters, and code generators.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AstWalker {
   /**
    * Depth-first traversal of the AST.
@@ -109,7 +110,7 @@ export class AstWalker {
    */
   static findNodeAt(root: SpelNodeImpl, position: number): SpelNodeImpl | null {
     const path = AstWalker.findNodePath(root, position);
-    return path.length > 0 ? path[path.length - 1]! : null;
+    return path.length > 0 ? (path[path.length - 1] ?? null) : null;
   }
 
   /**

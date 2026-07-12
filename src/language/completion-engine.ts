@@ -66,6 +66,7 @@ const STATIC_COMPLETIONS: CompletionItem[] = [
  * When a ContextSchema is available, suggestions include variable names,
  * property names, method names, bean names, and type names.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class SpelCompletionEngine {
   /**
    * Get completion suggestions at a given cursor position.
@@ -118,12 +119,12 @@ export class SpelCompletionEngine {
     _expression: string,
     _position: number,
     contextSchema: ContextSchema,
-    prefix: string = '',
+    prefix = '',
   ): CompletionItem[] {
     const items: CompletionItem[] = [];
 
     // Variables from context schema
-    for (const [name, schema] of Object.entries(contextSchema.variables ?? {})) {
+    for (const [name, schema] of Object.entries(contextSchema.variables)) {
       const label = '#' + name;
       if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
         items.push({
@@ -138,12 +139,12 @@ export class SpelCompletionEngine {
 
     // Root object fields
     if (contextSchema.root) {
-      for (const [name, schema] of Object.entries(contextSchema.root.fields ?? {})) {
+      for (const [name, schema] of Object.entries(contextSchema.root.fields)) {
         if (SpelCompletionEngine.#matchesPrefix(name, prefix)) {
           items.push({
             label: name,
             kind: CompletionKind.PROPERTY,
-            detail: schema.type ? `Field (${schema.type})` : 'Field',
+            detail: `Field (${schema.type})`,
             insertText: name,
             sortPriority: 90,
           });
@@ -151,7 +152,7 @@ export class SpelCompletionEngine {
       }
 
       // Root object methods
-      for (const [name, schema] of Object.entries(contextSchema.root.methods ?? {})) {
+      for (const [name, schema] of Object.entries(contextSchema.root.methods)) {
         if (SpelCompletionEngine.#matchesPrefix(name, prefix)) {
           items.push({
             label: name + '()',
@@ -165,7 +166,7 @@ export class SpelCompletionEngine {
     }
 
     // Registered functions
-    for (const [name, schema] of Object.entries(contextSchema.functions ?? {})) {
+    for (const [name, schema] of Object.entries(contextSchema.functions)) {
       const label = '#' + name;
       if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
         items.push({
@@ -179,7 +180,7 @@ export class SpelCompletionEngine {
     }
 
     // Registered beans
-    for (const [name, schema] of Object.entries(contextSchema.beans ?? {})) {
+    for (const [name, schema] of Object.entries(contextSchema.beans)) {
       const label = '@' + name;
       if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
         items.push({
@@ -193,7 +194,7 @@ export class SpelCompletionEngine {
     }
 
     // Registered types
-    for (const [name, schema] of Object.entries(contextSchema.types ?? {})) {
+    for (const [name, schema] of Object.entries(contextSchema.types)) {
       const label = 'T(' + name + ')';
       if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
         items.push({
@@ -216,7 +217,7 @@ export class SpelCompletionEngine {
    */
   static #getPrefixAt(expression: string, position: number): string {
     const before = expression.substring(0, position);
-    const match = before.match(/(#|@|T\()?[\w.]*$/);
+    const match = /(#|@|T\()?[\w.]*$/.exec(before);
     return match ? match[0] : '';
   }
 

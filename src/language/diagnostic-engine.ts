@@ -3,7 +3,7 @@ import type { SpelReference } from './reference-extractor.js';
 import type { ContextSchema } from '../types/context-schema.js';
 import { SpelExpressionParser } from '../spel-expression-parser.js';
 import { SpelParseException } from '../error/spel-parse-exception.js';
-import { SpelReferenceExtractor } from './reference-extractor.js';
+import { SpelReferenceExtractor, SpelReferenceKind } from './reference-extractor.js';
 
 /** Severity level for diagnostics */
 export enum DiagnosticSeverity {
@@ -33,12 +33,12 @@ export interface ContextValidationResult {
   valid: boolean;
   diagnostics: SpelDiagnostic[];
   missingReferences: SpelReference[];
-  typeMismatches: Array<{
+  typeMismatches: {
     referenceName: string;
     expectedType: string;
     actualUsage: string;
     position: number;
-  }>;
+  }[];
 }
 
 /**
@@ -50,6 +50,7 @@ export interface ContextValidationResult {
  *   3. Context check — validates references against a ContextSchema
  *   4. Type check — detects operand type mismatches
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class SpelDiagnosticEngine {
   /**
    * Check syntax validity of an expression.
@@ -106,7 +107,7 @@ export class SpelDiagnosticEngine {
     const selfCompPattern = /#(\w+)\s*(==|!=|eq|ne)\s*#\1/g;
     let scMatch: RegExpExecArray | null;
     while ((scMatch = selfCompPattern.exec(expression)) !== null) {
-      const isNeq = scMatch[2] === '!=' || scMatch[2]!.toLowerCase() === 'ne';
+      const isNeq = scMatch[2] === '!=' || scMatch[2].toLowerCase() === 'ne';
       diagnostics.push({
         severity: DiagnosticSeverity.WARNING,
         message: isNeq
@@ -158,12 +159,12 @@ export class SpelDiagnosticEngine {
     const missingRefs: SpelReference[] = [];
 
     for (const ref of refs) {
+       
       switch (ref.kind) {
-        case 'variable': {
+        case SpelReferenceKind.VARIABLE: {
           // Check if variable exists in schema
           if (ref.name !== 'root' && ref.name !== 'this') {
-            const hasVariable = contextSchema.variables &&
-              ref.name in contextSchema.variables;
+            const hasVariable = ref.name in contextSchema.variables;
             if (!hasVariable) {
               missingRefs.push(ref);
               diagnostics.push({
@@ -178,10 +179,10 @@ export class SpelDiagnosticEngine {
           }
           break;
         }
-        case 'root_property': {
+        case SpelReferenceKind.ROOT_PROPERTY: {
           // Check if property exists on root object
           if (contextSchema.root) {
-            const hasField = ref.name in (contextSchema.root.fields || {});
+            const hasField = ref.name in contextSchema.root.fields;
             if (!hasField) {
               missingRefs.push(ref);
               diagnostics.push({
@@ -196,10 +197,9 @@ export class SpelDiagnosticEngine {
           }
           break;
         }
-        case 'bean':
-        case 'bean_factory': {
-          const hasBean = contextSchema.beans &&
-            ref.name in contextSchema.beans;
+        case SpelReferenceKind.BEAN:
+        case SpelReferenceKind.BEAN_FACTORY: {
+          const hasBean = ref.name in contextSchema.beans;
           if (!hasBean) {
             missingRefs.push(ref);
             diagnostics.push({
@@ -213,9 +213,8 @@ export class SpelDiagnosticEngine {
           }
           break;
         }
-        case 'type': {
-          const hasType = contextSchema.types &&
-            ref.name in contextSchema.types;
+        case SpelReferenceKind.TYPE: {
+          const hasType = ref.name in contextSchema.types;
           if (!hasType) {
             missingRefs.push(ref);
             diagnostics.push({
@@ -229,9 +228,8 @@ export class SpelDiagnosticEngine {
           }
           break;
         }
-        case 'function': {
-          const hasFunc = contextSchema.functions &&
-            ref.name in contextSchema.functions;
+        case SpelReferenceKind.FUNCTION: {
+          const hasFunc = ref.name in contextSchema.functions;
           if (!hasFunc) {
             missingRefs.push(ref);
             diagnostics.push({
@@ -293,7 +291,7 @@ export class SpelDiagnosticEngine {
     try {
       const parser = new SpelExpressionParser();
       const expr = parser.parseExpression(expression);
-      const ast = (expr as { getAST?: () => SpelNodeImpl }).getAST?.() ?? null;
+      const ast = (expr as { getAST?: () => SpelNodeImpl; }).getAST?.() ?? null;
 
       // Run semantic checks on valid expression
       diagnostics.push(...SpelDiagnosticEngine.checkSemantics(expression));

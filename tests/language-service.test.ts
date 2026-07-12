@@ -138,7 +138,7 @@ describe('AST Node nodeType + getters', () => {
 
   it('PropertyOrFieldReference has correct nodeType and getName', () => {
     const ctx = new StandardEvaluationContext({ amount: 100 });
-    const expr = parser.parseExpression('amount', { getContextSchema: () => null, lookupVariable: () => new TypedValue({ amount: 100 }), getPropertyAccessors: () => [], getMethodResolvers: () => [], getTypeLocator: () => ({ findType: () => { throw new Error(); } }), getBeanResolver: () => ({ resolve: () => { throw new Error(); } }), getTypeConverter: () => ({ convertValue: (v: unknown) => v, canConvert: () => false }), getRootObject: () => new TypedValue({ amount: 100 }), variables: new Map(), functions: new Map() } as unknown as import('../src/evaluation-context/evaluation-context.js').EvaluationContext);
+    const expr = parser.parseExpression('amount', { getContextSchema: () => null, lookupVariable: () => new TypedValue({ amount: 100 }), getPropertyAccessors: () => [], getMethodResolvers: () => [], getTypeLocator: () => ({ findType: () => { throw new Error(); } }), getBeanResolver: () => ({ resolve: () => { throw new Error(); } }), getTypeConverter: () => ({ convertValue: (v: unknown) => v, canConvert: () => false }), getRootObject: () => new TypedValue({ amount: 100 }), variables: new Map(), functions: new Map() });
     // Just verify the AST structure from parseRaw
     const ast = parser.parseRaw('amount');
     // For a simple identifier, it might be parsed as an Identifier
@@ -160,7 +160,7 @@ describe('AST Node nodeType + getters', () => {
   it('Operator has getOperatorName', () => {
     const ast = getNode('1 + 2');
     expect(ast.nodeType).toBe(NodeType.OP_PLUS);
-    const op = ast as unknown as { getOperatorName?: () => string };
+    const op = ast as unknown as { getOperatorName?: () => string; };
     if (typeof op.getOperatorName === 'function') {
       expect(op.getOperatorName()).toBe('+');
     }
