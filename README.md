@@ -77,7 +77,7 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 
 ## API Reference
 
-Full API documentation is available at: https://agentix-e.github.io/spel-ts/
+Full API documentation is available at: https://AgentiX-E.github.io/spel-ts/
 
 ### Core Classes
 
@@ -102,8 +102,8 @@ import {
 
 | Metric | Value |
 |--------|-------|
-| Tests | 910+ passing |
-| Coverage | 96%+ statements / 95%+ branches |
+| Tests | 976 passing |
+| Coverage | 92.45% statements / 91.85% branches |
 | TypeScript | 5.x strict mode |
 | Bundles | ESM + CJS |
 | Dependencies | 0 runtime dependencies |
