@@ -27,12 +27,20 @@ export class PropertyOrFieldReference extends SpelNodeImpl {
     const context = state.getEvaluationContext();
     for (const accessor of context.getPropertyAccessors()) {
       const rootObj = state.getThis().getValue();
-      if (rootObj !== null && rootObj !== undefined && accessor.canWrite(context, rootObj, this.name)) {
+      if (
+        rootObj !== null &&
+        rootObj !== undefined &&
+        accessor.canWrite(context, rootObj, this.name)
+      ) {
         accessor.write(context, rootObj, this.name, newValue);
         return;
       }
     }
-    throw new SpelEvaluationException(this.startPos, SpelMessage.PROPERTY_OR_FIELD_NOT_WRITABLE, this.name);
+    throw new SpelEvaluationException(
+      this.startPos,
+      SpelMessage.PROPERTY_OR_FIELD_NOT_WRITABLE,
+      this.name,
+    );
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {
@@ -41,7 +49,11 @@ export class PropertyOrFieldReference extends SpelNodeImpl {
 
     if (target === null || target === undefined) {
       if (this.nullSafe) return TypedValue.NULL;
-      throw new SpelEvaluationException(this.startPos, SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL, this.name);
+      throw new SpelEvaluationException(
+        this.startPos,
+        SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL,
+        this.name,
+      );
     }
 
     for (const accessor of context.getPropertyAccessors()) {
@@ -50,7 +62,11 @@ export class PropertyOrFieldReference extends SpelNodeImpl {
       }
     }
 
-    throw new SpelEvaluationException(this.startPos, SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE, this.name);
+    throw new SpelEvaluationException(
+      this.startPos,
+      SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE,
+      this.name,
+    );
   }
 
   public toStringAST(): string {

@@ -27,6 +27,10 @@ import {
   NullLiteral,
   BooleanLiteral,
   StringLiteral,
+  IntLiteral,
+  FloatLiteral,
+  LongLiteral,
+  RealLiteral,
   VariableReference,
   PropertyOrFieldReference,
   BeanReference,
@@ -44,22 +48,30 @@ import {
 describe('NodeType', () => {
   it('has all literal node types', () => {
     const literals = [
-      NodeType.NULL_LITERAL, NodeType.BOOLEAN_LITERAL,
-      NodeType.INT_LITERAL, NodeType.LONG_LITERAL,
-      NodeType.REAL_LITERAL, NodeType.FLOAT_LITERAL,
+      NodeType.NULL_LITERAL,
+      NodeType.BOOLEAN_LITERAL,
+      NodeType.INT_LITERAL,
+      NodeType.LONG_LITERAL,
+      NodeType.REAL_LITERAL,
+      NodeType.FLOAT_LITERAL,
       NodeType.STRING_LITERAL,
     ];
-    literals.forEach(t => expect(typeof t).toBe('string'));
+    literals.forEach((t) => expect(typeof t).toBe('string'));
   });
 
   it('has all reference node types', () => {
     const refs = [
-      NodeType.VARIABLE_REFERENCE, NodeType.PROPERTY_OR_FIELD_REFERENCE,
-      NodeType.COMPOUND_EXPRESSION, NodeType.INDEXER,
-      NodeType.METHOD_REFERENCE, NodeType.CONSTRUCTOR_REFERENCE,
-      NodeType.BEAN_REFERENCE, NodeType.TYPE_REFERENCE, NodeType.IDENTIFIER,
+      NodeType.VARIABLE_REFERENCE,
+      NodeType.PROPERTY_OR_FIELD_REFERENCE,
+      NodeType.COMPOUND_EXPRESSION,
+      NodeType.INDEXER,
+      NodeType.METHOD_REFERENCE,
+      NodeType.CONSTRUCTOR_REFERENCE,
+      NodeType.BEAN_REFERENCE,
+      NodeType.TYPE_REFERENCE,
+      NodeType.IDENTIFIER,
     ];
-    refs.forEach(t => expect(typeof t).toBe('string'));
+    refs.forEach((t) => expect(typeof t).toBe('string'));
   });
 
   it('has all control flow node types', () => {
@@ -77,15 +89,29 @@ describe('NodeType', () => {
 
   it('has all 20 operator node types', () => {
     const ops = [
-      NodeType.OP_PLUS, NodeType.OP_MINUS, NodeType.OP_MULTIPLY,
-      NodeType.OP_DIVIDE, NodeType.OP_MODULUS, NodeType.OP_POWER,
-      NodeType.OP_EQ, NodeType.OP_NE, NodeType.OP_LT, NodeType.OP_LE,
-      NodeType.OP_GT, NodeType.OP_GE, NodeType.OP_AND, NodeType.OP_OR,
-      NodeType.OP_NOT, NodeType.OP_MATCHES, NodeType.OP_BETWEEN,
-      NodeType.OP_INSTANCEOF, NodeType.OP_INC, NodeType.OP_DEC,
+      NodeType.OP_PLUS,
+      NodeType.OP_MINUS,
+      NodeType.OP_MULTIPLY,
+      NodeType.OP_DIVIDE,
+      NodeType.OP_MODULUS,
+      NodeType.OP_POWER,
+      NodeType.OP_EQ,
+      NodeType.OP_NE,
+      NodeType.OP_LT,
+      NodeType.OP_LE,
+      NodeType.OP_GT,
+      NodeType.OP_GE,
+      NodeType.OP_AND,
+      NodeType.OP_OR,
+      NodeType.OP_NOT,
+      NodeType.OP_MATCHES,
+      NodeType.OP_BETWEEN,
+      NodeType.OP_INSTANCEOF,
+      NodeType.OP_INC,
+      NodeType.OP_DEC,
       NodeType.RANGE_OPERATOR,
     ];
-    ops.forEach(t => expect(typeof t).toBe('string'));
+    ops.forEach((t) => expect(typeof t).toBe('string'));
   });
 });
 
@@ -118,14 +144,30 @@ describe('AST Node nodeType + getters', () => {
     expect((ast as unknown as StringLiteral).getParsedValue()).toBe('hello');
   });
 
-  it('IntLiteral has correct nodeType', () => {
+  it('IntLiteral has correct nodeType and getParsedValue', () => {
     const ast = getNode('42');
     expect(ast.nodeType).toBe(NodeType.INT_LITERAL);
+    expect(ast instanceof IntLiteral).toBe(true);
+    expect((ast as unknown as IntLiteral).getParsedValue()).toBe(42);
   });
 
-  it('FloatLiteral has correct nodeType', () => {
+  it('FloatLiteral has correct nodeType and getParsedValue', () => {
     const ast = getNode('3.14F');
     expect([NodeType.FLOAT_LITERAL, NodeType.REAL_LITERAL]).toContain(ast.nodeType);
+  });
+
+  it('LongLiteral has correct nodeType and getParsedValue', () => {
+    const ast = getNode('9999999999L');
+    expect(ast.nodeType).toBe(NodeType.LONG_LITERAL);
+    expect(ast instanceof LongLiteral).toBe(true);
+    expect((ast as unknown as LongLiteral).getParsedValue()).toBe(9999999999);
+  });
+
+  it('RealLiteral has correct nodeType and getParsedValue', () => {
+    const ast = getNode('3.14D');
+    expect(ast.nodeType).toBe(NodeType.REAL_LITERAL);
+    expect(ast instanceof RealLiteral).toBe(true);
+    expect((ast as unknown as RealLiteral).getParsedValue()).toBe(3.14);
   });
 
   it('VariableReference has correct nodeType and getVariableName', () => {
@@ -158,7 +200,7 @@ describe('AST Node nodeType + getters', () => {
   it('Operator has getOperatorName', () => {
     const ast = getNode('1 + 2');
     expect(ast.nodeType).toBe(NodeType.OP_PLUS);
-    const op = ast as unknown as { getOperatorName?: () => string; };
+    const op = ast as unknown as { getOperatorName?: () => string };
     if (typeof op.getOperatorName === 'function') {
       expect(op.getOperatorName()).toBe('+');
     }
@@ -177,7 +219,7 @@ describe('AST Node nodeType + getters', () => {
     const expr = parser.parseExpression('#x > 5');
     const refs = expr.getReferences();
     expect(refs.length).toBeGreaterThan(0);
-    expect(refs.some(r => r.name === 'x')).toBe(true);
+    expect(refs.some((r) => r.name === 'x')).toBe(true);
   });
 
   it('hasChildOfType works', () => {
@@ -229,22 +271,19 @@ describe('AstWalker', () => {
     const paths: number[][] = [];
     AstWalker.walk(ast, {
       enterNode(_node, ancestors) {
-        paths.push(ancestors.map(a => a.startPos));
+        paths.push(ancestors.map((a) => a.startPos));
         return true;
       },
     });
     // Root has no ancestors
-    expect(paths[0]!.length).toBe(0);
+    expect(paths[0].length).toBe(0);
     // Children have root as ancestor
-    expect(paths[1]!.length).toBe(1);
+    expect(paths[1].length).toBe(1);
   });
 
   it('collect finds nodes by predicate', () => {
     const ast = parser.parseRaw('1 + 2');
-    const literals = AstWalker.collect(
-      ast,
-      n => n.nodeType === NodeType.INT_LITERAL,
-    );
+    const literals = AstWalker.collect(ast, (n) => n.nodeType === NodeType.INT_LITERAL);
     expect(literals.length).toBe(2);
   });
 
@@ -264,9 +303,14 @@ describe('AstWalker', () => {
     const ast = parser.parseRaw('100 + 200');
     // walk traverses all nodes
     let count = 0;
-    AstWalker.walk(ast, { enterNode() { count++; return true; } });
+    AstWalker.walk(ast, {
+      enterNode() {
+        count++;
+        return true;
+      },
+    });
     expect(count).toBeGreaterThanOrEqual(3); // root + 2 literals
-    
+
     // collect works
     const nums = AstWalker.collectOfType(ast, NodeType.INT_LITERAL);
     expect(nums.length).toBe(2);
@@ -278,7 +322,7 @@ describe('AstWalker', () => {
     // Position 0 should be inside the root
     const path = AstWalker.findNodePath(ast, 0);
     expect(path.length).toBeGreaterThan(0);
-    expect(path[0]!.nodeType).toBe(NodeType.INT_LITERAL);
+    expect(path[0].nodeType).toBe(NodeType.INT_LITERAL);
   });
 
   it('findNodePath walks ancestor chain', () => {
@@ -308,7 +352,7 @@ describe('SpelFormatter', () => {
   });
 
   it('format handles valid expression', () => {
-    const result = SpelFormatter.format('#order.amount > 1000 and #order.status == \'active\'');
+    const result = SpelFormatter.format("#order.amount > 1000 and #order.status == 'active'");
     expect(result.length).toBeGreaterThan(0);
   });
 
@@ -339,22 +383,24 @@ describe('SpelFormatter', () => {
 describe('SpelReferenceExtractor', () => {
   it('extracts variable references', () => {
     const refs = SpelReferenceExtractor.extract('#score > 60');
-    expect(refs.some(r => r.kind === SpelReferenceKind.VARIABLE && r.name === 'score')).toBe(true);
+    expect(refs.some((r) => r.kind === SpelReferenceKind.VARIABLE && r.name === 'score')).toBe(
+      true,
+    );
   });
 
   it('extracts bean references', () => {
     const refs = SpelReferenceExtractor.extract('@myBean.method()');
-    expect(refs.some(r => r.kind === SpelReferenceKind.BEAN && r.name === 'myBean')).toBe(true);
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN && r.name === 'myBean')).toBe(true);
   });
 
   it('extracts type references', () => {
     const refs = SpelReferenceExtractor.extract('T(Math).random()');
-    expect(refs.some(r => r.kind === SpelReferenceKind.TYPE && r.name === 'Math')).toBe(true);
+    expect(refs.some((r) => r.kind === SpelReferenceKind.TYPE && r.name === 'Math')).toBe(true);
   });
 
   it('extracts factory bean references', () => {
     const refs = SpelReferenceExtractor.extract('&@myFactory');
-    expect(refs.some(r => r.kind === SpelReferenceKind.BEAN_FACTORY)).toBe(true);
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN_FACTORY)).toBe(true);
   });
 
   it('handles invalid expressions gracefully', () => {
@@ -367,7 +413,7 @@ describe('SpelReferenceExtractor', () => {
     const ast = parser.parseRaw('#x > 5');
     const refs = SpelReferenceExtractor.extractFromAst(ast);
     expect(refs.length).toBeGreaterThan(0);
-    expect(refs[0]!.kind).toBe(SpelReferenceKind.VARIABLE);
+    expect(refs[0].kind).toBe(SpelReferenceKind.VARIABLE);
   });
 
   it('extracts root properties', () => {
@@ -376,7 +422,7 @@ describe('SpelReferenceExtractor', () => {
     const refs = SpelReferenceExtractor.extractFromAst(ast);
     // Should detect both the variable and the property
     expect(refs.length).toBeGreaterThanOrEqual(1);
-    const varRefs = refs.filter(r => r.kind === SpelReferenceKind.VARIABLE);
+    const varRefs = refs.filter((r) => r.kind === SpelReferenceKind.VARIABLE);
     expect(varRefs.length).toBeGreaterThan(0);
   });
 });
@@ -393,23 +439,23 @@ describe('SpelDiagnosticEngine', () => {
   it('checkSyntax returns error for invalid expression', () => {
     const diags = SpelDiagnosticEngine.checkSyntax('1 +');
     expect(diags.length).toBeGreaterThan(0);
-    expect(diags[0]!.severity).toBe(DiagnosticSeverity.ERROR);
-    expect(diags[0]!.source).toBe(DiagnosticSource.SYNTAX);
+    expect(diags[0].severity).toBe(DiagnosticSeverity.ERROR);
+    expect(diags[0].source).toBe(DiagnosticSource.SYNTAX);
   });
 
   it('checkSemantics detects double negation', () => {
     const diags = SpelDiagnosticEngine.checkSemantics('!!true');
-    expect(diags.some(d => d.code === 'SEMANTIC-DOUBLE_NEGATION')).toBe(true);
+    expect(diags.some((d) => d.code === 'SEMANTIC-DOUBLE_NEGATION')).toBe(true);
   });
 
   it('checkSemantics detects self-comparison', () => {
     const diags = SpelDiagnosticEngine.checkSemantics('#x == #x');
-    expect(diags.some(d => d.code === 'SEMANTIC-SELF_COMPARISON')).toBe(true);
+    expect(diags.some((d) => d.code === 'SEMANTIC-SELF_COMPARISON')).toBe(true);
   });
 
   it('checkSemantics detects tautology', () => {
     const diags = SpelDiagnosticEngine.checkSemantics('true or #x > 5');
-    expect(diags.some(d => d.code === 'SEMANTIC-TAUTOLOGY')).toBe(true);
+    expect(diags.some((d) => d.code === 'SEMANTIC-TAUTOLOGY')).toBe(true);
   });
 
   it('checkContext validates variable references', () => {
@@ -422,7 +468,7 @@ describe('SpelDiagnosticEngine', () => {
     };
     const diags = SpelDiagnosticEngine.checkContext('#x > 5', schema);
     // x is defined, so no errors
-    expect(diags.filter(d => d.code === 'CONTEXT-UNDEFINED_VARIABLE').length).toBe(0);
+    expect(diags.filter((d) => d.code === 'CONTEXT-UNDEFINED_VARIABLE').length).toBe(0);
   });
 
   it('checkContext detects undefined variables', () => {
@@ -434,21 +480,25 @@ describe('SpelDiagnosticEngine', () => {
       functions: {},
     };
     const diags = SpelDiagnosticEngine.checkContext('#undefined > 5', schema);
-    expect(diags.some(d => d.code === 'CONTEXT-UNDEFINED_VARIABLE')).toBe(true);
+    expect(diags.some((d) => d.code === 'CONTEXT-UNDEFINED_VARIABLE')).toBe(true);
   });
 
   it('validate runs all stages', () => {
     const diags = SpelDiagnosticEngine.validate('1 +');
     expect(diags.length).toBeGreaterThan(0);
-    expect(diags[0]!.source).toBe(DiagnosticSource.SYNTAX);
+    expect(diags[0].source).toBe(DiagnosticSource.SYNTAX);
   });
 
   it('validate skips semantic when syntax fails', () => {
     const diags = SpelDiagnosticEngine.validate('1 +', {
-      root: null, variables: {}, beans: {}, types: {}, functions: {},
+      root: null,
+      variables: {},
+      beans: {},
+      types: {},
+      functions: {},
     });
     // Should only have syntax errors, not try semantics
-    const syntaxDiags = diags.filter(d => d.source === DiagnosticSource.SYNTAX);
+    const syntaxDiags = diags.filter((d) => d.source === DiagnosticSource.SYNTAX);
     expect(syntaxDiags.length).toBeGreaterThan(0);
   });
 
@@ -472,9 +522,9 @@ describe('SpelCompletionEngine', () => {
   it('getStaticCompletions returns keyword and operator items', () => {
     const items = SpelCompletionEngine.getStaticCompletions();
     expect(items.length).toBeGreaterThan(20);
-    expect(items.some(i => i.kind === CompletionKind.KEYWORD)).toBe(true);
-    expect(items.some(i => i.kind === CompletionKind.OPERATOR)).toBe(true);
-    expect(items.some(i => i.kind === CompletionKind.SNIPPET)).toBe(true);
+    expect(items.some((i) => i.kind === CompletionKind.KEYWORD)).toBe(true);
+    expect(items.some((i) => i.kind === CompletionKind.OPERATOR)).toBe(true);
+    expect(items.some((i) => i.kind === CompletionKind.SNIPPET)).toBe(true);
   });
 
   it('getCompletions filters by prefix', () => {
@@ -505,15 +555,15 @@ describe('SpelCompletionEngine', () => {
       functions: {},
     };
     const items = SpelCompletionEngine.getContextCompletions('', 0, schema);
-    expect(items.some(i => i.label === '#threshold')).toBe(true);
-    expect(items.some(i => i.label === 'amount')).toBe(true);
-    expect(items.some(i => i.label === '@userService')).toBe(true);
+    expect(items.some((i) => i.label === '#threshold')).toBe(true);
+    expect(items.some((i) => i.label === 'amount')).toBe(true);
+    expect(items.some((i) => i.label === '@userService')).toBe(true);
   });
 
   it('getCompletions sorts by priority descending', () => {
     const items = SpelCompletionEngine.getCompletions('', 0, undefined);
     for (let i = 1; i < items.length; i++) {
-      expect(items[i - 1]!.sortPriority).toBeGreaterThanOrEqual(items[i]!.sortPriority);
+      expect(items[i - 1].sortPriority).toBeGreaterThanOrEqual(items[i].sortPriority);
     }
   });
 });
@@ -566,7 +616,7 @@ describe('SpelEvaluatorAdapter', () => {
     const ctx = new StandardEvaluationContext();
     const adapter = new SpelEvaluatorAdapter(ctx);
     const refs = adapter.extractReferences('#x > 5');
-    expect(refs.some(r => r.name === 'x')).toBe(true);
+    expect(refs.some((r) => r.name === 'x')).toBe(true);
   });
 
   it('validateContext returns ContextValidationResult', () => {

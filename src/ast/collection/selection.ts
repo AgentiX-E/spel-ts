@@ -17,8 +17,14 @@ export class Selection extends SpelNodeImpl {
   private readonly nullSafe: boolean;
   private readonly mode: SelectMode;
 
-  constructor(startPos: number, endPos: number, nullSafe: boolean,
-    target: SpelNodeImpl, predicate: SpelNodeImpl, mode: SelectMode = SelectMode.ALL) {
+  constructor(
+    startPos: number,
+    endPos: number,
+    nullSafe: boolean,
+    target: SpelNodeImpl,
+    predicate: SpelNodeImpl,
+    mode: SelectMode = SelectMode.ALL,
+  ) {
     super(NodeType.SELECTION, startPos, endPos, target, predicate);
     this.nullSafe = nullSafe;
     this.mode = mode;
@@ -100,7 +106,8 @@ export class Selection extends SpelNodeImpl {
   }
 
   public toStringAST(): string {
-    const prefix = this.mode === SelectMode.FIRST ? '.^[' : this.mode === SelectMode.LAST ? '.*[' : '.?[';
+    const prefix =
+      this.mode === SelectMode.FIRST ? '.^[' : this.mode === SelectMode.LAST ? '.*[' : '.?[';
     return `${this.children[0]!.toStringAST()}${prefix}${this.children[1]!.toStringAST()}]`;
   }
 }

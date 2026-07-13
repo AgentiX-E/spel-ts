@@ -4,7 +4,12 @@ import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
 
 export class OpModulus extends Operator {
-  constructor(operatorName: string, startPos: number, endPos: number, ...operands: import('../spel-node.js').SpelNodeImpl[]) {
+  constructor(
+    operatorName: string,
+    startPos: number,
+    endPos: number,
+    ...operands: import('../spel-node.js').SpelNodeImpl[]
+  ) {
     super(NodeType.OP_MODULUS, operatorName, startPos, endPos, ...operands);
   }
 

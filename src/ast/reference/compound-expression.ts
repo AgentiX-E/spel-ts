@@ -18,6 +18,6 @@ export class CompoundExpression extends SpelNodeImpl {
   }
 
   public toStringAST(): string {
-    return this.children.map(c => c.toStringAST()).join('.');
+    return this.children.map((c) => c.toStringAST()).join('.');
   }
 }

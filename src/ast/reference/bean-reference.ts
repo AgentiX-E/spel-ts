@@ -34,9 +34,7 @@ export class BeanReference extends SpelNodeImpl {
       if (e instanceof SpelEvaluationException) {
         throw e;
       }
-      throw new SpelEvaluationException(
-        this.startPos, SpelMessage.BEAN_NOT_FOUND, this.beanName,
-      );
+      throw new SpelEvaluationException(this.startPos, SpelMessage.BEAN_NOT_FOUND, this.beanName);
     }
   }
 

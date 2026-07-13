@@ -16,6 +16,8 @@ export default defineConfig({
       'src/type/type-descriptor.ts',
       'src/type/type-locator.ts',
       'src/bean/bean-resolver.ts',
+      // Interface-only files (no runtime code)
+      'src/language/spel-evaluator.ts',
       // Placeholder nodes (not in current feature scope)
       'src/ast/reference/identifier.ts',
       'src/evaluation-context/standard-type-converter.ts',

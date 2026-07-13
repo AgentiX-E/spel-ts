@@ -164,7 +164,7 @@ describe('LRUCache', () => {
     });
 
     it('should handle generic types', () => {
-      const objCache = new LRUCache<string, { id: number; }>(2);
+      const objCache = new LRUCache<string, { id: number }>(2);
       const obj1 = { id: 1 };
       const obj2 = { id: 2 };
       objCache.set('first', obj1);

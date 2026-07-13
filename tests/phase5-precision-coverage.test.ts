@@ -75,8 +75,12 @@ describe('Coverage: SpelNodeImpl base class', () => {
 
   it('getValue wraps unknown errors in SpelEvaluationException', () => {
     class BrokenNode extends SpelNodeImpl {
-      constructor() { super(NodeType.VARIABLE_REFERENCE, 0, 1); }
-      toStringAST(): string { return 'BROKEN'; }
+      constructor() {
+        super(NodeType.VARIABLE_REFERENCE, 0, 1);
+      }
+      toStringAST(): string {
+        return 'BROKEN';
+      }
       getValueInternal(): TypedValue {
         throw new Error('unexpected crash');
       }
@@ -269,7 +273,14 @@ describe('Coverage: Projection and Selection', () => {
 
   it('selection on Map', () => {
     const ctx = new StandardEvaluationContext();
-    ctx.setVariable('m', new Map([['a', 1], ['b', 2], ['c', 3]]));
+    ctx.setVariable(
+      'm',
+      new Map([
+        ['a', 1],
+        ['b', 2],
+        ['c', 3],
+      ]),
+    );
     const result = parser.parseExpression('#m.?[#this > 1]').getValueWithContext(ctx);
     expect(result).toEqual([2, 3]);
   });
@@ -282,8 +293,7 @@ describe('Coverage: Projection and Selection', () => {
   });
 
   it('Selection toStringAST with FIRST mode', () => {
-    const sel = new Selection(0, 5, false,
-      new NullLiteral(0, 4), new NullLiteral(0, 4));
+    const sel = new Selection(0, 5, false, new NullLiteral(0, 4), new NullLiteral(0, 4));
     expect(sel.toStringAST()).toBe('null.?[null]');
   });
 
@@ -382,7 +392,9 @@ describe('Coverage: TypeLocator uncovered branches', () => {
   it('callStaticMethod via constructor prototype', () => {
     const locator = new StandardTypeLocator();
     class WithProto {
-      greet(name: string): string { return 'Hello ' + name; }
+      greet(name: string): string {
+        return 'Hello ' + name;
+      }
     }
     locator.register('WithProto', WithProto);
     const typeDesc = locator.findType('WithProto');
@@ -502,19 +514,25 @@ describe('Coverage: MethodResolver and type converter', () => {
 
   it('string method: split', () => {
     const ctx = new StandardEvaluationContext({ s: 'a,b,c' });
-    expect(parser.parseExpression("s.split(',')").getValueWithContext(ctx)).toEqual(['a', 'b', 'c']);
+    expect(parser.parseExpression("s.split(',')").getValueWithContext(ctx)).toEqual([
+      'a',
+      'b',
+      'c',
+    ]);
   });
 
   it('string method: replace', () => {
     const ctx = new StandardEvaluationContext({ s: 'hello world' });
-    expect(parser.parseExpression("s.replace('world', 'earth')").getValueWithContext(ctx))
-      .toBe('hello earth');
+    expect(parser.parseExpression("s.replace('world', 'earth')").getValueWithContext(ctx)).toBe(
+      'hello earth',
+    );
   });
 
   it('string method: concat', () => {
     const ctx = new StandardEvaluationContext({ s: 'hello' });
-    expect(parser.parseExpression("s.concat(' world')").getValueWithContext(ctx))
-      .toBe('hello world');
+    expect(parser.parseExpression("s.concat(' world')").getValueWithContext(ctx)).toBe(
+      'hello world',
+    );
   });
 
   it('number method: toFixed', () => {
@@ -624,7 +642,7 @@ describe('Coverage: Indexer', () => {
   it('indexer setValue on object', () => {
     const ctx = new StandardEvaluationContext({ data: { name: 'old' } });
     parser.parseExpression("data['name'] = 'new'").getValueWithContext(ctx);
-    const root = ctx.getRootObject().getValue() as { data: Record<string, string>; };
+    const root = ctx.getRootObject().getValue() as { data: Record<string, string> };
     expect(root.data.name).toBe('new');
   });
 });
@@ -654,7 +672,10 @@ describe('Coverage: Parser error paths', () => {
     class Point {
       readonly x: number;
       readonly y: number;
-      constructor(x: number, y: number) { this.x = x; this.y = y; }
+      constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+      }
     }
     typeLocator.register('Point', Point);
     ctx.setTypeLocator(typeLocator);
@@ -697,7 +718,7 @@ describe('Coverage: StandardEvaluationContext', () => {
     const ctx = new StandardEvaluationContext();
     const count = ctx.getPropertyAccessors().length;
     // Adding a duplicate ReflectivePropertyAccessor
-    ctx.addPropertyAccessor(ctx.getPropertyAccessors()[0]!);
+    ctx.addPropertyAccessor(ctx.getPropertyAccessors()[0]);
     expect(ctx.getPropertyAccessors().length).toBe(count + 1);
   });
 });
@@ -766,7 +787,7 @@ describe('Coverage: SpelExpression full API', () => {
     const ctx = new StandardEvaluationContext({ x: 5 });
     const expr = parser.parseExpression('x');
     expr.setValue(ctx, 99);
-    const root = ctx.getRootObject().getValue() as { x: number; };
+    const root = ctx.getRootObject().getValue() as { x: number };
     expect(root.x).toBe(99);
   });
 
@@ -816,7 +837,6 @@ describe('Coverage: Misc toStringAST branches', () => {
     expect(expr.toStringAST()).toContain('hello');
   });
 });
-
 
 // ==================== FINAL PRECISION HITS ====================
 describe('Coverage: Final precision hits', () => {

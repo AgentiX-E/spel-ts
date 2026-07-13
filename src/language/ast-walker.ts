@@ -69,10 +69,7 @@ export class AstWalker {
    * @param predicate Filter function
    * @returns All matching nodes in depth-first order
    */
-  static collect(
-    root: SpelNodeImpl,
-    predicate: (node: SpelNodeImpl) => boolean,
-  ): SpelNodeImpl[] {
+  static collect(root: SpelNodeImpl, predicate: (node: SpelNodeImpl) => boolean): SpelNodeImpl[] {
     const result: SpelNodeImpl[] = [];
     AstWalker.walk(root, {
       enterNode(node) {
@@ -120,20 +117,13 @@ export class AstWalker {
    * @param nodeType The node type to filter by
    * @returns All matching nodes
    */
-  static collectOfType(
-    root: SpelNodeImpl,
-    nodeType: NodeType,
-  ): SpelNodeImpl[] {
-    return AstWalker.collect(root, node => node.nodeType === nodeType);
+  static collectOfType(root: SpelNodeImpl, nodeType: NodeType): SpelNodeImpl[] {
+    return AstWalker.collect(root, (node) => node.nodeType === nodeType);
   }
 
   // ===== Private helpers =====
 
-  static #walkNode(
-    node: SpelNodeImpl,
-    ancestors: SpelNodeImpl[],
-    visitor: AstVisitor,
-  ): void {
+  static #walkNode(node: SpelNodeImpl, ancestors: SpelNodeImpl[], visitor: AstVisitor): void {
     // Enter
     const shouldContinue = visitor.enterNode?.(node, ancestors);
     if (shouldContinue === false) return;
@@ -153,11 +143,7 @@ export class AstWalker {
     visitor.leaveNode?.(node, ancestors);
   }
 
-  static #findPath(
-    node: SpelNodeImpl,
-    position: number,
-    path: SpelNodeImpl[],
-  ): boolean {
+  static #findPath(node: SpelNodeImpl, position: number, path: SpelNodeImpl[]): boolean {
     // Check if position falls within this node's span
     if (position < node.startPos || position > node.endPos) {
       return false;

@@ -91,7 +91,9 @@ describe('Phase 4: T(Type) Type Reference', () => {
     const ctx = new StandardEvaluationContext();
     const typeLocator = new StandardTypeLocator();
     class MyType {
-      static calc(x: number): number { return x * 2; }
+      static calc(x: number): number {
+        return x * 2;
+      }
     }
     typeLocator.register('MyType', MyType, { calc: MyType.calc });
     ctx.setTypeLocator(typeLocator);
@@ -110,7 +112,7 @@ describe('Phase 4: T(Type) Type Reference', () => {
     ctx.setTypeLocator(typeLocator);
 
     const result = parser.parseExpression('T(MyType)').getValueWithContext(ctx);
-    const typeDesc = result as { isInstance(v: unknown): boolean; };
+    const typeDesc = result as { isInstance(v: unknown): boolean };
     const instance = new MyType(42);
     expect(typeDesc.isInstance(instance)).toBe(true);
     expect(typeDesc.isInstance('notMyType')).toBe(false);
@@ -121,7 +123,9 @@ describe('Phase 4: T(Type) Type Reference', () => {
     const typeLocator = new StandardTypeLocator();
     class Person {
       readonly name: string;
-      constructor(name: string) { this.name = name; }
+      constructor(name: string) {
+        this.name = name;
+      }
     }
     typeLocator.register('Person', Person);
     ctx.setTypeLocator(typeLocator);
@@ -137,7 +141,9 @@ describe('Phase 4: T(Type) Type Reference', () => {
     const ctx = new StandardEvaluationContext();
     const typeLocator = new StandardTypeLocator();
     class Utils {
-      static double(x: number): number { return x * 2; }
+      static double(x: number): number {
+        return x * 2;
+      }
     }
     typeLocator.register('Utils', Utils, { double: Utils.double });
     ctx.setTypeLocator(typeLocator);
@@ -268,7 +274,10 @@ describe('Phase 4: Edge Case Coverage', () => {
 
   it('COV-32: nested inline collections', () => {
     const result = parser.parseExpression('{{1, 2}, {3, 4}}').getValue();
-    expect(result).toEqual([[1, 2], [3, 4]]);
+    expect(result).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
   });
 
   it('COV-33: string with embedded expression', () => {

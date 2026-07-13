@@ -9,7 +9,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        project: ['./tsconfig.json', './tsconfig.test.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -22,7 +22,7 @@ export default tseslint.config(
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
       '@stylistic/member-delimiter-style': ['error', {
         multiline: { delimiter: 'semi', requireLast: true },
-        singleline: { delimiter: 'semi', requireLast: true },
+        singleline: { delimiter: 'semi', requireLast: false },
       }],
       '@typescript-eslint/no-unused-vars': ['error', {
         argsIgnorePattern: '^_',

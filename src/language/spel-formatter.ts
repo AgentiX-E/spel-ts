@@ -39,12 +39,20 @@ export class SpelFormatter {
       const ch = expression[i] ?? '';
       const prev = result[result.length - 1];
       if ((ch === "'" || ch === '"') && (i === 0 || expression[i - 1] !== '\\')) {
-        if (inString === null) { inString = ch; }
-        else if (inString === ch) { inString = null; }
+        if (inString === null) {
+          inString = ch;
+        } else if (inString === ch) {
+          inString = null;
+        }
       }
-      if (inString !== null) { result += ch; continue; }
+      if (inString !== null) {
+        result += ch;
+        continue;
+      }
       if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
-        if (prev && prev !== ' ' && SpelFormatter.#isTokenChar(prev)) { result += ' '; }
+        if (prev && prev !== ' ' && SpelFormatter.#isTokenChar(prev)) {
+          result += ' ';
+        }
         continue;
       }
       result += ch;
@@ -62,10 +70,13 @@ export class SpelFormatter {
   }
 
   static #compactSpaces(expr: string): string {
-    return expr.replace(/\s*([+\-*/%=<>!&|^?:.,;()[\]{}])\s*/g, '$1')
+    return expr
+      .replace(/\s*([+\-*/%=<>!&|^?:.,;()[\]{}])\s*/g, '$1')
       .replace(/\s+(and|or|not|eq|ne|lt|gt|le|ge|mod|matches|between|instanceof|new)\s+/gi, ' $1 ')
       .trim();
   }
 
-  static #isTokenChar(ch: string): boolean { return /[\w#@]/.test(ch); }
+  static #isTokenChar(ch: string): boolean {
+    return /[\w#@]/.test(ch);
+  }
 }

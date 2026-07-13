@@ -4,7 +4,12 @@ import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
 
 export class OpEQ extends Operator {
-  constructor(operatorName: string, startPos: number, endPos: number, ...operands: import('../spel-node.js').SpelNodeImpl[]) {
+  constructor(
+    operatorName: string,
+    startPos: number,
+    endPos: number,
+    ...operands: import('../spel-node.js').SpelNodeImpl[]
+  ) {
     super(NodeType.OP_EQ, operatorName, startPos, endPos, ...operands);
   }
 
@@ -23,8 +28,10 @@ export class OpEQ extends Operator {
     }
 
     // SpEL coercion: boolean ↔ number
-    if ((typeof left === 'boolean' && typeof right === 'number')
-      || (typeof left === 'number' && typeof right === 'boolean')) {
+    if (
+      (typeof left === 'boolean' && typeof right === 'number') ||
+      (typeof left === 'number' && typeof right === 'boolean')
+    ) {
       return new TypedValue(Number(left) === Number(right));
     }
 

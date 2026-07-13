@@ -3,6 +3,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "verbatimModuleSyntax": false,
     "strictFunctionTypes": false
   },

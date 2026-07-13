@@ -63,23 +63,27 @@ export class SpelDiagnosticEngine {
       return []; // Valid
     } catch (e) {
       if (e instanceof SpelParseException) {
-        return [{
-          severity: DiagnosticSeverity.ERROR,
-          message: e.message,
-          from: e.position,
-          to: expression.length,
-          code: 'SYNTAX-' + (String(e.messageCode) || 'UNKNOWN'),
-          source: DiagnosticSource.SYNTAX,
-        }];
+        return [
+          {
+            severity: DiagnosticSeverity.ERROR,
+            message: e.message,
+            from: e.position,
+            to: expression.length,
+            code: 'SYNTAX-' + (String(e.messageCode) || 'UNKNOWN'),
+            source: DiagnosticSource.SYNTAX,
+          },
+        ];
       }
-      return [{
-        severity: DiagnosticSeverity.ERROR,
-        message: (e as Error).message,
-        from: 0,
-        to: expression.length,
-        code: 'SYNTAX-UNKNOWN',
-        source: DiagnosticSource.SYNTAX,
-      }];
+      return [
+        {
+          severity: DiagnosticSeverity.ERROR,
+          message: (e as Error).message,
+          from: 0,
+          to: expression.length,
+          code: 'SYNTAX-UNKNOWN',
+          source: DiagnosticSource.SYNTAX,
+        },
+      ];
     }
   }
 
@@ -151,16 +155,12 @@ export class SpelDiagnosticEngine {
   /**
    * Validate expression references against a ContextSchema.
    */
-  static checkContext(
-    expression: string,
-    contextSchema: ContextSchema,
-  ): SpelDiagnostic[] {
+  static checkContext(expression: string, contextSchema: ContextSchema): SpelDiagnostic[] {
     const refs = SpelReferenceExtractor.extract(expression);
     const diagnostics: SpelDiagnostic[] = [];
     const missingRefs: SpelReference[] = [];
 
     for (const ref of refs) {
-       
       switch (ref.kind) {
         case SpelReferenceKind.VARIABLE: {
           // Check if variable exists in schema
@@ -255,17 +255,18 @@ export class SpelDiagnosticEngine {
   /**
    * Run all validation stages.
    */
-  static validate(
-    expression: string,
-    contextSchema?: ContextSchema,
-  ): SpelDiagnostic[] {
+  static validate(expression: string, contextSchema?: ContextSchema): SpelDiagnostic[] {
     const diagnostics: SpelDiagnostic[] = [];
 
     // Stage 1: Syntax
     diagnostics.push(...SpelDiagnosticEngine.checkSyntax(expression));
 
     // If syntax errors exist, skip further stages (expression can't be parsed)
-    if (diagnostics.some(d => d.source === DiagnosticSource.SYNTAX && d.severity === DiagnosticSeverity.ERROR)) {
+    if (
+      diagnostics.some(
+        (d) => d.source === DiagnosticSource.SYNTAX && d.severity === DiagnosticSeverity.ERROR,
+      )
+    ) {
       return diagnostics;
     }
 
@@ -292,7 +293,7 @@ export class SpelDiagnosticEngine {
     try {
       const parser = new SpelExpressionParser();
       const expr = parser.parseExpression(expression);
-      const ast = (expr as { getAST?: () => SpelNodeImpl; }).getAST?.() ?? null;
+      const ast = (expr as { getAST?: () => SpelNodeImpl }).getAST?.() ?? null;
 
       // Run semantic checks on valid expression
       diagnostics.push(...SpelDiagnosticEngine.checkSemantics(expression));

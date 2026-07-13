@@ -5,7 +5,12 @@
  *   instanceof T(Type), Projection on non-collection
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SpelExpressionParser, StandardEvaluationContext, StandardTypeLocator, DefaultBeanResolver } from '../src/index.js';
+import {
+  SpelExpressionParser,
+  StandardEvaluationContext,
+  StandardTypeLocator,
+  DefaultBeanResolver,
+} from '../src/index.js';
 
 describe('Phase 6: Octal Literals', () => {
   const parser = new SpelExpressionParser();
@@ -58,8 +63,7 @@ describe('Phase 6: Range Operator (..)', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('from', 2);
     ctx.setVariable('to', 6);
-    expect(parser.parseExpression('#from..#to').getValueWithContext(ctx))
-      .toEqual([2, 3, 4, 5, 6]);
+    expect(parser.parseExpression('#from..#to').getValueWithContext(ctx)).toEqual([2, 3, 4, 5, 6]);
   });
 
   it('range toStringAST', () => {
@@ -75,7 +79,9 @@ describe('Phase 6: T(Type).staticMethod() and .staticField', () => {
     const ctx = new StandardEvaluationContext();
     const typeLocator = new StandardTypeLocator();
     class MathUtil {
-      static abs(x: number): number { return Math.abs(x); }
+      static abs(x: number): number {
+        return Math.abs(x);
+      }
     }
     typeLocator.register('MathUtil', MathUtil, { abs: MathUtil.abs });
     ctx.setTypeLocator(typeLocator);
@@ -89,7 +95,9 @@ describe('Phase 6: T(Type).staticMethod() and .staticField', () => {
     const ctx = new StandardEvaluationContext();
     const typeLocator = new StandardTypeLocator();
     class Greeter {
-      static hello(name: string): string { return 'Hi ' + name; }
+      static hello(name: string): string {
+        return 'Hi ' + name;
+      }
     }
     typeLocator.register('Greeter', Greeter, { hello: Greeter.hello });
     ctx.setTypeLocator(typeLocator);
@@ -126,7 +134,9 @@ describe('Phase 6: instanceof T(Type)', () => {
     const typeLocator = new StandardTypeLocator();
     class Animal {
       readonly species: string;
-      constructor(s: string) { this.species = s; }
+      constructor(s: string) {
+        this.species = s;
+      }
     }
     typeLocator.register('Animal', Animal);
     ctx.setTypeLocator(typeLocator);
@@ -134,8 +144,7 @@ describe('Phase 6: instanceof T(Type)', () => {
     const dog = new Animal('dog');
     ctx.setVariable('pet', dog);
 
-    const result = parser.parseExpression('#pet instanceof T(Animal)')
-      .getValueWithContext(ctx);
+    const result = parser.parseExpression('#pet instanceof T(Animal)').getValueWithContext(ctx);
     expect(result).toBe(true);
   });
 
@@ -150,7 +159,8 @@ describe('Phase 6: instanceof T(Type)', () => {
 
     ctx.setVariable('notAnimal', { name: 'Bob' });
 
-    const result = parser.parseExpression('#notAnimal instanceof T(Animal)')
+    const result = parser
+      .parseExpression('#notAnimal instanceof T(Animal)')
       .getValueWithContext(ctx);
     expect(result).toBe(false);
   });
@@ -183,7 +193,9 @@ describe('Phase 6: @bean advanced patterns', () => {
     const ctx = new StandardEvaluationContext();
     const br = new DefaultBeanResolver();
     class Calculator {
-      add(a: number, b: number): number { return a + b; }
+      add(a: number, b: number): number {
+        return a + b;
+      }
     }
     br.register('calc', new Calculator());
     ctx.setBeanResolver(br);
@@ -200,7 +212,9 @@ describe('Phase 6: Method invocations via compound expression', () => {
     const ctx = new StandardEvaluationContext({
       calculator: {
         value: 5,
-        add(n: number): number { return this.value + n; },
+        add(n: number): number {
+          return this.value + n;
+        },
       },
     });
     const result = parser.parseExpression('calculator.add(3)').getValueWithContext(ctx);

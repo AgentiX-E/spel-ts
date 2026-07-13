@@ -24,9 +24,11 @@ export class ReflectiveMethodResolver implements MethodResolver {
         const result = fn.apply(target, args);
         return new TypedValue(result);
       } catch (e) {
-        throw new SpelEvaluationException(-1,
+        throw new SpelEvaluationException(
+          -1,
           SpelMessage.EXCEPTION_DURING_METHOD_INVOCATION,
-          name, (e as Error).message,
+          name,
+          (e as Error).message,
         );
       }
     }
@@ -48,8 +50,10 @@ export class ReflectiveMethodResolver implements MethodResolver {
 
   private tryStringMethod(target: string, name: string, args: unknown[]): TypedValue | null {
     switch (name) {
-      case 'length': return new TypedValue(target.length);
-      case 'isEmpty': return new TypedValue(target.length === 0);
+      case 'length':
+        return new TypedValue(target.length);
+      case 'isEmpty':
+        return new TypedValue(target.length === 0);
       case 'charAt': {
         const idx = args[0] as number;
         return new TypedValue(idx >= 0 && idx < target.length ? target.charAt(idx) : '');
@@ -57,27 +61,41 @@ export class ReflectiveMethodResolver implements MethodResolver {
       case 'substring':
         if (args.length === 1) return new TypedValue(target.substring(args[0] as number));
         return new TypedValue(target.substring(args[0] as number, args[1] as number));
-      case 'contains': return new TypedValue(target.includes(args[0] as string));
-      case 'startsWith': return new TypedValue(target.startsWith(args[0] as string));
-      case 'endsWith': return new TypedValue(target.endsWith(args[0] as string));
-      case 'indexOf': return new TypedValue(target.indexOf(args[0] as string));
-      case 'toLowerCase': return new TypedValue(target.toLowerCase());
-      case 'toUpperCase': return new TypedValue(target.toUpperCase());
-      case 'trim': return new TypedValue(target.trim());
-      case 'split': return new TypedValue(target.split(args[0] as string));
+      case 'contains':
+        return new TypedValue(target.includes(args[0] as string));
+      case 'startsWith':
+        return new TypedValue(target.startsWith(args[0] as string));
+      case 'endsWith':
+        return new TypedValue(target.endsWith(args[0] as string));
+      case 'indexOf':
+        return new TypedValue(target.indexOf(args[0] as string));
+      case 'toLowerCase':
+        return new TypedValue(target.toLowerCase());
+      case 'toUpperCase':
+        return new TypedValue(target.toUpperCase());
+      case 'trim':
+        return new TypedValue(target.trim());
+      case 'split':
+        return new TypedValue(target.split(args[0] as string));
       case 'replace':
         return new TypedValue(target.split(args[0] as string).join(args[1] as string));
-      case 'concat': return new TypedValue(target + String(args[0]));
-      default: return null;
+      case 'concat':
+        return new TypedValue(target + String(args[0]));
+      default:
+        return null;
     }
   }
 
   private tryNumberMethod(target: number, name: string): TypedValue | null {
     switch (name) {
-      case 'toString': return new TypedValue(target.toString());
-      case 'toFixed': return new TypedValue(target.toFixed());
-      case 'toExponential': return new TypedValue(target.toExponential());
-      default: return null;
+      case 'toString':
+        return new TypedValue(target.toString());
+      case 'toFixed':
+        return new TypedValue(target.toFixed());
+      case 'toExponential':
+        return new TypedValue(target.toExponential());
+      default:
+        return null;
     }
   }
 }

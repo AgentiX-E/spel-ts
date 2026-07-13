@@ -64,10 +64,10 @@ import { OpDec } from './ast/operator/op-dec.js';
  * Parallels Spring SpelExpressionParser — public API entry point
  */
 export class SpelExpressionParser {
-  private readonly configuration: SpelParserConfiguration;
-
   constructor(configuration?: SpelParserConfiguration) {
-    this.configuration = configuration ?? SpelParserConfiguration.DEFAULT;
+    // configuration is accepted for Spring API compatibility;
+    // currently unused as all expressions are parsed with defaults.
+    void configuration;
   }
 
   public parseExpression(expressionString: string): SpelExpression {
@@ -254,23 +254,38 @@ export class InternalSpelExpressionParser {
   }
 
   private isRelationalOp(kind: TokenKind): boolean {
-    return kind === TokenKind.EQ || kind === TokenKind.NE
-      || kind === TokenKind.LT || kind === TokenKind.LE
-      || kind === TokenKind.GT || kind === TokenKind.GE
-      || kind === TokenKind.MATCHES || kind === TokenKind.INSTANCEOF;
+    return (
+      kind === TokenKind.EQ ||
+      kind === TokenKind.NE ||
+      kind === TokenKind.LT ||
+      kind === TokenKind.LE ||
+      kind === TokenKind.GT ||
+      kind === TokenKind.GE ||
+      kind === TokenKind.MATCHES ||
+      kind === TokenKind.INSTANCEOF
+    );
   }
 
   private buildRelationalOp(opToken: Token, left: SpelNodeImpl, right: SpelNodeImpl): SpelNodeImpl {
     switch (opToken.kind) {
-      case TokenKind.EQ: return new OpEQ('==', opToken.startPos, right.endPos, left, right);
-      case TokenKind.NE: return new OpNE('!=', opToken.startPos, right.endPos, left, right);
-      case TokenKind.LT: return new OpLT('<', opToken.startPos, right.endPos, left, right);
-      case TokenKind.LE: return new OpLE('<=', opToken.startPos, right.endPos, left, right);
-      case TokenKind.GT: return new OpGT('>', opToken.startPos, right.endPos, left, right);
-      case TokenKind.GE: return new OpGE('>=', opToken.startPos, right.endPos, left, right);
-      case TokenKind.MATCHES: return new OpMatches('matches', opToken.startPos, right.endPos, left, right);
-      case TokenKind.INSTANCEOF: return new OpInstanceof('instanceof', opToken.startPos, right.endPos, left, right);
-      default: throw this.raise(SpelMessage.OODES, TokenKind[opToken.kind]);
+      case TokenKind.EQ:
+        return new OpEQ('==', opToken.startPos, right.endPos, left, right);
+      case TokenKind.NE:
+        return new OpNE('!=', opToken.startPos, right.endPos, left, right);
+      case TokenKind.LT:
+        return new OpLT('<', opToken.startPos, right.endPos, left, right);
+      case TokenKind.LE:
+        return new OpLE('<=', opToken.startPos, right.endPos, left, right);
+      case TokenKind.GT:
+        return new OpGT('>', opToken.startPos, right.endPos, left, right);
+      case TokenKind.GE:
+        return new OpGE('>=', opToken.startPos, right.endPos, left, right);
+      case TokenKind.MATCHES:
+        return new OpMatches('matches', opToken.startPos, right.endPos, left, right);
+      case TokenKind.INSTANCEOF:
+        return new OpInstanceof('instanceof', opToken.startPos, right.endPos, left, right);
+      default:
+        throw this.raise(SpelMessage.OODES, TokenKind[opToken.kind]);
     }
   }
 
@@ -307,17 +322,27 @@ export class InternalSpelExpressionParser {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
       const kind = this.peek().kind;
-      if (kind !== TokenKind.STAR && kind !== TokenKind.SLASH
-        && kind !== TokenKind.PERCENT && kind !== TokenKind.MOD) {
+      if (
+        kind !== TokenKind.STAR &&
+        kind !== TokenKind.SLASH &&
+        kind !== TokenKind.PERCENT &&
+        kind !== TokenKind.MOD
+      ) {
         break;
       }
       const opToken = this.advance();
       const right = this.eatPowerExpression();
 
       switch (opToken.kind) {
-        case TokenKind.STAR: left = new OpMultiply('*', opToken.startPos, right.endPos, left, right); break;
-        case TokenKind.SLASH: left = new OpDivide('/', opToken.startPos, right.endPos, left, right); break;
-        default: left = new OpModulus('%', opToken.startPos, right.endPos, left, right); break;
+        case TokenKind.STAR:
+          left = new OpMultiply('*', opToken.startPos, right.endPos, left, right);
+          break;
+        case TokenKind.SLASH:
+          left = new OpDivide('/', opToken.startPos, right.endPos, left, right);
+          break;
+        default:
+          left = new OpModulus('%', opToken.startPos, right.endPos, left, right);
+          break;
       }
     }
 
@@ -358,8 +383,13 @@ export class InternalSpelExpressionParser {
     if (kind === TokenKind.MINUS) {
       const opToken = this.advance();
       const operand = this.eatUnaryExpression();
-      return new OpMinus('-', opToken.startPos, operand.endPos,
-        new NullLiteral(opToken.startPos, opToken.endPos), operand);
+      return new OpMinus(
+        '-',
+        opToken.startPos,
+        operand.endPos,
+        new NullLiteral(opToken.startPos, opToken.endPos),
+        operand,
+      );
     }
 
     // Prefix: +expr (no-op, just return operand)
@@ -417,13 +447,21 @@ export class InternalSpelExpressionParser {
       }
 
       // Property access: expr.identifier / expr.?identifier
-      if (kind === TokenKind.DOT || kind === TokenKind.SAFE_NAV
-        || kind === TokenKind.SELECTION || kind === TokenKind.PROJECTION
-        || kind === TokenKind.SELECT_FIRST || kind === TokenKind.SELECT_LAST) {
-
+      if (
+        kind === TokenKind.DOT ||
+        kind === TokenKind.SAFE_NAV ||
+        kind === TokenKind.SELECTION ||
+        kind === TokenKind.PROJECTION ||
+        kind === TokenKind.SELECT_FIRST ||
+        kind === TokenKind.SELECT_LAST
+      ) {
         // Handle selection/projection directly as combined tokens (e.g., .?[)
-        if (kind === TokenKind.SELECTION || kind === TokenKind.PROJECTION
-          || kind === TokenKind.SELECT_FIRST || kind === TokenKind.SELECT_LAST) {
+        if (
+          kind === TokenKind.SELECTION ||
+          kind === TokenKind.PROJECTION ||
+          kind === TokenKind.SELECT_FIRST ||
+          kind === TokenKind.SELECT_LAST
+        ) {
           const selToken = this.advance();
           let predicate: SpelNodeImpl;
           if (this.peek().kind !== TokenKind.RBRACKET) {
@@ -436,9 +474,12 @@ export class InternalSpelExpressionParser {
           if (kind === TokenKind.PROJECTION) {
             node = new Projection(selToken.startPos, this.pos, false, node, predicate);
           } else {
-            const mode = kind === TokenKind.SELECT_FIRST ? SelectMode.FIRST
-              : kind === TokenKind.SELECT_LAST ? SelectMode.LAST
-              : SelectMode.ALL;
+            const mode =
+              kind === TokenKind.SELECT_FIRST
+                ? SelectMode.FIRST
+                : kind === TokenKind.SELECT_LAST
+                  ? SelectMode.LAST
+                  : SelectMode.ALL;
             node = new Selection(selToken.startPos, this.pos, false, node, predicate, mode);
           }
           continue;
@@ -450,7 +491,10 @@ export class InternalSpelExpressionParser {
         if (nextToken.kind === TokenKind.IDENTIFIER) {
           this.advance();
           let nextNode: SpelNodeImpl = new PropertyOrFieldReference(
-            nextToken.startPos, nextToken.endPos, nextToken.literal!);
+            nextToken.startPos,
+            nextToken.endPos,
+            nextToken.literal!,
+          );
           if (nullSafe && nextNode instanceof PropertyOrFieldReference) {
             nextNode.nullSafe = true;
           }
@@ -467,8 +511,12 @@ export class InternalSpelExpressionParser {
           continue;
         }
         // .?[ or .![ or .$[ etc. — selection/projection
-        if (nextToken.kind === TokenKind.SELECTION || nextToken.kind === TokenKind.PROJECTION
-          || nextToken.kind === TokenKind.SELECT_FIRST || nextToken.kind === TokenKind.SELECT_LAST) {
+        if (
+          nextToken.kind === TokenKind.SELECTION ||
+          nextToken.kind === TokenKind.PROJECTION ||
+          nextToken.kind === TokenKind.SELECT_FIRST ||
+          nextToken.kind === TokenKind.SELECT_LAST
+        ) {
           const selToken = this.advance();
           // The SELECTION/PROJECTION token already consumed the '.?[' prefix
           // eat predicate up to ']'
@@ -483,9 +531,12 @@ export class InternalSpelExpressionParser {
           if (selToken.kind === TokenKind.PROJECTION) {
             node = new Projection(selToken.startPos, this.pos, false, node, predicate);
           } else {
-            const mode = selToken.kind === TokenKind.SELECT_FIRST ? SelectMode.FIRST
-              : selToken.kind === TokenKind.SELECT_LAST ? SelectMode.LAST
-              : SelectMode.ALL;
+            const mode =
+              selToken.kind === TokenKind.SELECT_FIRST
+                ? SelectMode.FIRST
+                : selToken.kind === TokenKind.SELECT_LAST
+                  ? SelectMode.LAST
+                  : SelectMode.ALL;
             node = new Selection(selToken.startPos, this.pos, false, node, predicate, mode);
           }
           continue;
@@ -641,7 +692,10 @@ export class InternalSpelExpressionParser {
 
     const startPos = startToken.startPos;
     let node: SpelNodeImpl = new PropertyOrFieldReference(
-      startToken.startPos, startToken.endPos, startToken.literal!);
+      startToken.startPos,
+      startToken.endPos,
+      startToken.literal!,
+    );
 
     // Check for method call: name(args)
     if (this.peek().kind === TokenKind.LPAREN) {
@@ -661,7 +715,10 @@ export class InternalSpelExpressionParser {
         if (nextToken.kind === TokenKind.IDENTIFIER) {
           this.advance();
           let nextNode: SpelNodeImpl = new PropertyOrFieldReference(
-            nextToken.startPos, nextToken.endPos, nextToken.literal!);
+            nextToken.startPos,
+            nextToken.endPos,
+            nextToken.literal!,
+          );
           if (nullSafe && nextNode instanceof PropertyOrFieldReference) {
             nextNode.nullSafe = true;
           }
@@ -681,8 +738,12 @@ export class InternalSpelExpressionParser {
         }
 
         // Selection/Projection: .?[predicate] / .![projection]
-        if (nextToken.kind === TokenKind.SELECTION || nextToken.kind === TokenKind.PROJECTION
-          || nextToken.kind === TokenKind.SELECT_FIRST || nextToken.kind === TokenKind.SELECT_LAST) {
+        if (
+          nextToken.kind === TokenKind.SELECTION ||
+          nextToken.kind === TokenKind.PROJECTION ||
+          nextToken.kind === TokenKind.SELECT_FIRST ||
+          nextToken.kind === TokenKind.SELECT_LAST
+        ) {
           const selToken = this.advance();
           this.advance(); // Skip the consumed '['
           // The SELECTION/PROJECTION token already consumed '.?[' — eat predicate up to ']'
@@ -697,9 +758,12 @@ export class InternalSpelExpressionParser {
           if (selToken.kind === TokenKind.PROJECTION) {
             node = new Projection(selToken.startPos, this.pos, false, node, predicate);
           } else {
-            const mode = selToken.kind === TokenKind.SELECT_FIRST ? SelectMode.FIRST
-              : selToken.kind === TokenKind.SELECT_LAST ? SelectMode.LAST
-              : SelectMode.ALL;
+            const mode =
+              selToken.kind === TokenKind.SELECT_FIRST
+                ? SelectMode.FIRST
+                : selToken.kind === TokenKind.SELECT_LAST
+                  ? SelectMode.LAST
+                  : SelectMode.ALL;
             node = new Selection(selToken.startPos, this.pos, false, node, predicate, mode);
           }
           continue;
@@ -775,13 +839,32 @@ export class InternalSpelExpressionParser {
         this.expect(TokenKind.RPAREN);
         // Build: #beanRef.name.method => @bean name accessed via bean resolver then method called
         // For Phase 2, return as compound: beanRef.method(args)
-        const beanRef = new BeanReference(atToken.startPos, nameToken.endPos, nameToken.literal!, isFactoryBean);
-        const methodRef = new MethodReference(methodToken.startPos, this.pos, methodToken.literal!, ...args);
+        const beanRef = new BeanReference(
+          atToken.startPos,
+          nameToken.endPos,
+          nameToken.literal!,
+          isFactoryBean,
+        );
+        const methodRef = new MethodReference(
+          methodToken.startPos,
+          this.pos,
+          methodToken.literal!,
+          ...args,
+        );
         return new CompoundExpression(atToken.startPos, this.pos, beanRef, methodRef);
       }
       // @bean.property
-      const beanRef = new BeanReference(atToken.startPos, nameToken.endPos, nameToken.literal!, isFactoryBean);
-      const propRef = new PropertyOrFieldReference(methodToken.startPos, methodToken.endPos, methodToken.literal!);
+      const beanRef = new BeanReference(
+        atToken.startPos,
+        nameToken.endPos,
+        nameToken.literal!,
+        isFactoryBean,
+      );
+      const propRef = new PropertyOrFieldReference(
+        methodToken.startPos,
+        methodToken.endPos,
+        methodToken.literal!,
+      );
       return new CompoundExpression(atToken.startPos, this.pos, beanRef, propRef);
     }
 

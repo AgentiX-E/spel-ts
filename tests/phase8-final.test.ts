@@ -1,4 +1,3 @@
-
 import { describe, it, expect } from 'vitest';
 import { Token } from '../src/tokenizer/token.js';
 import { TokenKind } from '../src/tokenizer/token-kind.js';
@@ -23,10 +22,15 @@ import { DefaultBeanResolver } from '../src/bean/default-bean-resolver.js';
 // === token.ts keyword branches (43-49) ===
 describe('Phase8: Token keyword branches', () => {
   const keywords = [
-    TokenKind.MOD, TokenKind.EQ, TokenKind.NE,
-    TokenKind.LT, TokenKind.LE, TokenKind.GT, TokenKind.GE,
+    TokenKind.MOD,
+    TokenKind.EQ,
+    TokenKind.NE,
+    TokenKind.LT,
+    TokenKind.LE,
+    TokenKind.GT,
+    TokenKind.GE,
   ];
-  keywords.forEach(k => {
+  keywords.forEach((k) => {
     it(`Token isKeyword for ${TokenKind[k]}`, () => {
       expect(new Token(k, 0, 1).isKeyword()).toBe(true);
     });
@@ -55,7 +59,7 @@ describe('Phase8: Literal toStringAST', () => {
 // === compound-expression.ts lines 8-9 ===
 describe('Phase8: CompoundExpression single child', () => {
   it('single identifier as compound', () => {
-    const ctx = new StandardEvaluationContext({x:42});
+    const ctx = new StandardEvaluationContext({ x: 42 });
     const r = new SpelExpressionParser().parseExpression('x').getValueWithContext(ctx);
     expect(r).toBe(42);
   });
@@ -88,7 +92,7 @@ describe('Phase8: Inc/Dec toStringAST', () => {
 // === spel-node.ts line 92 ===
 describe('Phase8: Operator toStringAST with single child', () => {
   it('Operator toStringAST with single operand', () => {
-    const op = new OpMinus('-', 0, 5, new IntLiteral(0,1,5));
+    const op = new OpMinus('-', 0, 5, new IntLiteral(0, 1, 5));
     expect(op.toStringAST()).toBeDefined();
   });
 });
@@ -97,7 +101,7 @@ describe('Phase8: Operator toStringAST with single child', () => {
 describe('Phase8: Indexer write to map', () => {
   it('indexer setValue on map', () => {
     const ctx = new StandardEvaluationContext();
-    const m = new Map([['k','old']]);
+    const m = new Map([['k', 'old']]);
     ctx.setVariable('m', m);
     new SpelExpressionParser().parseExpression('#m["k"] = "new"').getValueWithContext(ctx);
     expect(m.get('k')).toBe('new');
@@ -115,9 +119,17 @@ describe('Phase8: ReflectivePropertyAccessor specificTargetClasses', () => {
 describe('Phase8: Projection Map iteration', () => {
   it('projection on Map iterates values', () => {
     const ctx = new StandardEvaluationContext();
-    ctx.setVariable('m', new Map([['a',1],['b',2]]));
-    const r = new SpelExpressionParser().parseExpression('#m.![#this * 10]').getValueWithContext(ctx);
-    expect(r).toEqual([10,20]);
+    ctx.setVariable(
+      'm',
+      new Map([
+        ['a', 1],
+        ['b', 2],
+      ]),
+    );
+    const r = new SpelExpressionParser()
+      .parseExpression('#m.![#this * 10]')
+      .getValueWithContext(ctx);
+    expect(r).toEqual([10, 20]);
   });
 });
 
@@ -125,9 +137,18 @@ describe('Phase8: Projection Map iteration', () => {
 describe('Phase8: Selection Map iteration', () => {
   it('selection on Map iterates values', () => {
     const ctx = new StandardEvaluationContext();
-    ctx.setVariable('m', new Map([['a',1],['b',2],['c',3]]));
-    const r = new SpelExpressionParser().parseExpression('#m.?[#this > 1]').getValueWithContext(ctx);
-    expect(r).toEqual([2,3]);
+    ctx.setVariable(
+      'm',
+      new Map([
+        ['a', 1],
+        ['b', 2],
+        ['c', 3],
+      ]),
+    );
+    const r = new SpelExpressionParser()
+      .parseExpression('#m.?[#this > 1]')
+      .getValueWithContext(ctx);
+    expect(r).toEqual([2, 3]);
   });
 });
 
@@ -142,22 +163,46 @@ describe('Phase8: TypeDescriptorAccessor full coverage', () => {
 
   it('read returns NULL for non-existent', () => {
     const a = new TypeDescriptorAccessor();
-    const td = { name:'T', constructor: class{}, staticMethods:{}, staticFields:{} };
+    const td = { name: 'T', constructor: class {}, staticMethods: {}, staticFields: {} };
     expect(a.read({} as any, td, 'missing')).toBeDefined();
   });
 
   it('read returns constructor static method', () => {
     const a = new TypeDescriptorAccessor();
-    class T { static foo(){return 42;} }
-    const td = { name:'T', constructor:T, staticMethods:{}, staticFields:{}, isInstance:()=>true, newInstance:()=>new T(), callStaticMethod:()=>42, getStaticField:()=>null };
+    class T {
+      static foo() {
+        return 42;
+      }
+    }
+    const td = {
+      name: 'T',
+      constructor: T,
+      staticMethods: {},
+      staticFields: {},
+      isInstance: () => true,
+      newInstance: () => new T(),
+      callStaticMethod: () => 42,
+      getStaticField: () => null,
+    };
     const v = a.read({} as any, td, 'foo');
     expect(v.getValue()).toBe(T.foo);
   });
 
   it('read returns constructor property', () => {
     const a = new TypeDescriptorAccessor();
-    class T { static bar = 99; }
-    const td = { name:'T', constructor:T, staticMethods:{}, staticFields:{}, isInstance:()=>true, newInstance:()=>new T(), callStaticMethod:()=>42, getStaticField:()=>null };
+    class T {
+      static bar = 99;
+    }
+    const td = {
+      name: 'T',
+      constructor: T,
+      staticMethods: {},
+      staticFields: {},
+      isInstance: () => true,
+      newInstance: () => new T(),
+      callStaticMethod: () => 42,
+      getStaticField: () => null,
+    };
     const v = a.read({} as any, td, 'bar');
     expect(v.getValue()).toBe(99);
   });
@@ -165,7 +210,16 @@ describe('Phase8: TypeDescriptorAccessor full coverage', () => {
   it('read returns name field', () => {
     const a = new TypeDescriptorAccessor();
     class T {}
-    const td = { name: 'MyType', constructor: T, staticMethods: {}, staticFields: {}, isInstance: () => true, newInstance: () => new T(), callStaticMethod: () => 42, getStaticField: () => null };
+    const td = {
+      name: 'MyType',
+      constructor: T,
+      staticMethods: {},
+      staticFields: {},
+      isInstance: () => true,
+      newInstance: () => new T(),
+      callStaticMethod: () => 42,
+      getStaticField: () => null,
+    };
     // constructor.name takes priority over td.name for property access
     const v = a.read({} as never, td, 'name');
     expect(v.getValue()).toBe('T');
@@ -173,8 +227,17 @@ describe('Phase8: TypeDescriptorAccessor full coverage', () => {
 
   it('canWrite and write', () => {
     const a = new TypeDescriptorAccessor();
-    const sf: Record<string,unknown> = {};
-    const td = { name:'T', constructor:class{}, staticMethods:{}, staticFields:sf, isInstance:()=>true, newInstance:()=>({}), callStaticMethod:()=>42, getStaticField:()=>null };
+    const sf: Record<string, unknown> = {};
+    const td = {
+      name: 'T',
+      constructor: class {},
+      staticMethods: {},
+      staticFields: sf,
+      isInstance: () => true,
+      newInstance: () => ({}),
+      callStaticMethod: () => 42,
+      getStaticField: () => null,
+    };
     expect(a.canWrite({} as any, td, 'k')).toBe(true);
     a.write({} as any, td, 'k', 'v');
     expect(sf.k).toBe('v');
@@ -205,7 +268,11 @@ describe('Phase8: ReflectiveMethodResolver edge', () => {
 
   it('method throws during invocation', () => {
     const r = new ReflectiveMethodResolver();
-    const obj = { explode: () => { throw new Error('BOOM'); } };
+    const obj = {
+      explode: () => {
+        throw new Error('BOOM');
+      },
+    };
     expect(() => r.resolve({} as any, obj, 'explode', [])).toThrow();
   });
 });
@@ -213,13 +280,15 @@ describe('Phase8: ReflectiveMethodResolver edge', () => {
 // === method-reference.ts:39-42,44-45,60-61 ===
 describe('Phase8: MethodReference fallback', () => {
   it('method not found via accessor throws', () => {
-    const ctx = new StandardEvaluationContext({obj:{}});
-    expect(() => new SpelExpressionParser().parseExpression('obj.missing()').getValueWithContext(ctx)).toThrow();
+    const ctx = new StandardEvaluationContext({ obj: {} });
+    expect(() =>
+      new SpelExpressionParser().parseExpression('obj.missing()').getValueWithContext(ctx),
+    ).toThrow();
   });
 
   it('method on object uses accessor fallback', () => {
     const ctx = new StandardEvaluationContext();
-    const obj = { greet: ()=>'hi' };
+    const obj = { greet: () => 'hi' };
     ctx.setRootObject(obj);
     const r = new SpelExpressionParser().parseExpression('greet()').getValueWithContext(ctx);
     expect(r).toBe('hi');
@@ -231,10 +300,19 @@ describe('Phase8: ConstructorReference', () => {
   it('constructor with args', () => {
     const ctx = new StandardEvaluationContext();
     const tl = new StandardTypeLocator();
-    class Point { x:number; y:number; constructor(x:number,y:number){this.x=x;this.y=y;} }
+    class Point {
+      x: number;
+      y: number;
+      constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+      }
+    }
     tl.register('Point', Point);
     ctx.setTypeLocator(tl);
-    const r = new SpelExpressionParser().parseExpression('new Point(1,2)').getValueWithContext(ctx) as Point;
+    const r = new SpelExpressionParser()
+      .parseExpression('new Point(1,2)')
+      .getValueWithContext(ctx) as Point;
     expect(r.x).toBe(1);
     expect(r.y).toBe(2);
   });

@@ -17,7 +17,11 @@ export class ReflectivePropertyAccessor implements PropertyAccessor {
 
   public read(_context: EvaluationContext, target: unknown, name: string): TypedValue {
     if (target === null || target === undefined) {
-      throw new SpelEvaluationException(-1, SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL, name);
+      throw new SpelEvaluationException(
+        -1,
+        SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL,
+        name,
+      );
     }
     const obj = target as Record<string, unknown>;
     if (!(name in obj)) {
@@ -31,7 +35,12 @@ export class ReflectivePropertyAccessor implements PropertyAccessor {
     return typeof target === 'object';
   }
 
-  public write(_context: EvaluationContext, target: unknown, name: string, newValue: unknown): void {
+  public write(
+    _context: EvaluationContext,
+    target: unknown,
+    name: string,
+    newValue: unknown,
+  ): void {
     if (target === null || target === undefined || typeof target !== 'object') {
       throw new SpelEvaluationException(-1, SpelMessage.PROPERTY_OR_FIELD_NOT_WRITABLE, name);
     }

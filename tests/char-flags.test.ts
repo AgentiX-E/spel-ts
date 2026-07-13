@@ -30,13 +30,20 @@ describe('CharFlag', () => {
 
     it('should have no overlapping bits', () => {
       const flags = [
-        CharFlag.LETTER, CharFlag.DIGIT, CharFlag.WHITESPACE,
-        CharFlag.OPERATOR, CharFlag.QUOTE, CharFlag.UNDERSCORE,
-        CharFlag.DOLLAR, CharFlag.DOT, CharFlag.EXPONENT, CharFlag.SIGN,
+        CharFlag.LETTER,
+        CharFlag.DIGIT,
+        CharFlag.WHITESPACE,
+        CharFlag.OPERATOR,
+        CharFlag.QUOTE,
+        CharFlag.UNDERSCORE,
+        CharFlag.DOLLAR,
+        CharFlag.DOT,
+        CharFlag.EXPONENT,
+        CharFlag.SIGN,
       ];
       for (let i = 0; i < flags.length; i++) {
         for (let j = i + 1; j < flags.length; j++) {
-          expect(flags[i]! & flags[j]!).toBe(0);
+          expect(flags[i] & flags[j]).toBe(0);
         }
       }
     });

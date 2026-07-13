@@ -81,7 +81,7 @@ buildCharTable();
  * Get character flag bitmask
  */
 export function getCharFlag(ch: number): number {
-  return (ch >= 0 && ch < 128) ? CHAR_FLAG_TABLE[ch]! : CharFlag.NONE;
+  return ch >= 0 && ch < 128 ? CHAR_FLAG_TABLE[ch]! : CharFlag.NONE;
 }
 
 /**
@@ -102,9 +102,11 @@ export function isDigit(ch: number): boolean {
  * Check if character is a hex digit (0-9, a-f, A-F)
  */
 export function isHexDigit(ch: number): boolean {
-  return isDigit(ch) ||
-    (ch >= 65 && ch <= 70) ||  // A-F
-    (ch >= 97 && ch <= 102);   // a-f
+  return (
+    isDigit(ch) ||
+    (ch >= 65 && ch <= 70) || // A-F
+    (ch >= 97 && ch <= 102)
+  ); // a-f
 }
 
 /**

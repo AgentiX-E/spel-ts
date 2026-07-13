@@ -79,24 +79,42 @@ export class Tokenizer {
    */
   private identifierOrKeyword(start: number, text: string): Token {
     switch (text) {
-      case 'null':   return new Token(TokenKind.LITERAL_NULL, start, this.pos, text, null);
-      case 'true':   return new Token(TokenKind.LITERAL_BOOLEAN, start, this.pos, text, true);
-      case 'false':  return new Token(TokenKind.LITERAL_BOOLEAN, start, this.pos, text, false);
-      case 'eq':     return new Token(TokenKind.EQ, start, this.pos, text);
-      case 'ne':     return new Token(TokenKind.NE, start, this.pos, text);
-      case 'lt':     return new Token(TokenKind.LT, start, this.pos, text);
-      case 'le':     return new Token(TokenKind.LE, start, this.pos, text);
-      case 'gt':     return new Token(TokenKind.GT, start, this.pos, text);
-      case 'ge':     return new Token(TokenKind.GE, start, this.pos, text);
-      case 'and':    return new Token(TokenKind.AND, start, this.pos, text);
-      case 'or':     return new Token(TokenKind.OR, start, this.pos, text);
-      case 'not':    return new Token(TokenKind.NOT, start, this.pos, text);
-      case 'mod':    return new Token(TokenKind.MOD, start, this.pos, text);
-      case 'matches':return new Token(TokenKind.MATCHES, start, this.pos, text);
-      case 'between':return new Token(TokenKind.BETWEEN, start, this.pos, text);
-      case 'instanceof': return new Token(TokenKind.INSTANCEOF, start, this.pos, text);
-      case 'new':    return new Token(TokenKind.NEW, start, this.pos, text);
-      default:       return new Token(TokenKind.IDENTIFIER, start, this.pos, text);
+      case 'null':
+        return new Token(TokenKind.LITERAL_NULL, start, this.pos, text, null);
+      case 'true':
+        return new Token(TokenKind.LITERAL_BOOLEAN, start, this.pos, text, true);
+      case 'false':
+        return new Token(TokenKind.LITERAL_BOOLEAN, start, this.pos, text, false);
+      case 'eq':
+        return new Token(TokenKind.EQ, start, this.pos, text);
+      case 'ne':
+        return new Token(TokenKind.NE, start, this.pos, text);
+      case 'lt':
+        return new Token(TokenKind.LT, start, this.pos, text);
+      case 'le':
+        return new Token(TokenKind.LE, start, this.pos, text);
+      case 'gt':
+        return new Token(TokenKind.GT, start, this.pos, text);
+      case 'ge':
+        return new Token(TokenKind.GE, start, this.pos, text);
+      case 'and':
+        return new Token(TokenKind.AND, start, this.pos, text);
+      case 'or':
+        return new Token(TokenKind.OR, start, this.pos, text);
+      case 'not':
+        return new Token(TokenKind.NOT, start, this.pos, text);
+      case 'mod':
+        return new Token(TokenKind.MOD, start, this.pos, text);
+      case 'matches':
+        return new Token(TokenKind.MATCHES, start, this.pos, text);
+      case 'between':
+        return new Token(TokenKind.BETWEEN, start, this.pos, text);
+      case 'instanceof':
+        return new Token(TokenKind.INSTANCEOF, start, this.pos, text);
+      case 'new':
+        return new Token(TokenKind.NEW, start, this.pos, text);
+      default:
+        return new Token(TokenKind.IDENTIFIER, start, this.pos, text);
     }
   }
 
@@ -107,8 +125,7 @@ export class Tokenizer {
     const start = this.pos;
 
     // Hexadecimal 0x or 0X
-    if (this.expression.charCodeAt(this.pos) === 48 /* '0' */ &&
-        this.pos + 1 < this.maxPos) {
+    if (this.expression.charCodeAt(this.pos) === 48 /* '0' */ && this.pos + 1 < this.maxPos) {
       const next = this.expression.charCodeAt(this.pos + 1);
       if (next === 120 /* 'x' */ || next === 88 /* 'X' */) {
         this.pos += 2;
@@ -116,8 +133,7 @@ export class Tokenizer {
           this.pos++;
         }
         const text = this.expression.slice(start, this.pos);
-        return new Token(TokenKind.LITERAL_HEX, start, this.pos, text,
-          parseInt(text, 16));
+        return new Token(TokenKind.LITERAL_HEX, start, this.pos, text, parseInt(text, 16));
       }
       // Octal: 0[0-7]+
       if (next >= 48 /* '0' */ && next <= 55 /* '7' */) {
@@ -131,8 +147,7 @@ export class Tokenizer {
           }
         }
         const text = this.expression.slice(start, this.pos);
-        return new Token(TokenKind.LITERAL_INT, start, this.pos, text,
-          parseInt(text, 8));
+        return new Token(TokenKind.LITERAL_INT, start, this.pos, text, parseInt(text, 8));
       }
     }
 
@@ -146,8 +161,7 @@ export class Tokenizer {
     // Fractional part
     if (this.pos < this.maxPos && this.expression.charCodeAt(this.pos) === 46 /* '.' */) {
       // Check not range operator ..
-      if (this.pos + 1 < this.maxPos &&
-          this.expression.charCodeAt(this.pos + 1) === 46) {
+      if (this.pos + 1 < this.maxPos && this.expression.charCodeAt(this.pos + 1) === 46) {
         // This is .. operator, do not consume
       } else {
         isFloat = true;
@@ -181,15 +195,18 @@ export class Tokenizer {
     if (this.pos < this.maxPos) {
       const suffix = this.expression.charCodeAt(this.pos);
       switch (suffix) {
-        case 76: case 108: // 'L' 'l'
+        case 76:
+        case 108: // 'L' 'l'
           kind = TokenKind.LITERAL_LONG;
           this.pos++;
           break;
-        case 70: case 102: // 'F' 'f'
+        case 70:
+        case 102: // 'F' 'f'
           kind = TokenKind.LITERAL_FLOAT;
           this.pos++;
           break;
-        case 68: case 100: // 'D' 'd'
+        case 68:
+        case 100: // 'D' 'd'
           kind = TokenKind.LITERAL_DOUBLE;
           this.pos++;
           break;
@@ -204,9 +221,10 @@ export class Tokenizer {
     }
 
     const text = this.expression.slice(start, this.pos);
-    const value = kind === TokenKind.LITERAL_INT || kind === TokenKind.LITERAL_LONG
-      ? parseInt(text, 10)
-      : parseFloat(text);
+    const value =
+      kind === TokenKind.LITERAL_INT || kind === TokenKind.LITERAL_LONG
+        ? parseInt(text, 10)
+        : parseFloat(text);
 
     return new Token(kind, start, this.pos, text, value);
   }
@@ -227,8 +245,7 @@ export class Tokenizer {
 
       if (ch === quote) {
         // Check for escaped quote '' or ""
-        if (this.pos + 1 < this.maxPos &&
-            this.expression.charCodeAt(this.pos + 1) === quote) {
+        if (this.pos + 1 < this.maxPos && this.expression.charCodeAt(this.pos + 1) === quote) {
           parts.push(quoteChar);
           this.pos += 2; // Skip two quotes
         } else {
@@ -244,10 +261,7 @@ export class Tokenizer {
 
     // Check if end of expression reached without closing string
     if (!foundClosingQuote) {
-      throw new SpelParseException(
-        start,
-        SpelMessage.UNTERMINATED_STRING_LITERAL,
-      );
+      throw new SpelParseException(start, SpelMessage.UNTERMINATED_STRING_LITERAL);
     }
 
     const value = parts.join('');
@@ -267,137 +281,183 @@ export class Tokenizer {
     switch (ch) {
       // Single character
       case 42: // *
-        if (this.matchNext(42)) { // **
+        if (this.matchNext(42)) {
+          // **
           this.pos++;
           return new Token(TokenKind.POWER, start, this.pos, '**');
         }
         return new Token(TokenKind.STAR, start, this.pos, '*');
 
       case 43: // +
-        if (this.matchNext(43)) { // ++
+        if (this.matchNext(43)) {
+          // ++
           this.pos++;
           return new Token(TokenKind.INC, start, this.pos, '++');
         }
         return new Token(TokenKind.PLUS, start, this.pos, '+');
 
       case 45: // -
-        if (this.matchNext(45)) { // --
+        if (this.matchNext(45)) {
+          // --
           this.pos++;
           return new Token(TokenKind.DEC, start, this.pos, '--');
         }
         return new Token(TokenKind.MINUS, start, this.pos, '-');
 
-      case 47: return new Token(TokenKind.SLASH, start, this.pos, '/');    // /
-      case 37: return new Token(TokenKind.PERCENT, start, this.pos, '%');  // %
-      case 94: return new Token(TokenKind.POWER, start, this.pos, '^');    // ^
-      case 40: return new Token(TokenKind.LPAREN, start, this.pos, '(');   // (
-      case 41: return new Token(TokenKind.RPAREN, start, this.pos, ')');   // )
-      case 91: return new Token(TokenKind.LBRACKET, start, this.pos, '['); // [
-      case 93: return new Token(TokenKind.RBRACKET, start, this.pos, ']'); // ]
-      case 123: return new Token(TokenKind.LBRACE, start, this.pos, '{');  // {
-      case 125: return new Token(TokenKind.RBRACE, start, this.pos, '}');  // }
-      case 44: return new Token(TokenKind.COMMA, start, this.pos, ',');    // ,
-      case 58: return new Token(TokenKind.COLON, start, this.pos, ':');    // :
-      case 35: return new Token(TokenKind.HASH, start, this.pos, '#');     // #
-      case 64: return new Token(TokenKind.AT, start, this.pos, '@');       // @
+      case 47:
+        return new Token(TokenKind.SLASH, start, this.pos, '/'); // /
+      case 37:
+        return new Token(TokenKind.PERCENT, start, this.pos, '%'); // %
+      case 94:
+        return new Token(TokenKind.POWER, start, this.pos, '^'); // ^
+      case 40:
+        return new Token(TokenKind.LPAREN, start, this.pos, '('); // (
+      case 41:
+        return new Token(TokenKind.RPAREN, start, this.pos, ')'); // )
+      case 91:
+        return new Token(TokenKind.LBRACKET, start, this.pos, '['); // [
+      case 93:
+        return new Token(TokenKind.RBRACKET, start, this.pos, ']'); // ]
+      case 123:
+        return new Token(TokenKind.LBRACE, start, this.pos, '{'); // {
+      case 125:
+        return new Token(TokenKind.RBRACE, start, this.pos, '}'); // }
+      case 44:
+        return new Token(TokenKind.COMMA, start, this.pos, ','); // ,
+      case 58:
+        return new Token(TokenKind.COLON, start, this.pos, ':'); // :
+      case 35:
+        return new Token(TokenKind.HASH, start, this.pos, '#'); // #
+      case 64:
+        return new Token(TokenKind.AT, start, this.pos, '@'); // @
 
-      case 33: { // !
-        if (this.matchNext(61)) { // !=
+      case 33: {
+        // !
+        if (this.matchNext(61)) {
+          // !=
           this.pos++;
           return new Token(TokenKind.NE, start, this.pos, '!=');
         }
         return new Token(TokenKind.NOT, start, this.pos, '!');
       }
 
-      case 61: { // =
-        if (this.matchNext(61)) { // ==
+      case 61: {
+        // =
+        if (this.matchNext(61)) {
+          // ==
           this.pos++;
           return new Token(TokenKind.EQ, start, this.pos, '==');
         }
         return new Token(TokenKind.ASSIGN, start, this.pos, '=');
       }
 
-      case 60: { // <
-        if (this.matchNext(61)) { // <=
+      case 60: {
+        // <
+        if (this.matchNext(61)) {
+          // <=
           this.pos++;
           return new Token(TokenKind.LE, start, this.pos, '<=');
         }
         return new Token(TokenKind.LT, start, this.pos, '<');
       }
 
-      case 62: { // >
-        if (this.matchNext(61)) { // >=
+      case 62: {
+        // >
+        if (this.matchNext(61)) {
+          // >=
           this.pos++;
           return new Token(TokenKind.GE, start, this.pos, '>=');
         }
         return new Token(TokenKind.GT, start, this.pos, '>');
       }
 
-      case 38: { // &
-        if (this.matchNext(38)) { // &&
+      case 38: {
+        // &
+        if (this.matchNext(38)) {
+          // &&
           this.pos++;
           return new Token(TokenKind.AND, start, this.pos, '&&');
         }
-        if (this.matchNext(64)) { // &@
+        if (this.matchNext(64)) {
+          // &@
           this.pos++;
           return new Token(TokenKind.AMP_AT, start, this.pos, '&@');
         }
         throw new SpelParseException(SpelMessage.NOT_VALID_CHAR, start, '&');
       }
 
-      case 124: { // |
-        if (this.matchNext(124)) { // ||
+      case 124: {
+        // |
+        if (this.matchNext(124)) {
+          // ||
           this.pos++;
           return new Token(TokenKind.OR, start, this.pos, '||');
         }
         throw new SpelParseException(SpelMessage.NOT_VALID_CHAR, start, '|');
       }
 
-      case 63: { // ?
-        if (this.matchNext(46)) { // ?.
+      case 63: {
+        // ?
+        if (this.matchNext(46)) {
+          // ?.
           this.pos++;
           return new Token(TokenKind.SAFE_NAV, start, this.pos, '?.');
         }
-        if (this.matchNext(58)) { // ?:
+        if (this.matchNext(58)) {
+          // ?:
           this.pos++;
           return new Token(TokenKind.ELVIS, start, this.pos, '?:');
         }
         return new Token(TokenKind.QMARK, start, this.pos, '?');
       }
 
-      case 46: { // .
+      case 46: {
+        // .
         // Check for .![ .?[ .$[ .^[ .*[ or ..
         if (this.pos < this.maxPos) {
           const next = this.expression.charCodeAt(this.pos);
-          if (next === 46) { // ..
+          if (next === 46) {
+            // ..
             this.pos++;
             return new Token(TokenKind.DOTDOT, start, this.pos, '..');
           }
           if (next === 33 /* '!' */) {
-            if (this.pos + 1 < this.maxPos &&
-                this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */) {
+            if (
+              this.pos + 1 < this.maxPos &&
+              this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */
+            ) {
               this.pos += 2;
               return new Token(TokenKind.PROJECTION, start, this.pos, '.![');
             }
           }
           if (next === 63 /* '?' */) {
-            if (this.pos + 1 < this.maxPos &&
-                this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */) {
+            if (
+              this.pos + 1 < this.maxPos &&
+              this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */
+            ) {
               this.pos += 2;
               return new Token(TokenKind.SELECTION, start, this.pos, '.?[');
             }
           }
           if (next === 36 /* '$' */ || next === 94 /* '^' */) {
-            if (this.pos + 1 < this.maxPos &&
-                this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */) {
+            if (
+              this.pos + 1 < this.maxPos &&
+              this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */
+            ) {
               this.pos += 2;
-              return new Token(TokenKind.SELECT_FIRST, start, this.pos,
-                this.expression.slice(start, this.pos));
+              return new Token(
+                TokenKind.SELECT_FIRST,
+                start,
+                this.pos,
+                this.expression.slice(start, this.pos),
+              );
             }
           }
           if (next === 42 /* '*' */) {
-            if (this.pos + 1 < this.maxPos &&
-                this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */) {
+            if (
+              this.pos + 1 < this.maxPos &&
+              this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */
+            ) {
               this.pos += 2;
               return new Token(TokenKind.SELECT_LAST, start, this.pos, '.*[');
             }
@@ -407,11 +467,7 @@ export class Tokenizer {
       }
 
       default:
-        throw new SpelParseException(
-          SpelMessage.NOT_VALID_CHAR,
-          start,
-          String.fromCharCode(ch),
-        );
+        throw new SpelParseException(SpelMessage.NOT_VALID_CHAR, start, String.fromCharCode(ch));
     }
   }
 
@@ -419,8 +475,7 @@ export class Tokenizer {
    * Check if current position character matches expected
    */
   private matchNext(expected: number): boolean {
-    return this.pos < this.maxPos &&
-           this.expression.charCodeAt(this.pos) === expected;
+    return this.pos < this.maxPos && this.expression.charCodeAt(this.pos) === expected;
   }
 
   /**

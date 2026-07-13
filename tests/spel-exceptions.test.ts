@@ -49,7 +49,12 @@ describe('SpelParseException', () => {
 
   it('should handle multiple inserts', () => {
     const ex = new SpelParseException(
-      0, SpelMessage.OPERATOR_NOT_SUPPORTED_BETWEEN_TYPES, '+', 'string', 'number');
+      0,
+      SpelMessage.OPERATOR_NOT_SUPPORTED_BETWEEN_TYPES,
+      '+',
+      'string',
+      'number',
+    );
     expect(ex.inserts).toEqual(['+', 'string', 'number']);
   });
 });

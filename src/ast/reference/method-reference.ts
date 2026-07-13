@@ -19,10 +19,15 @@ export class MethodReference extends SpelNodeImpl {
 
   public getValueInternal(state: ExpressionState): TypedValue {
     const target = state.getThis().getValue();
-    const argValues = this.children.map(c => c.getValue(state).getValue());
+    const argValues = this.children.map((c) => c.getValue(state).getValue());
 
     if (target === null || target === undefined) {
-      throw new SpelEvaluationException(this.startPos, SpelMessage.METHOD_NOT_FOUND, this.methodName, 'null');
+      throw new SpelEvaluationException(
+        this.startPos,
+        SpelMessage.METHOD_NOT_FOUND,
+        this.methodName,
+        'null',
+      );
     }
 
     const context = state.getEvaluationContext();
@@ -41,9 +46,12 @@ export class MethodReference extends SpelNodeImpl {
           try {
             return new TypedValue((propValue as (...a: unknown[]) => unknown)(...argValues));
           } catch (e) {
-            throw new SpelEvaluationException(this.startPos,
+            throw new SpelEvaluationException(
+              this.startPos,
               SpelMessage.EXCEPTION_DURING_METHOD_INVOCATION,
-              this.methodName, (e as Error).message);
+              this.methodName,
+              (e as Error).message,
+            );
           }
         }
         break;
@@ -58,10 +66,15 @@ export class MethodReference extends SpelNodeImpl {
       // not found in functions
     }
 
-    throw new SpelEvaluationException(this.startPos, SpelMessage.METHOD_NOT_FOUND, this.methodName, typeof target);
+    throw new SpelEvaluationException(
+      this.startPos,
+      SpelMessage.METHOD_NOT_FOUND,
+      this.methodName,
+      typeof target,
+    );
   }
 
   public toStringAST(): string {
-    return `${this.methodName}(${this.children.map(c => c.toStringAST()).join(', ')})`;
+    return `${this.methodName}(${this.children.map((c) => c.toStringAST()).join(', ')})`;
   }
 }

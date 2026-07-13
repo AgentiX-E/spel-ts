@@ -333,13 +333,19 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
 
     describe('inline map', () => {
       it("{'key': 'value'} → Map", () => {
-        const result = parser.parseExpression("{'key': 'value'}").getValue() as Map<string, unknown>;
+        const result = parser.parseExpression("{'key': 'value'}").getValue() as Map<
+          string,
+          unknown
+        >;
         expect(result instanceof Map).toBe(true);
         expect(result.get('key')).toBe('value');
       });
 
       it('multiple entries', () => {
-        const result = parser.parseExpression("{'a': 1, 'b': 2}").getValue() as Map<string, unknown>;
+        const result = parser.parseExpression("{'a': 1, 'b': 2}").getValue() as Map<
+          string,
+          unknown
+        >;
         expect(result.get('a')).toBe(1);
         expect(result.get('b')).toBe(2);
       });
@@ -348,7 +354,8 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
     describe('selection (.?[])', () => {
       it('.?[filter] — filter matches starting with "a"', () => {
         // Selection uses #this to refer to current element
-        const result = parser.parseExpression("{'a', 'ab', 'abc', 'b'}.?[#this matches '^a.*$']")
+        const result = parser
+          .parseExpression("{'a', 'ab', 'abc', 'b'}.?[#this matches '^a.*$']")
           .getValue();
         expect(result).toEqual(['a', 'ab', 'abc']);
       });
@@ -367,7 +374,9 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
       const ctx = new StandardEvaluationContext({
         order: { quantity: 5, price: 20 },
       });
-      const result = parser.parseExpression('order.quantity * order.price').getValueWithContext(ctx);
+      const result = parser
+        .parseExpression('order.quantity * order.price')
+        .getValueWithContext(ctx);
       expect(result).toBe(100);
     });
 
@@ -390,23 +399,22 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
     it('compound condition', () => {
       const ctx = new StandardEvaluationContext();
       ctx.setVariable('score', 85);
-      const result = parser.parseExpression('#score >= 60 && #score < 90')
-        .getValueWithContext(ctx);
+      const result = parser.parseExpression('#score >= 60 && #score < 90').getValueWithContext(ctx);
       expect(result).toBe(true);
     });
 
     it('ternary with variables', () => {
       const ctx = new StandardEvaluationContext();
       ctx.setVariable('passed', true);
-      const result = parser.parseExpression("#passed ? 'PASS' : 'FAIL'")
-        .getValueWithContext(ctx);
+      const result = parser.parseExpression("#passed ? 'PASS' : 'FAIL'").getValueWithContext(ctx);
       expect(result).toBe('PASS');
     });
 
     it('nested conditions', () => {
       const ctx = new StandardEvaluationContext();
       ctx.setVariable('x', 15);
-      const result = parser.parseExpression('#x > 10 && #x < 20 || #x > 100')
+      const result = parser
+        .parseExpression('#x > 10 && #x < 20 || #x > 100')
         .getValueWithContext(ctx);
       expect(result).toBe(true);
     });

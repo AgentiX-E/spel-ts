@@ -8,8 +8,13 @@ import { NodeType } from '../../language/node-type.js';
 export class Projection extends SpelNodeImpl {
   private readonly nullSafe: boolean;
 
-  constructor(startPos: number, endPos: number, nullSafe: boolean,
-    target: SpelNodeImpl, projection: SpelNodeImpl) {
+  constructor(
+    startPos: number,
+    endPos: number,
+    nullSafe: boolean,
+    target: SpelNodeImpl,
+    projection: SpelNodeImpl,
+  ) {
     super(NodeType.PROJECTION, startPos, endPos, target, projection);
     this.nullSafe = nullSafe;
   }
@@ -23,10 +28,18 @@ export class Projection extends SpelNodeImpl {
 
     if (targetValue === null || targetValue === undefined) {
       if (this.nullSafe) return TypedValue.NULL;
-      throw new SpelEvaluationException(this.startPos, SpelMessage.PROJECTION_NOT_SUPPORTED_ON_TYPE, 'null');
+      throw new SpelEvaluationException(
+        this.startPos,
+        SpelMessage.PROJECTION_NOT_SUPPORTED_ON_TYPE,
+        'null',
+      );
     }
 
-    if (!Array.isArray(targetValue) && !(targetValue instanceof Set) && !(targetValue instanceof Map)) {
+    if (
+      !Array.isArray(targetValue) &&
+      !(targetValue instanceof Set) &&
+      !(targetValue instanceof Map)
+    ) {
       // Spring SpEL: non-collection is wrapped in single-element array for projection
       state.pushHeadIndex(new TypedValue(targetValue));
       try {
@@ -37,9 +50,10 @@ export class Projection extends SpelNodeImpl {
       }
     }
 
-    const collection = targetValue instanceof Map
-      ? [...targetValue.values()]
-      : [...targetValue as Iterable<unknown>];
+    const collection =
+      targetValue instanceof Map
+        ? [...targetValue.values()]
+        : [...(targetValue as Iterable<unknown>)];
     const result: unknown[] = [];
     for (const item of collection) {
       state.pushHeadIndex(new TypedValue(item));

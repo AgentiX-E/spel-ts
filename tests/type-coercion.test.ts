@@ -44,8 +44,7 @@ describe('SpelTypeConverter', () => {
       });
 
       it('should throw for non-numeric string', () => {
-        expect(() => converter.convertValue('abc', Number))
-          .toThrow(SpelEvaluationException);
+        expect(() => converter.convertValue('abc', Number)).toThrow(SpelEvaluationException);
       });
     });
 
@@ -77,8 +76,7 @@ describe('SpelTypeConverter', () => {
       });
 
       it('should throw for invalid boolean string', () => {
-        expect(() => converter.convertValue('yes', Boolean))
-          .toThrow(SpelEvaluationException);
+        expect(() => converter.convertValue('yes', Boolean)).toThrow(SpelEvaluationException);
       });
     });
 
@@ -117,8 +115,9 @@ describe('SpelTypeConverter', () => {
     describe('unsupported conversions', () => {
       it('should throw for unsupported type pair', () => {
         // Object → Number is not supported
-        expect(() => converter.convertValue({}, Number as new (...args: unknown[]) => unknown))
-          .toThrow(SpelEvaluationException);
+        expect(() =>
+          converter.convertValue({}, Number as new (...args: unknown[]) => unknown),
+        ).toThrow(SpelEvaluationException);
       });
     });
   });

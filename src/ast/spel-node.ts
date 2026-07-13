@@ -7,12 +7,7 @@ import { NodeType } from '../language/node-type.js';
 export abstract class SpelNodeImpl {
   protected children: SpelNodeImpl[];
 
-  constructor(
-    nodeType: NodeType,
-    startPos: number,
-    endPos: number,
-    ...children: SpelNodeImpl[]
-  ) {
+  constructor(nodeType: NodeType, startPos: number, endPos: number, ...children: SpelNodeImpl[]) {
     this.nodeType = nodeType;
     this.startPos = startPos;
     this.endPos = endPos;
@@ -79,12 +74,12 @@ export abstract class SpelNodeImpl {
 
   /** Check if any direct child is of the given node type */
   public hasChildOfType(type: NodeType): boolean {
-    return this.children.some(c => c.nodeType === type);
+    return this.children.some((c) => c.nodeType === type);
   }
 
   /** Get all direct children of the given node type */
   public getChildrenOfType(type: NodeType): SpelNodeImpl[] {
-    return this.children.filter(c => c.nodeType === type);
+    return this.children.filter((c) => c.nodeType === type);
   }
 
   public abstract toStringAST(): string;

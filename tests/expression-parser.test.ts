@@ -109,9 +109,7 @@ describe('SpelExpressionParser', () => {
     it('should return null for non-existent property', () => {
       const ctx = new StandardEvaluationContext({ name: 'Alice' });
       // Non-existent property throws exception in SpEL
-      expect(() =>
-        parser.parseExpression('nonexistent').getValueWithContext(ctx),
-      ).toThrow();
+      expect(() => parser.parseExpression('nonexistent').getValueWithContext(ctx)).toThrow();
     });
 
     it('should access nested properties from context', () => {
@@ -140,9 +138,7 @@ describe('SpelExpressionParser', () => {
 
     it('should throw for undefined variable', () => {
       const ctx = new StandardEvaluationContext();
-      expect(() =>
-        parser.parseExpression('#undefined').getValueWithContext(ctx),
-      ).toThrow();
+      expect(() => parser.parseExpression('#undefined').getValueWithContext(ctx)).toThrow();
     });
   });
 

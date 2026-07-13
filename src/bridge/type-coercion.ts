@@ -25,12 +25,7 @@ export class SpelTypeConverter {
     if (typeof value === 'string' && targetType === Number) {
       const num = parseFloat(value);
       if (isNaN(num)) {
-        throw new SpelEvaluationException(
-          -1,
-          SpelMessage.TYPE_CONVERSION_ERROR,
-          value,
-          'Number',
-        );
+        throw new SpelEvaluationException(-1, SpelMessage.TYPE_CONVERSION_ERROR, value, 'Number');
       }
       return num;
     }
@@ -45,12 +40,7 @@ export class SpelTypeConverter {
       const s = value.toLowerCase();
       if (s === 'true') return true;
       if (s === 'false') return false;
-      throw new SpelEvaluationException(
-        -1,
-        SpelMessage.TYPE_CONVERSION_ERROR,
-        value,
-        'Boolean',
-      );
+      throw new SpelEvaluationException(-1, SpelMessage.TYPE_CONVERSION_ERROR, value, 'Boolean');
     }
 
     // Boolean → String

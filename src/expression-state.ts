@@ -38,9 +38,7 @@ export class ExpressionState {
 
   public popScope(): Map<string, TypedValue> {
     if (this.scopeStack.length === 0) {
-      throw new SpelEvaluationException(
-        -1, SpelMessage.CANNOT_POP_SCOPE,
-      );
+      throw new SpelEvaluationException(-1, SpelMessage.CANNOT_POP_SCOPE);
     }
     return this.scopeStack.pop()!;
   }
@@ -57,9 +55,7 @@ export class ExpressionState {
 
   public popHeadIndex(): TypedValue {
     if (this.headIndexStack.length === 0) {
-      throw new SpelEvaluationException(
-        -1, SpelMessage.CANNOT_POP_HEAD_INDEX,
-      );
+      throw new SpelEvaluationException(-1, SpelMessage.CANNOT_POP_HEAD_INDEX);
     }
     return this.headIndexStack.pop()!;
   }
@@ -110,9 +106,7 @@ export class ExpressionState {
     if (result != null) {
       return result;
     }
-    throw new SpelEvaluationException(
-      -1, SpelMessage.VARIABLE_NOT_FOUND, name,
-    );
+    throw new SpelEvaluationException(-1, SpelMessage.VARIABLE_NOT_FOUND, name);
   }
 
   /**
@@ -138,9 +132,7 @@ export class ExpressionState {
     if (fn != null) {
       return fn;
     }
-    throw new SpelEvaluationException(
-      -1, SpelMessage.FUNCTION_NOT_FOUND, name,
-    );
+    throw new SpelEvaluationException(-1, SpelMessage.FUNCTION_NOT_FOUND, name);
   }
 
   // ===== Type Lookup (Delegate to TypeLocator) =====
@@ -162,9 +154,7 @@ export class ExpressionState {
    * Used for property chain navigation in CompoundExpression
    */
   public createChildState(rootObject: unknown): ExpressionState {
-    const child = new ExpressionState(
-      this.context.createChildContext(rootObject),
-    );
+    const child = new ExpressionState(this.context.createChildContext(rootObject));
     // Inherit scopeStack
     for (const scope of this.scopeStack) {
       child.scopeStack.push(scope);

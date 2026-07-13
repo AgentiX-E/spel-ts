@@ -29,34 +29,178 @@ export interface CompletionItem {
  */
 const STATIC_COMPLETIONS: CompletionItem[] = [
   // Keywords
-  { label: 'null', kind: CompletionKind.KEYWORD, detail: 'Null literal', insertText: 'null', sortPriority: 50 },
-  { label: 'true', kind: CompletionKind.KEYWORD, detail: 'Boolean true', insertText: 'true', sortPriority: 50 },
-  { label: 'false', kind: CompletionKind.KEYWORD, detail: 'Boolean false', insertText: 'false', sortPriority: 50 },
-  { label: 'new', kind: CompletionKind.KEYWORD, detail: 'Constructor call', insertText: 'new ', sortPriority: 50 },
-  { label: 'T()', kind: CompletionKind.KEYWORD, detail: 'Type reference', insertText: 'T($1)', sortPriority: 50 },
+  {
+    label: 'null',
+    kind: CompletionKind.KEYWORD,
+    detail: 'Null literal',
+    insertText: 'null',
+    sortPriority: 50,
+  },
+  {
+    label: 'true',
+    kind: CompletionKind.KEYWORD,
+    detail: 'Boolean true',
+    insertText: 'true',
+    sortPriority: 50,
+  },
+  {
+    label: 'false',
+    kind: CompletionKind.KEYWORD,
+    detail: 'Boolean false',
+    insertText: 'false',
+    sortPriority: 50,
+  },
+  {
+    label: 'new',
+    kind: CompletionKind.KEYWORD,
+    detail: 'Constructor call',
+    insertText: 'new ',
+    sortPriority: 50,
+  },
+  {
+    label: 'T()',
+    kind: CompletionKind.KEYWORD,
+    detail: 'Type reference',
+    insertText: 'T($1)',
+    sortPriority: 50,
+  },
 
   // Operators
-  { label: 'and (&&)', kind: CompletionKind.OPERATOR, detail: 'Logical AND', insertText: 'and ', sortPriority: 40 },
-  { label: 'or (||)', kind: CompletionKind.OPERATOR, detail: 'Logical OR', insertText: 'or ', sortPriority: 40 },
-  { label: 'not (!)', kind: CompletionKind.OPERATOR, detail: 'Logical NOT', insertText: 'not ', sortPriority: 40 },
-  { label: '==', kind: CompletionKind.OPERATOR, detail: 'Equal to', insertText: '== ', sortPriority: 40 },
-  { label: '!=', kind: CompletionKind.OPERATOR, detail: 'Not equal to', insertText: '!= ', sortPriority: 40 },
-  { label: '>', kind: CompletionKind.OPERATOR, detail: 'Greater than', insertText: '> ', sortPriority: 40 },
-  { label: '<', kind: CompletionKind.OPERATOR, detail: 'Less than', insertText: '< ', sortPriority: 40 },
-  { label: '>=', kind: CompletionKind.OPERATOR, detail: 'Greater than or equal', insertText: '>= ', sortPriority: 40 },
-  { label: '<=', kind: CompletionKind.OPERATOR, detail: 'Less than or equal', insertText: '<= ', sortPriority: 40 },
-  { label: 'matches', kind: CompletionKind.OPERATOR, detail: 'Regex match', insertText: "matches '$1'", sortPriority: 40 },
-  { label: 'between', kind: CompletionKind.OPERATOR, detail: 'Range check', insertText: 'between {$1, $2}', sortPriority: 40 },
-  { label: 'instanceof', kind: CompletionKind.OPERATOR, detail: 'Type check', insertText: 'instanceof ', sortPriority: 40 },
-  { label: '?:', kind: CompletionKind.OPERATOR, detail: 'Elvis (null-safe default)', insertText: '?: $1', sortPriority: 40 },
+  {
+    label: 'and (&&)',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Logical AND',
+    insertText: 'and ',
+    sortPriority: 40,
+  },
+  {
+    label: 'or (||)',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Logical OR',
+    insertText: 'or ',
+    sortPriority: 40,
+  },
+  {
+    label: 'not (!)',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Logical NOT',
+    insertText: 'not ',
+    sortPriority: 40,
+  },
+  {
+    label: '==',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Equal to',
+    insertText: '== ',
+    sortPriority: 40,
+  },
+  {
+    label: '!=',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Not equal to',
+    insertText: '!= ',
+    sortPriority: 40,
+  },
+  {
+    label: '>',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Greater than',
+    insertText: '> ',
+    sortPriority: 40,
+  },
+  {
+    label: '<',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Less than',
+    insertText: '< ',
+    sortPriority: 40,
+  },
+  {
+    label: '>=',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Greater than or equal',
+    insertText: '>= ',
+    sortPriority: 40,
+  },
+  {
+    label: '<=',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Less than or equal',
+    insertText: '<= ',
+    sortPriority: 40,
+  },
+  {
+    label: 'matches',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Regex match',
+    insertText: "matches '$1'",
+    sortPriority: 40,
+  },
+  {
+    label: 'between',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Range check',
+    insertText: 'between {$1, $2}',
+    sortPriority: 40,
+  },
+  {
+    label: 'instanceof',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Type check',
+    insertText: 'instanceof ',
+    sortPriority: 40,
+  },
+  {
+    label: '?:',
+    kind: CompletionKind.OPERATOR,
+    detail: 'Elvis (null-safe default)',
+    insertText: '?: $1',
+    sortPriority: 40,
+  },
 
   // Snippets
-  { label: '?: ternary', kind: CompletionKind.SNIPPET, detail: 'Ternary conditional', insertText: '$1 ? $2 : $3', sortPriority: 20 },
-  { label: '.?[]', kind: CompletionKind.SNIPPET, detail: 'Collection selection (all)', insertText: '.?[$1]', sortPriority: 20 },
-  { label: '.![]', kind: CompletionKind.SNIPPET, detail: 'Collection projection', insertText: '.![$1]', sortPriority: 20 },
-  { label: '.^[]', kind: CompletionKind.SNIPPET, detail: 'Collection selection (first)', insertText: '.^[$1]', sortPriority: 20 },
-  { label: '.*[]', kind: CompletionKind.SNIPPET, detail: 'Collection selection (last)', insertText: '.*[$1]', sortPriority: 20 },
-  { label: '#this', kind: CompletionKind.SNIPPET, detail: 'Current element reference', insertText: '#this', sortPriority: 30 },
+  {
+    label: '?: ternary',
+    kind: CompletionKind.SNIPPET,
+    detail: 'Ternary conditional',
+    insertText: '$1 ? $2 : $3',
+    sortPriority: 20,
+  },
+  {
+    label: '.?[]',
+    kind: CompletionKind.SNIPPET,
+    detail: 'Collection selection (all)',
+    insertText: '.?[$1]',
+    sortPriority: 20,
+  },
+  {
+    label: '.![]',
+    kind: CompletionKind.SNIPPET,
+    detail: 'Collection projection',
+    insertText: '.![$1]',
+    sortPriority: 20,
+  },
+  {
+    label: '.^[]',
+    kind: CompletionKind.SNIPPET,
+    detail: 'Collection selection (first)',
+    insertText: '.^[$1]',
+    sortPriority: 20,
+  },
+  {
+    label: '.*[]',
+    kind: CompletionKind.SNIPPET,
+    detail: 'Collection selection (last)',
+    insertText: '.*[$1]',
+    sortPriority: 20,
+  },
+  {
+    label: '#this',
+    kind: CompletionKind.SNIPPET,
+    detail: 'Current element reference',
+    insertText: '#this',
+    sortPriority: 30,
+  },
 ];
 
 /**
@@ -93,7 +237,9 @@ export class SpelCompletionEngine {
 
     // Add context-aware completions if schema is available
     if (contextSchema) {
-      items.push(...SpelCompletionEngine.getContextCompletions(expression, position, contextSchema, prefix));
+      items.push(
+        ...SpelCompletionEngine.getContextCompletions(expression, position, contextSchema, prefix),
+      );
     }
 
     // Sort by priority (descending) then alphabetically

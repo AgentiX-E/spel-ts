@@ -9,6 +9,8 @@
     "exactOptionalPropertyTypes": false,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false,
 
     "outDir": "./dist",
@@ -23,9 +25,15 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
 
+    // strictFunctionTypes must remain false because the test suite and
+    // reflective method registrar API accept (...args: unknown[]) => unknown
+    // as a generic function signature. With strictFunctionTypes enabled,
+    // assigning (x: number) => number or (name: string) => string would
+    // become a type error. The runtime already validates argument counts
+    // and types, so this does not weaken safety in practice.
     "strictFunctionTypes": false,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"],
+  "include": ["src/**/*.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist", "coverage"]
 }

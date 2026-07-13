@@ -27,7 +27,11 @@ export class Indexer extends SpelNodeImpl {
     if (Array.isArray(target)) {
       const idx = Number(index);
       if (isNaN(idx) || idx < 0 || idx >= target.length) {
-        throw new SpelEvaluationException(this.startPos, SpelMessage.INDEX_OUT_OF_BOUNDS, String(idx));
+        throw new SpelEvaluationException(
+          this.startPos,
+          SpelMessage.INDEX_OUT_OF_BOUNDS,
+          String(idx),
+        );
       }
       return new TypedValue(target[idx]);
     }
@@ -40,10 +44,16 @@ export class Indexer extends SpelNodeImpl {
       return new TypedValue((target as Record<string, unknown>)[String(index)]);
     }
 
-    throw new SpelEvaluationException(this.startPos, SpelMessage.INDEXING_NOT_SUPPORTED_FOR_TYPE, typeof target);
+    throw new SpelEvaluationException(
+      this.startPos,
+      SpelMessage.INDEXING_NOT_SUPPORTED_FOR_TYPE,
+      typeof target,
+    );
   }
 
-  public override isWritable(_state: ExpressionState): boolean { return true; }
+  public override isWritable(_state: ExpressionState): boolean {
+    return true;
+  }
 
   public override setValue(state: ExpressionState, newValue: unknown): void {
     const target = this.children[0]!.getValue(state).getValue();
@@ -55,7 +65,11 @@ export class Indexer extends SpelNodeImpl {
         (target as unknown[])[idx] = newValue;
         return;
       }
-      throw new SpelEvaluationException(this.startPos, SpelMessage.INDEX_OUT_OF_BOUNDS, String(idx));
+      throw new SpelEvaluationException(
+        this.startPos,
+        SpelMessage.INDEX_OUT_OF_BOUNDS,
+        String(idx),
+      );
     }
 
     if (target instanceof Map) {
@@ -68,7 +82,11 @@ export class Indexer extends SpelNodeImpl {
       return;
     }
 
-    throw new SpelEvaluationException(this.startPos, SpelMessage.INDEXING_NOT_SUPPORTED_FOR_TYPE, typeof target);
+    throw new SpelEvaluationException(
+      this.startPos,
+      SpelMessage.INDEXING_NOT_SUPPORTED_FOR_TYPE,
+      typeof target,
+    );
   }
 
   public toStringAST(): string {

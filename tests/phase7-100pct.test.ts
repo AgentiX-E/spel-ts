@@ -3,8 +3,10 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  SpelExpressionParser, StandardEvaluationContext,
-  StandardTypeLocator, DefaultBeanResolver,
+  SpelExpressionParser,
+  StandardEvaluationContext,
+  StandardTypeLocator,
+  DefaultBeanResolver,
 } from '../src/index.js';
 import { SpelNodeImpl } from '../src/ast/spel-node.js';
 import { NullLiteral } from '../src/ast/literal/null-literal.js';
@@ -55,7 +57,9 @@ describe('Phase7: Comparison default coercion', () => {
 
 describe('Phase7: OpMatches invalid regex', () => {
   it('invalid regex pattern throws', () => {
-    expect(() => new SpelExpressionParser().parseExpression("'x' matches '['").getValue()).toThrow();
+    expect(() =>
+      new SpelExpressionParser().parseExpression("'x' matches '['").getValue(),
+    ).toThrow();
   });
 });
 
@@ -97,10 +101,16 @@ describe('Phase7: type-descriptor-accessor branches', () => {
   it('static method call via descriptor', () => {
     const ctx = new StandardEvaluationContext();
     const tl = new StandardTypeLocator();
-    class Calc { static add(a:number,b:number){return a+b;} }
-    tl.register('Calc', Calc, {add:Calc.add});
+    class Calc {
+      static add(a: number, b: number) {
+        return a + b;
+      }
+    }
+    tl.register('Calc', Calc, { add: Calc.add });
     ctx.setTypeLocator(tl);
-    const result = new SpelExpressionParser().parseExpression('T(Calc).add(1,2)').getValueWithContext(ctx);
+    const result = new SpelExpressionParser()
+      .parseExpression('T(Calc).add(1,2)')
+      .getValueWithContext(ctx);
     expect(result).toBe(3);
   });
 
@@ -110,20 +120,26 @@ describe('Phase7: type-descriptor-accessor branches', () => {
     class MyCls {}
     tl.register('MyCls', MyCls);
     ctx.setTypeLocator(tl);
-    const result = new SpelExpressionParser().parseExpression('T(MyCls).name').getValueWithContext(ctx);
+    const result = new SpelExpressionParser()
+      .parseExpression('T(MyCls).name')
+      .getValueWithContext(ctx);
     expect(result).toBe('MyCls');
   });
 });
 
 describe('Phase7: reflective-method-resolver edge', () => {
   it('string method startsWith', () => {
-    const ctx = new StandardEvaluationContext({s:'hello'});
-    const r = new SpelExpressionParser().parseExpression("s.startsWith('h')").getValueWithContext(ctx);
+    const ctx = new StandardEvaluationContext({ s: 'hello' });
+    const r = new SpelExpressionParser()
+      .parseExpression("s.startsWith('h')")
+      .getValueWithContext(ctx);
     expect(r).toBe(true);
   });
   it('string method endsWith', () => {
-    const ctx = new StandardEvaluationContext({s:'hello'});
-    const r = new SpelExpressionParser().parseExpression("s.endsWith('o')").getValueWithContext(ctx);
+    const ctx = new StandardEvaluationContext({ s: 'hello' });
+    const r = new SpelExpressionParser()
+      .parseExpression("s.endsWith('o')")
+      .getValueWithContext(ctx);
     expect(r).toBe(true);
   });
 });
@@ -145,7 +161,9 @@ describe('Phase7: selection nullSafe path', () => {
   it('selection on null returns empty array', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('n', null);
-    const r = new SpelExpressionParser().parseExpression('#n.?[#this > 0]').getValueWithContext(ctx);
+    const r = new SpelExpressionParser()
+      .parseExpression('#n.?[#this > 0]')
+      .getValueWithContext(ctx);
     expect(r).toEqual([]);
   });
 });
@@ -154,7 +172,7 @@ describe('Phase7: constructor-reference', () => {
   it('new without args', () => {
     const ctx = new StandardEvaluationContext();
     const tl = new StandardTypeLocator();
-    class Empty { }
+    class Empty {}
     tl.register('Empty', Empty);
     ctx.setTypeLocator(tl);
     const r = new SpelExpressionParser().parseExpression('new Empty()').getValueWithContext(ctx);
@@ -186,7 +204,7 @@ describe('Phase7: standard-evaluation-context stubs', () => {
 describe('Phase7: indexer setValue branches', () => {
   it('indexer write to array via assignment', () => {
     const ctx = new StandardEvaluationContext();
-    ctx.setVariable('a', [1,2,3]);
+    ctx.setVariable('a', [1, 2, 3]);
     new SpelExpressionParser().parseExpression('#a[1] = 99').getValueWithContext(ctx);
     expect((ctx.lookupVariable('a')!.getValue() as number[])[1]).toBe(99);
   });

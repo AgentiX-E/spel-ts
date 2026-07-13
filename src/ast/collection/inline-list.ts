@@ -17,6 +17,6 @@ export class InlineList extends SpelNodeImpl {
   }
 
   public toStringAST(): string {
-    return '{' + this.children.map(c => c.toStringAST()).join(', ') + '}';
+    return '{' + this.children.map((c) => c.toStringAST()).join(', ') + '}';
   }
 }

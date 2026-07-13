@@ -19,67 +19,67 @@ export enum TokenKind {
   IDENTIFIER,
 
   // Operators
-  PLUS,          // +
-  MINUS,         // -
-  STAR,          // *
-  SLASH,         // /
-  PERCENT,       // %
-  MOD,           // mod
-  POWER,         // ^ or **
+  PLUS, // +
+  MINUS, // -
+  STAR, // *
+  SLASH, // /
+  PERCENT, // %
+  MOD, // mod
+  POWER, // ^ or **
 
-  INC,           // ++
-  DEC,           // --
+  INC, // ++
+  DEC, // --
 
   // Comparison/Relational
-  EQ,            // == or eq
-  NE,            // != or ne
-  LT,            // < or lt
-  LE,            // <= or le
-  GT,            // > or gt
-  GE,            // >= or ge
+  EQ, // == or eq
+  NE, // != or ne
+  LT, // < or lt
+  LE, // <= or le
+  GT, // > or gt
+  GE, // >= or ge
 
   // Logical
-  AND,           // && or and
-  OR,            // || or or
-  NOT,           // ! or not
+  AND, // && or and
+  OR, // || or or
+  NOT, // ! or not
 
   // Assignment
-  ASSIGN,        // =
+  ASSIGN, // =
 
   // Special operators
-  MATCHES,       // matches
-  BETWEEN,       // between
-  INSTANCEOF,    // instanceof
+  MATCHES, // matches
+  BETWEEN, // between
+  INSTANCEOF, // instanceof
 
   // Delimiters
-  LPAREN,        // (
-  RPAREN,        // )
-  LBRACKET,      // [
-  RBRACKET,      // ]
-  LBRACE,        // {
-  RBRACE,        // }
-  COMMA,         // ,
-  COLON,         // :
-  DOT,           // .
-  SAFE_NAV,      // ?.
-  QMARK,         // ?
-  ELVIS,         // ?:
-  HASH,          // #
-  AT,            // @
-  AMP_AT,        // &@
+  LPAREN, // (
+  RPAREN, // )
+  LBRACKET, // [
+  RBRACKET, // ]
+  LBRACE, // {
+  RBRACE, // }
+  COMMA, // ,
+  COLON, // :
+  DOT, // .
+  SAFE_NAV, // ?.
+  QMARK, // ?
+  ELVIS, // ?:
+  HASH, // #
+  AT, // @
+  AMP_AT, // &@
 
   // Projection/Selection
-  PROJECTION,    // .![
-  SELECTION,     // .?[
-  SELECT_FIRST,  // .$[ or .^[
-  SELECT_LAST,   // .*[
+  PROJECTION, // .![
+  SELECTION, // .?[
+  SELECT_FIRST, // .$[ or .^[
+  SELECT_LAST, // .*[
 
   // Type reference
-  TYPE_START,    // T( (internal use)
+  TYPE_START, // T( (internal use)
 
   // Control
-  NEW,           // new
-  DOTDOT,        // .. (reserved)
+  NEW, // new
+  DOTDOT, // .. (reserved)
 
   EOF,
 }

@@ -30,7 +30,10 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
       return { valid: true, errors: [], ast: expr.getAST() };
     } catch (e) {
       if (e instanceof SpelParseException) {
-        return { valid: false, errors: [{ message: e.message, position: e.position, code: String(e.messageCode) }] };
+        return {
+          valid: false,
+          errors: [{ message: e.message, position: e.position, code: String(e.messageCode) }],
+        };
       }
       const err = e instanceof Error ? e : new Error(String(e));
       return { valid: false, errors: [{ message: err.message, position: 0, code: 'UNKNOWN' }] };
@@ -55,11 +58,12 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
   validateContext(expression: string, contextSchema: ContextSchema): ContextValidationResult {
     const diagnostics = SpelDiagnosticEngine.checkContext(expression, contextSchema);
     const refs = SpelReferenceExtractor.extract(expression);
-    const missingRefs = refs.filter(ref => {
+    const missingRefs = refs.filter((ref) => {
       switch (ref.kind) {
         case SpelReferenceKind.VARIABLE:
-          return ref.name !== 'root' && ref.name !== 'this' &&
-            !(ref.name in contextSchema.variables);
+          return (
+            ref.name !== 'root' && ref.name !== 'this' && !(ref.name in contextSchema.variables)
+          );
         case SpelReferenceKind.ROOT_PROPERTY:
           return contextSchema.root ? !(ref.name in contextSchema.root.fields) : false;
         case SpelReferenceKind.BEAN:
@@ -69,14 +73,25 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
           return !(ref.name in contextSchema.types);
         case SpelReferenceKind.FUNCTION:
           return !(ref.name in contextSchema.functions);
-        default: return false;
+        default:
+          return false;
       }
     });
-    return { valid: diagnostics.length === 0, diagnostics, missingReferences: missingRefs, typeMismatches: [] };
+    return {
+      valid: diagnostics.length === 0,
+      diagnostics,
+      missingReferences: missingRefs,
+      typeMismatches: [],
+    };
   }
 
-  getCompletions(expression: string, position: number, contextSchema?: ContextSchema): CompletionItem[] {
-    const schema = contextSchema ?? SpelEvaluatorAdapter.#extractContextSchema(this.context) ?? undefined;
+  getCompletions(
+    expression: string,
+    position: number,
+    contextSchema?: ContextSchema,
+  ): CompletionItem[] {
+    const schema =
+      contextSchema ?? SpelEvaluatorAdapter.#extractContextSchema(this.context) ?? undefined;
     return SpelCompletionEngine.getCompletions(expression, position, schema);
   }
 
@@ -86,23 +101,35 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
 
   static #extractContextSchema(ctx: StandardEvaluationContext): ContextSchema | null {
     try {
-      const schema: ContextSchema = { root: null, variables: {}, beans: {}, types: {}, functions: {} };
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      const rootObj = (ctx as unknown as { getRootObject?: () => { getValue?: () => unknown; }; }).getRootObject?.()?.getValue?.();
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (rootObj && typeof rootObj === 'object' && rootObj !== null) {
-        const fields: Record<string, { type: string; }> = {};
+      const schema: ContextSchema = {
+        root: null,
+        variables: {},
+        beans: {},
+        types: {},
+        functions: {},
+      };
+
+      const rootObj = (ctx as unknown as { getRootObject?: () => { getValue?: () => unknown } })
+        .getRootObject?.()
+        .getValue?.();
+      if (typeof rootObj === 'object' && rootObj !== null) {
+        const fields: Record<string, { type: string }> = {};
         for (const key of Object.keys(rootObj)) {
           fields[key] = { type: typeof (rootObj as Record<string, unknown>)[key] };
         }
         schema.root = {
           name: 'root',
-          type: (rootObj as { constructor?: { name?: string; }; }).constructor?.name ?? 'object',
-          fields: fields as Record<string, { type: 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'map'; }>,
+          type: (rootObj as { constructor?: { name?: string } }).constructor?.name ?? 'object',
+          fields: fields as Record<
+            string,
+            { type: 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'map' }
+          >,
           methods: {},
         };
       }
       return schema;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }
 }

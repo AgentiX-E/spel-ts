@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { SpelExpressionParser, StandardEvaluationContext, StandardTypeLocator } from '../src/index.js';
+import {
+  SpelExpressionParser,
+  StandardEvaluationContext,
+  StandardTypeLocator,
+} from '../src/index.js';
 
 describe('Phase 4b: Quick Coverage Fill', () => {
   const parser = new SpelExpressionParser();
@@ -10,7 +14,10 @@ describe('Phase 4b: Quick Coverage Fill', () => {
     class Point {
       readonly x: number;
       readonly y: number;
-      constructor(x: number, y: number) { this.x = x; this.y = y; }
+      constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+      }
     }
     typeLocator.register('Point', Point);
     ctx.setTypeLocator(typeLocator);
@@ -28,7 +35,13 @@ describe('Phase 4b: Quick Coverage Fill', () => {
 
   it('indexer on map with string key', () => {
     const ctx = new StandardEvaluationContext();
-    ctx.setVariable('m', new Map([['a', 1], ['b', 2]]));
+    ctx.setVariable(
+      'm',
+      new Map([
+        ['a', 1],
+        ['b', 2],
+      ]),
+    );
     expect(parser.parseExpression("#m['a']").getValueWithContext(ctx)).toBe(1);
   });
 
@@ -63,14 +76,18 @@ describe('Phase 4b: Quick Coverage Fill', () => {
     const ctx = new StandardEvaluationContext({
       level1: { level2: { level3: { value: 'deep' } } },
     });
-    expect(parser.parseExpression('level1.level2.level3.value').getValueWithContext(ctx)).toBe('deep');
+    expect(parser.parseExpression('level1.level2.level3.value').getValueWithContext(ctx)).toBe(
+      'deep',
+    );
   });
 
   it('type locator static method call', () => {
     const ctx = new StandardEvaluationContext();
     const typeLocator = new StandardTypeLocator();
     class MathUtils {
-      static abs(x: number): number { return Math.abs(x); }
+      static abs(x: number): number {
+        return Math.abs(x);
+      }
     }
     typeLocator.register('MathUtils', MathUtils, { abs: MathUtils.abs });
     ctx.setTypeLocator(typeLocator);

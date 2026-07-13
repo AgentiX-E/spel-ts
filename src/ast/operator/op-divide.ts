@@ -6,7 +6,12 @@ import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
 
 export class OpDivide extends Operator {
-  constructor(operatorName: string, startPos: number, endPos: number, ...operands: import('../spel-node.js').SpelNodeImpl[]) {
+  constructor(
+    operatorName: string,
+    startPos: number,
+    endPos: number,
+    ...operands: import('../spel-node.js').SpelNodeImpl[]
+  ) {
     super(NodeType.OP_DIVIDE, operatorName, startPos, endPos, ...operands);
   }
 
@@ -15,10 +20,7 @@ export class OpDivide extends Operator {
     const right = this.children[1]!.getValue(state).getValue() as number;
 
     if (right === 0) {
-      throw new SpelEvaluationException(
-        this.startPos,
-        SpelMessage.DIVISION_BY_ZERO,
-      );
+      throw new SpelEvaluationException(this.startPos, SpelMessage.DIVISION_BY_ZERO);
     }
 
     return new TypedValue(left / right);

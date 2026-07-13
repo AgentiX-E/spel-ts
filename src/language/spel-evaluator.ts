@@ -55,7 +55,11 @@ export interface SpelEvaluator {
    * Returns context-aware suggestions when contextSchema is provided,
    * otherwise returns static keyword/operator completions.
    */
-  getCompletions?(expression: string, position: number, contextSchema?: ContextSchema): CompletionItem[];
+  getCompletions?(
+    expression: string,
+    position: number,
+    contextSchema?: ContextSchema,
+  ): CompletionItem[];
 
   /**
    * Format a SpEL expression with consistent spacing and indentation.

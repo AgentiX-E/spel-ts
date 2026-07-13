@@ -4,9 +4,7 @@ import { SpelMessage } from '../src/error/spel-message.js';
 describe('SpelMessage', () => {
   it('should have unique error codes', () => {
     const codes = new Set<number>();
-    const values = Object.values(SpelMessage).filter(
-      (v): v is number => typeof v === 'number',
-    );
+    const values = Object.values(SpelMessage).filter((v): v is number => typeof v === 'number');
 
     for (const code of values) {
       expect(codes.has(code)).toBe(false);
@@ -15,9 +13,7 @@ describe('SpelMessage', () => {
   });
 
   it('should have 40+ entries', () => {
-    const values = Object.values(SpelMessage).filter(
-      (v): v is number => typeof v === 'number',
-    );
+    const values = Object.values(SpelMessage).filter((v): v is number => typeof v === 'number');
     expect(values.length).toBeGreaterThanOrEqual(40);
   });
 
@@ -118,9 +114,7 @@ describe('SpelMessage', () => {
   });
 
   it('should have parse errors in 1xxx range', () => {
-    const values = Object.values(SpelMessage).filter(
-      (v): v is number => typeof v === 'number',
-    );
+    const values = Object.values(SpelMessage).filter((v): v is number => typeof v === 'number');
     for (const code of values) {
       if (code < 1001) continue; // TypeScript const enum might skip to first
       if (code >= 2000) break;
@@ -130,9 +124,7 @@ describe('SpelMessage', () => {
   });
 
   it('should have evaluation errors in 2xxx range', () => {
-    const values = Object.values(SpelMessage).filter(
-      (v): v is number => typeof v === 'number',
-    );
+    const values = Object.values(SpelMessage).filter((v): v is number => typeof v === 'number');
     for (const code of values) {
       if (code >= 2000) {
         expect(code).toBeGreaterThanOrEqual(2000);

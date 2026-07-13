@@ -3,7 +3,9 @@ import { TypedValue } from '../typed-value.js';
 import type { PropertyAccessor } from './property-accessor.js';
 
 export class MapAccessor implements PropertyAccessor {
-  public getSpecificTargetClasses(): null { return null; }
+  public getSpecificTargetClasses(): null {
+    return null;
+  }
 
   public canRead(_context: EvaluationContext, target: unknown, _name: string): boolean {
     if (target === null || target === undefined) return false;
@@ -22,7 +24,12 @@ export class MapAccessor implements PropertyAccessor {
     return target instanceof Map;
   }
 
-  public write(_context: EvaluationContext, target: unknown, name: string, newValue: unknown): void {
+  public write(
+    _context: EvaluationContext,
+    target: unknown,
+    name: string,
+    newValue: unknown,
+  ): void {
     (target as Map<string, unknown>).set(name, newValue);
   }
 }

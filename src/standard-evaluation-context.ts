@@ -54,8 +54,12 @@ export class StandardEvaluationContext implements EvaluationContext {
     this.typeConverter = new SpelTypeConverter();
   }
 
-  public getRootObject(): TypedValue { return this.rootObject; }
-  public setRootObject(obj: unknown): void { this.rootObject = new TypedValue(obj); }
+  public getRootObject(): TypedValue {
+    return this.rootObject;
+  }
+  public setRootObject(obj: unknown): void {
+    this.rootObject = new TypedValue(obj);
+  }
 
   public lookupVariable(name: string): TypedValue | null {
     return this.variables.get(name) ?? null;
@@ -71,23 +75,37 @@ export class StandardEvaluationContext implements EvaluationContext {
     this.functions.set(name, fn);
   }
 
-  public getPropertyAccessors(): PropertyAccessor[] { return this.propertyAccessors; }
+  public getPropertyAccessors(): PropertyAccessor[] {
+    return this.propertyAccessors;
+  }
   public addPropertyAccessor(accessor: PropertyAccessor): void {
     this.propertyAccessors.push(accessor);
   }
 
-  public getMethodResolvers(): MethodResolver[] { return this.methodResolvers; }
+  public getMethodResolvers(): MethodResolver[] {
+    return this.methodResolvers;
+  }
   public addMethodResolver(resolver: MethodResolver): void {
     this.methodResolvers.push(resolver);
   }
 
-  public getTypeLocator(): TypeLocator { return this.typeLocator; }
-  public setTypeLocator(typeLocator: TypeLocator): void { this.typeLocator = typeLocator; }
+  public getTypeLocator(): TypeLocator {
+    return this.typeLocator;
+  }
+  public setTypeLocator(typeLocator: TypeLocator): void {
+    this.typeLocator = typeLocator;
+  }
 
-  public getBeanResolver(): BeanResolver { return this.beanResolver; }
-  public setBeanResolver(beanResolver: BeanResolver): void { this.beanResolver = beanResolver; }
+  public getBeanResolver(): BeanResolver {
+    return this.beanResolver;
+  }
+  public setBeanResolver(beanResolver: BeanResolver): void {
+    this.beanResolver = beanResolver;
+  }
 
-  public getTypeConverter(): SpelTypeConverter { return this.typeConverter; }
+  public getTypeConverter(): SpelTypeConverter {
+    return this.typeConverter;
+  }
 
   public createChildContext(rootObject: unknown): EvaluationContext {
     const child = new StandardEvaluationContext(rootObject);

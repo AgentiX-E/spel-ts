@@ -16,12 +16,12 @@ export class ConstructorReference extends SpelNodeImpl {
   }
 
   public getValueInternal(state: ExpressionState): TypedValue {
-    const argValues = this.children.map(c => c.getValue(state).getValue());
+    const argValues = this.children.map((c) => c.getValue(state).getValue());
     const typeDesc = state.findType(this.className);
     return new TypedValue(typeDesc.newInstance(...argValues));
   }
 
   public toStringAST(): string {
-    return `new ${this.className}(${this.children.map(c => c.toStringAST()).join(', ')})`;
+    return `new ${this.className}(${this.children.map((c) => c.toStringAST()).join(', ')})`;
   }
 }

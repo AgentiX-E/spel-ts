@@ -17,11 +17,13 @@ export class TypeDescriptorAccessor implements PropertyAccessor {
   public canRead(_context: EvaluationContext, target: unknown, _name: string): boolean {
     if (target === null || target === undefined) return false;
     // TypeDescriptor objects have name, constructor, staticMethods, staticFields
-    return typeof target === 'object'
-      && 'name' in target
-      && 'constructor' in target
-      && 'staticMethods' in target
-      && 'staticFields' in target;
+    return (
+      typeof target === 'object' &&
+      'name' in target &&
+      'constructor' in target &&
+      'staticMethods' in target &&
+      'staticFields' in target
+    );
   }
 
   public read(_context: EvaluationContext, target: unknown, name: string): TypedValue {
@@ -54,7 +56,12 @@ export class TypeDescriptorAccessor implements PropertyAccessor {
     return typeof target === 'object' && target !== null && 'staticFields' in target;
   }
 
-  public write(_context: EvaluationContext, target: unknown, name: string, newValue: unknown): void {
+  public write(
+    _context: EvaluationContext,
+    target: unknown,
+    name: string,
+    newValue: unknown,
+  ): void {
     const td = target as TypeDescriptor;
     td.staticFields[name] = newValue;
   }

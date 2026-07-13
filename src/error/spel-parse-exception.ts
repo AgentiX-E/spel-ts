@@ -23,7 +23,9 @@ export class SpelParseException extends Error {
    * Full error message with expression string
    */
   public toDetailedString(expressionString: string): string {
-    return `SpelParseException at position ${this.position.toString()} in "${expressionString}": ` +
-      `[${this.messageCode.toString()}] ${this.inserts.join(', ')}`;
+    return (
+      `SpelParseException at position ${this.position.toString()} in "${expressionString}": ` +
+      `[${this.messageCode.toString()}] ${this.inserts.join(', ')}`
+    );
   }
 }

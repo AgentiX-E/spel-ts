@@ -23,7 +23,9 @@ export class SpelEvaluationException extends Error {
    * Full error message with expression string
    */
   public toDetailedString(expressionString: string): string {
-    return `SpelEvaluationException at position ${this.position.toString()} in "${expressionString}": ` +
-      `[${this.messageCode.toString()}] ${this.inserts.join(', ')}`;
+    return (
+      `SpelEvaluationException at position ${this.position.toString()} in "${expressionString}": ` +
+      `[${this.messageCode.toString()}] ${this.inserts.join(', ')}`
+    );
   }
 }

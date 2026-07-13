@@ -4,8 +4,13 @@ import { SpelNodeImpl } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
 
 export class Ternary extends SpelNodeImpl {
-  constructor(startPos: number, endPos: number,
-    condition: SpelNodeImpl, trueExpr: SpelNodeImpl, falseExpr: SpelNodeImpl) {
+  constructor(
+    startPos: number,
+    endPos: number,
+    condition: SpelNodeImpl,
+    trueExpr: SpelNodeImpl,
+    falseExpr: SpelNodeImpl,
+  ) {
     super(NodeType.TERNARY, startPos, endPos, condition, trueExpr, falseExpr);
   }
 

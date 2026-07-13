@@ -5,7 +5,12 @@ import type { TypeDescriptor } from '../../type/type-descriptor.js';
 import { NodeType } from '../../language/node-type.js';
 
 export class OpInstanceof extends Operator {
-  constructor(operatorName: string, startPos: number, endPos: number, ...operands: import('../spel-node.js').SpelNodeImpl[]) {
+  constructor(
+    operatorName: string,
+    startPos: number,
+    endPos: number,
+    ...operands: import('../spel-node.js').SpelNodeImpl[]
+  ) {
     super(NodeType.OP_INSTANCEOF, operatorName, startPos, endPos, ...operands);
   }
 
@@ -30,11 +35,13 @@ export class OpInstanceof extends Operator {
   }
 
   private isTypeDescriptor(value: unknown): boolean {
-    return typeof value === 'object'
-      && value !== null
-      && 'name' in value
-      && 'constructor' in value
-      && 'isInstance' in value
-      && typeof (value as Record<string, unknown>).isInstance === 'function';
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      'name' in value &&
+      'constructor' in value &&
+      'isInstance' in value &&
+      typeof (value as Record<string, unknown>).isInstance === 'function'
+    );
   }
 }

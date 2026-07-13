@@ -36,7 +36,18 @@ export { DefaultBeanResolver } from './bean/default-bean-resolver.js';
 export { SpelTypeConverter } from './bridge/type-coercion.js';
 
 // ===== Lexical Analysis =====
-export { CharFlag, getCharFlag, isLetter, isDigit, isHexDigit, isWhitespace, isOperator, isQuote, isIdentifierStart, isIdentifierPart } from './tokenizer/char-flags.js';
+export {
+  CharFlag,
+  getCharFlag,
+  isLetter,
+  isDigit,
+  isHexDigit,
+  isWhitespace,
+  isOperator,
+  isQuote,
+  isIdentifierStart,
+  isIdentifierPart,
+} from './tokenizer/char-flags.js';
 export { TokenKind } from './tokenizer/token-kind.js';
 export { Token } from './tokenizer/token.js';
 export { Tokenizer } from './tokenizer/tokenizer.js';
@@ -100,15 +111,18 @@ export { RangeOperator } from './ast/operator/range-operator.js';
 export { NodeType } from './language/node-type.js';
 
 // — SpelEvaluator interface & types —
-export type {
-  SpelEvaluator, ParseResult, ParseError,
-} from './language/spel-evaluator.js';
+export type { SpelEvaluator, ParseResult, ParseError } from './language/spel-evaluator.js';
 
 // — ContextSchema types —
 export type {
-  ContextSchema, RootObjectSchema, FieldSchema,
-  VariableSchema, BeanSchema, TypeSchema,
-  MethodSchema, FunctionSchema,
+  ContextSchema,
+  RootObjectSchema,
+  FieldSchema,
+  VariableSchema,
+  BeanSchema,
+  TypeSchema,
+  MethodSchema,
+  FunctionSchema,
 } from './types/context-schema.js';
 
 // — References —

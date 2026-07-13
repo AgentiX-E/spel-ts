@@ -36,12 +36,15 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2002: Accessing a non-existent property on a valid root object
     it('should throw PROPERTY_OR_FIELD_NOT_READABLE for non-existent property', () => {
       const ctx = new StandardEvaluationContext({ name: 'Alice' });
-      expect(() => parser.parseExpression('nonexistent').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('nonexistent').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
       try {
         parser.parseExpression('nonexistent').getValueWithContext(ctx);
       } catch (e) {
-        expect((e as SpelEvaluationException).messageCode).toBe(SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE);
+        expect((e as SpelEvaluationException).messageCode).toBe(
+          SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE,
+        );
       }
     });
   });
@@ -50,12 +53,15 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2004: Accessing a property on a null root object
     it('should throw PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL for property on null', () => {
       const ctx = new StandardEvaluationContext(null);
-      expect(() => parser.parseExpression('anyProp').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('anyProp').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
       try {
         parser.parseExpression('anyProp').getValueWithContext(ctx);
       } catch (e) {
-        expect((e as SpelEvaluationException).messageCode).toBe(SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL);
+        expect((e as SpelEvaluationException).messageCode).toBe(
+          SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL,
+        );
       }
     });
 
@@ -72,8 +78,9 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2007: Calling a method that doesn't exist on the target
     it('should throw METHOD_NOT_FOUND for non-existent method on string', () => {
       const ctx = new StandardEvaluationContext('hello');
-      expect(() => parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
       try {
         parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx);
       } catch (e) {
@@ -83,14 +90,16 @@ describe('Edge Case: Error Paths', () => {
 
     it('should throw METHOD_NOT_FOUND for method on number', () => {
       const ctx = new StandardEvaluationContext(42);
-      expect(() => parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
     });
 
     it('should throw METHOD_NOT_FOUND for non-existent method on object', () => {
       const ctx = new StandardEvaluationContext({});
-      expect(() => parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('nonExistentMethod()').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
     });
   });
 
@@ -99,8 +108,7 @@ describe('Edge Case: Error Paths', () => {
     it('should throw FUNCTION_NOT_FOUND when lookupFunction fails', () => {
       const ctx = new StandardEvaluationContext();
       const state = new ExpressionState(ctx);
-      expect(() => state.lookupFunction('nonexistentFunc'))
-        .toThrow(SpelEvaluationException);
+      expect(() => state.lookupFunction('nonexistentFunc')).toThrow(SpelEvaluationException);
       try {
         state.lookupFunction('nonexistentFunc');
       } catch (e) {
@@ -111,8 +119,7 @@ describe('Edge Case: Error Paths', () => {
     it('should throw when function is not registered in context', () => {
       const ctx = new StandardEvaluationContext();
       const state = new ExpressionState(ctx);
-      expect(() => state.lookupFunction('unregistered'))
-        .toThrow(SpelEvaluationException);
+      expect(() => state.lookupFunction('unregistered')).toThrow(SpelEvaluationException);
     });
 
     it('should succeed when function IS registered', () => {
@@ -129,8 +136,7 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2011: Type not found in TypeLocator
     it('should throw TYPE_NOT_FOUND from StandardTypeLocator', () => {
       const locator = new StandardTypeLocator();
-      expect(() => locator.findType('NonExistentType'))
-        .toThrow(SpelEvaluationException);
+      expect(() => locator.findType('NonExistentType')).toThrow(SpelEvaluationException);
       try {
         locator.findType('NonExistentType');
       } catch (e) {
@@ -143,8 +149,7 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2014: Bean not found in BeanResolver
     it('should throw BEAN_NOT_FOUND from DefaultBeanResolver', () => {
       const resolver = new DefaultBeanResolver();
-      expect(() => resolver.resolve('nonExistentBean'))
-        .toThrow(SpelEvaluationException);
+      expect(() => resolver.resolve('nonExistentBean')).toThrow(SpelEvaluationException);
       try {
         resolver.resolve('nonExistentBean');
       } catch (e) {
@@ -154,8 +159,7 @@ describe('Edge Case: Error Paths', () => {
 
     it('should throw BEAN_NOT_FOUND for non-existent factory bean', () => {
       const resolver = new DefaultBeanResolver();
-      expect(() => resolver.resolve('nonExistentFactory', true))
-        .toThrow(SpelEvaluationException);
+      expect(() => resolver.resolve('nonExistentFactory', true)).toThrow(SpelEvaluationException);
       try {
         resolver.resolve('nonExistentFactory', true);
       } catch (e) {
@@ -169,8 +173,9 @@ describe('Edge Case: Error Paths', () => {
     // The parser requires [index] as a postfix operator, so we wrap the array in an object
     it('should throw INDEX_OUT_OF_BOUNDS for out-of-range array index', () => {
       const ctx = new StandardEvaluationContext({ arr: [10, 20, 30] });
-      expect(() => parser.parseExpression('arr[99]').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('arr[99]').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
       try {
         parser.parseExpression('arr[99]').getValueWithContext(ctx);
       } catch (e) {
@@ -180,14 +185,16 @@ describe('Edge Case: Error Paths', () => {
 
     it('should throw INDEX_OUT_OF_BOUNDS for negative array index', () => {
       const ctx = new StandardEvaluationContext({ arr: [10, 20, 30] });
-      expect(() => parser.parseExpression('arr[-1]').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('arr[-1]').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
     });
 
     it('should throw INDEX_OUT_OF_BOUNDS for NaN index', () => {
       const ctx = new StandardEvaluationContext({ arr: [10, 20, 30] });
-      expect(() => parser.parseExpression("arr['abc']").getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression("arr['abc']").getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
     });
 
     it('should access valid array index successfully', () => {
@@ -200,8 +207,7 @@ describe('Edge Case: Error Paths', () => {
   describe('DIVISION_BY_ZERO', () => {
     // SPR-2025: Division by zero
     it('should throw DIVISION_BY_ZERO', () => {
-      expect(() => parser.parseExpression('1/0').getValue())
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('1/0').getValue()).toThrow(SpelEvaluationException);
       try {
         parser.parseExpression('1/0').getValue();
       } catch (e) {
@@ -214,8 +220,9 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2016: setValue on a non-writable literal node
     it('should throw NOT_ASSIGNABLE when setValue on literal expression', () => {
       const ctx = new StandardEvaluationContext();
-      expect(() => parser.parseExpression('42').setValue(ctx, 100))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('42').setValue(ctx, 100)).toThrow(
+        SpelEvaluationException,
+      );
       try {
         parser.parseExpression('42').setValue(ctx, 100);
       } catch (e) {
@@ -234,8 +241,9 @@ describe('Edge Case: Error Paths', () => {
     // SPR-2010: Variable not found in context
     it('should throw VARIABLE_NOT_FOUND for undefined #variable', () => {
       const ctx = new StandardEvaluationContext();
-      expect(() => parser.parseExpression('#undefinedVar').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('#undefinedVar').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
       try {
         parser.parseExpression('#undefinedVar').getValueWithContext(ctx);
       } catch (e) {
@@ -250,8 +258,9 @@ describe('Edge Case: Error Paths', () => {
       // Wrap the non-indexable value in an object and access via property chain
       // The Indexer will be called on a target that is not array/map/object
       const ctx = new StandardEvaluationContext({ val: 'hello' });
-      expect(() => parser.parseExpression('val[0]').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('val[0]').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
     });
   });
 });
@@ -298,8 +307,7 @@ describe('Edge Case: ExpressionState', () => {
     });
 
     it('should throw CANNOT_POP_SCOPE when popping empty stack', () => {
-      expect(() => state.popScope())
-        .toThrow(SpelEvaluationException);
+      expect(() => state.popScope()).toThrow(SpelEvaluationException);
       try {
         state.popScope();
       } catch (e) {
@@ -319,8 +327,7 @@ describe('Edge Case: ExpressionState', () => {
     });
 
     it('should throw CANNOT_POP_HEAD_INDEX when popping empty head stack', () => {
-      expect(() => state.popHeadIndex())
-        .toThrow(SpelEvaluationException);
+      expect(() => state.popHeadIndex()).toThrow(SpelEvaluationException);
       try {
         state.popHeadIndex();
       } catch (e) {
@@ -408,8 +415,9 @@ describe('Edge Case: CompoundExpression', () => {
       const ctx = new StandardEvaluationContext({
         a: { b: null },
       });
-      expect(() => parser.parseExpression('a.b.c').getValueWithContext(ctx))
-        .toThrow(SpelEvaluationException);
+      expect(() => parser.parseExpression('a.b.c').getValueWithContext(ctx)).toThrow(
+        SpelEvaluationException,
+      );
     });
 
     it('should return null for null-safe navigation (?.) hitting null', () => {
@@ -436,7 +444,10 @@ describe('Edge Case: CompoundExpression', () => {
 describe('Edge Case: PropertyAccessor Chain', () => {
   describe('MapAccessor', () => {
     it('should read from Map', () => {
-      const map = new Map([['key1', 'val1'], ['key2', 'val2']]);
+      const map = new Map([
+        ['key1', 'val1'],
+        ['key2', 'val2'],
+      ]);
       const ctx = new StandardEvaluationContext(map);
       const accessor = new MapAccessor();
       expect(accessor.canRead(ctx, map, 'key1')).toBe(true);
@@ -554,24 +565,26 @@ describe('Edge Case: PropertyAccessor Chain', () => {
       const obj = { name: 'Alice' };
       const ctx = new StandardEvaluationContext(obj);
       const accessor = new ReflectivePropertyAccessor();
-      expect(() => accessor.read(ctx, obj, 'nonexistent'))
-        .toThrow(SpelEvaluationException);
+      expect(() => accessor.read(ctx, obj, 'nonexistent')).toThrow(SpelEvaluationException);
       try {
         accessor.read(ctx, obj, 'nonexistent');
       } catch (e) {
-        expect((e as SpelEvaluationException).messageCode).toBe(SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE);
+        expect((e as SpelEvaluationException).messageCode).toBe(
+          SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE,
+        );
       }
     });
 
     it('should throw PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL for null target', () => {
       const ctx = new StandardEvaluationContext();
       const accessor = new ReflectivePropertyAccessor();
-      expect(() => accessor.read(ctx, null, 'prop'))
-        .toThrow(SpelEvaluationException);
+      expect(() => accessor.read(ctx, null, 'prop')).toThrow(SpelEvaluationException);
       try {
         accessor.read(ctx, null, 'prop');
       } catch (e) {
-        expect((e as SpelEvaluationException).messageCode).toBe(SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL);
+        expect((e as SpelEvaluationException).messageCode).toBe(
+          SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE_ON_NULL,
+        );
       }
     });
 
@@ -586,8 +599,7 @@ describe('Edge Case: PropertyAccessor Chain', () => {
     it('should throw PROPERTY_OR_FIELD_NOT_WRITABLE for null target', () => {
       const ctx = new StandardEvaluationContext();
       const accessor = new ReflectivePropertyAccessor();
-      expect(() => accessor.write(ctx, null, 'prop', 'val'))
-        .toThrow(SpelEvaluationException);
+      expect(() => accessor.write(ctx, null, 'prop', 'val')).toThrow(SpelEvaluationException);
     });
 
     it('should return false for canWrite on null/undefined', () => {
@@ -774,8 +786,7 @@ describe('Edge Case: StandardTypeLocator', () => {
   });
 
   it('should throw TYPE_NOT_FOUND for unregistered type', () => {
-    expect(() => locator.findType('UnknownType'))
-      .toThrow(SpelEvaluationException);
+    expect(() => locator.findType('UnknownType')).toThrow(SpelEvaluationException);
     try {
       locator.findType('UnknownType');
     } catch (e) {
@@ -813,8 +824,7 @@ describe('Edge Case: StandardTypeLocator', () => {
     class Simple {}
     locator.register('Simple', Simple);
     const desc = locator.findType('Simple');
-    expect(() => desc.callStaticMethod('nonExistent'))
-      .toThrow(SpelEvaluationException);
+    expect(() => desc.callStaticMethod('nonExistent')).toThrow(SpelEvaluationException);
   });
 
   it('should throw PROPERTY_OR_FIELD_NOT_READABLE for unknown static field', () => {
@@ -823,8 +833,7 @@ describe('Edge Case: StandardTypeLocator', () => {
     }
     locator.register('Simple', Simple, {}, { VERSION: Simple.VERSION });
     const desc = locator.findType('Simple');
-    expect(() => desc.getStaticField('nonExistent'))
-      .toThrow(SpelEvaluationException);
+    expect(() => desc.getStaticField('nonExistent')).toThrow(SpelEvaluationException);
   });
 
   it('should access static field from constructor', () => {
@@ -890,8 +899,7 @@ describe('Edge Case: DefaultBeanResolver', () => {
   });
 
   it('should throw BEAN_NOT_FOUND for unregistered bean', () => {
-    expect(() => resolver.resolve('unknown'))
-      .toThrow(SpelEvaluationException);
+    expect(() => resolver.resolve('unknown')).toThrow(SpelEvaluationException);
     try {
       resolver.resolve('unknown');
     } catch (e) {
@@ -900,8 +908,7 @@ describe('Edge Case: DefaultBeanResolver', () => {
   });
 
   it('should throw BEAN_NOT_FOUND for unregistered factory bean', () => {
-    expect(() => resolver.resolve('unknown', true))
-      .toThrow(SpelEvaluationException);
+    expect(() => resolver.resolve('unknown', true)).toThrow(SpelEvaluationException);
   });
 
   it('should return false for has() on unregistered bean', () => {
@@ -1127,8 +1134,9 @@ describe('Edge Case: StandardTypeConverter', () => {
     });
 
     it('should throw TYPE_CONVERSION_ERROR for object → Number', () => {
-      expect(() => converter.convertValue({}, Number as new (...args: unknown[]) => unknown))
-        .toThrow(SpelEvaluationException);
+      expect(() =>
+        converter.convertValue({}, Number as new (...args: unknown[]) => unknown),
+      ).toThrow(SpelEvaluationException);
       try {
         converter.convertValue({}, Number as new (...args: unknown[]) => unknown);
       } catch (e) {
@@ -1202,7 +1210,10 @@ describe('Edge Case: TypeDescriptor', () => {
   describe('newInstance', () => {
     it('should create instance with constructor args', () => {
       class Person {
-        constructor(public name: string, public age: number) {}
+        constructor(
+          public name: string,
+          public age: number,
+        ) {}
       }
       locator.register('Person', Person);
       const desc = locator.findType('Person');

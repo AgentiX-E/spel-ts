@@ -1,6 +1,9 @@
-
 import { describe, it, expect } from 'vitest';
-import { SpelExpressionParser, StandardEvaluationContext, DefaultBeanResolver } from '../src/index.js';
+import {
+  SpelExpressionParser,
+  StandardEvaluationContext,
+  DefaultBeanResolver,
+} from '../src/index.js';
 
 describe('Phase9: Parser branch coverage', () => {
   const p = new SpelExpressionParser();
@@ -53,14 +56,14 @@ describe('Phase9: Parser branch coverage', () => {
     // "new" without type name throws at expect(TokenKind.IDENTIFIER)
   });
 
-  // Between with and-form (not list form) 
+  // Between with and-form (not list form)
   it('between with and keyword', () => {
     expect(p.parseExpression('3 between 1 and 5').getValue()).toBe(true);
   });
 
   // Postfix DOT without LPAREN after method name
   it('plain property access via DOT', () => {
-    const ctx = new StandardEvaluationContext({obj:{prop:42}});
+    const ctx = new StandardEvaluationContext({ obj: { prop: 42 } });
     expect(p.parseExpression('obj.prop').getValueWithContext(ctx)).toBe(42);
   });
 

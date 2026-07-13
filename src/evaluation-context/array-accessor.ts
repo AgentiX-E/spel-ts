@@ -3,7 +3,9 @@ import { TypedValue } from '../typed-value.js';
 import type { PropertyAccessor } from './property-accessor.js';
 
 export class ArrayAccessor implements PropertyAccessor {
-  public getSpecificTargetClasses(): null { return null; }
+  public getSpecificTargetClasses(): null {
+    return null;
+  }
 
   public canRead(_context: EvaluationContext, target: unknown, name: string): boolean {
     if (!Array.isArray(target)) return false;
@@ -21,7 +23,12 @@ export class ArrayAccessor implements PropertyAccessor {
     return Array.isArray(target);
   }
 
-  public write(_context: EvaluationContext, target: unknown, name: string, newValue: unknown): void {
+  public write(
+    _context: EvaluationContext,
+    target: unknown,
+    name: string,
+    newValue: unknown,
+  ): void {
     const arr = target as unknown[];
     const index = parseInt(name, 10);
     arr[index] = newValue;

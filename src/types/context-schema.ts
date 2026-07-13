@@ -120,7 +120,7 @@ export interface MethodSchema {
   returnType: string;
 
   /** Method parameters */
-  params?: { name: string; type: string; }[];
+  params?: { name: string; type: string }[];
 
   /** Human-readable description */
   description?: string;
@@ -132,7 +132,7 @@ export interface FunctionSchema {
   returnType: string;
 
   /** Function parameters */
-  params: { name: string; type: string; }[];
+  params: { name: string; type: string }[];
 
   /** Human-readable description */
   description?: string;
