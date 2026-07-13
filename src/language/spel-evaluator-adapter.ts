@@ -109,9 +109,11 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
         functions: {},
       };
 
-      const rootObj = (ctx as unknown as { getRootObject?: () => { getValue?: () => unknown } })
-        .getRootObject?.()
-        .getValue?.();
+      interface StandardContextInternals {
+        getRootObject?(): { getValue?(): unknown };
+      }
+      const internals = ctx as unknown as StandardContextInternals;
+      const rootObj = internals.getRootObject?.()?.getValue?.();
       if (typeof rootObj === 'object' && rootObj !== null) {
         const fields: Record<string, { type: string }> = {};
         for (const key of Object.keys(rootObj)) {
