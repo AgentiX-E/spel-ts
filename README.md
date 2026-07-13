@@ -111,3 +111,8 @@ import {
 ## License
 
 MIT © AgentiX-E
+
+## Ecosystem
+
+- [@agentix-e/nl2spel](https://github.com/AgentiX-E/nl2spel) — Natural language → SpEL expression generation engine
+- [@agentix-e/spel-editor](https://github.com/AgentiX-E/spel-editor) — Web-embeddable SpEL editor (CodeMirror 6 + spel-ts powered)
