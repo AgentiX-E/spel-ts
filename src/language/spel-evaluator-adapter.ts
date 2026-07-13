@@ -113,6 +113,7 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
         getRootObject?(): { getValue?(): unknown };
       }
       const internals = ctx as unknown as StandardContextInternals;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const rootObj = internals.getRootObject?.()?.getValue?.();
       if (typeof rootObj === 'object' && rootObj !== null) {
         const fields: Record<string, { type: string }> = {};
