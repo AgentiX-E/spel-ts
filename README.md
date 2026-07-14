@@ -102,8 +102,8 @@ import {
 
 | Metric | Value |
 |--------|-------|
-| Tests | 978 passing |
-| Coverage | 92.12% statements / 91.92% branches |
+| Tests | 1030 passing |
+| Coverage | 94.51% statements / 93.32% branches |
 | TypeScript | 5.x strict mode |
 | Bundles | ESM + CJS |
 | Dependencies | 0 runtime dependencies |
