@@ -37,6 +37,7 @@ export class StandardEvaluationContext implements EvaluationContext {
       findType: (name: string) => {
         throw new Error(`Type "${name}" not found. TypeLocator not configured.`);
       },
+      // Stub: no-op until a real TypeLocator is installed via setTypeLocator()
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       registerType: () => {},
       hasType: () => false,
@@ -46,6 +47,7 @@ export class StandardEvaluationContext implements EvaluationContext {
       resolve: (name: string) => {
         throw new Error(`Bean "${name}" not found. BeanResolver not configured.`);
       },
+      // Stub: no-op until a real BeanResolver is installed via setBeanResolver()
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       register: () => {},
       has: () => false,

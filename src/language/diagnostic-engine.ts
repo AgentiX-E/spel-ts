@@ -50,13 +50,12 @@ export interface ContextValidationResult {
  *   3. Context check — validates references against a ContextSchema
  *   4. Type check — detects operand type mismatches
  */
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class SpelDiagnosticEngine {
+export namespace SpelDiagnosticEngine {
   /**
    * Check syntax validity of an expression.
    * Returns diagnostics from the SpEL parser.
    */
-  static checkSyntax(expression: string): SpelDiagnostic[] {
+  export function checkSyntax(expression: string): SpelDiagnostic[] {
     try {
       const parser = new SpelExpressionParser();
       parser.parseExpression(expression);
@@ -90,7 +89,7 @@ export class SpelDiagnosticEngine {
   /**
    * Check for semantic issues (self-comparison, double negation, tautologies).
    */
-  static checkSemantics(expression: string): SpelDiagnostic[] {
+  export function checkSemantics(expression: string): SpelDiagnostic[] {
     const diagnostics: SpelDiagnostic[] = [];
 
     // Double negation: !!expr or not not expr
@@ -155,7 +154,7 @@ export class SpelDiagnosticEngine {
   /**
    * Validate expression references against a ContextSchema.
    */
-  static checkContext(expression: string, contextSchema: ContextSchema): SpelDiagnostic[] {
+  export function checkContext(expression: string, contextSchema: ContextSchema): SpelDiagnostic[] {
     const refs = SpelReferenceExtractor.extract(expression);
     const diagnostics: SpelDiagnostic[] = [];
     const missingRefs: SpelReference[] = [];
@@ -255,11 +254,11 @@ export class SpelDiagnosticEngine {
   /**
    * Run all validation stages.
    */
-  static validate(expression: string, contextSchema?: ContextSchema): SpelDiagnostic[] {
+  export function validate(expression: string, contextSchema?: ContextSchema): SpelDiagnostic[] {
     const diagnostics: SpelDiagnostic[] = [];
 
     // Stage 1: Syntax
-    diagnostics.push(...SpelDiagnosticEngine.checkSyntax(expression));
+    diagnostics.push(...checkSyntax(expression));
 
     // If syntax errors exist, skip further stages (expression can't be parsed)
     if (
@@ -271,11 +270,11 @@ export class SpelDiagnosticEngine {
     }
 
     // Stage 2: Semantic
-    diagnostics.push(...SpelDiagnosticEngine.checkSemantics(expression));
+    diagnostics.push(...checkSemantics(expression));
 
     // Stage 3: Context (only if schema provided)
     if (contextSchema) {
-      diagnostics.push(...SpelDiagnosticEngine.checkContext(expression, contextSchema));
+      diagnostics.push(...checkContext(expression, contextSchema));
     }
 
     return diagnostics;
@@ -284,7 +283,7 @@ export class SpelDiagnosticEngine {
   /**
    * Parse an expression and return both AST and diagnostics.
    */
-  static parseWithDiagnostics(expression: string): {
+  export function parseWithDiagnostics(expression: string): {
     ast: SpelNodeImpl | null;
     diagnostics: SpelDiagnostic[];
   } {
@@ -296,7 +295,7 @@ export class SpelDiagnosticEngine {
       const ast = (expr as { getAST?: () => SpelNodeImpl }).getAST?.() ?? null;
 
       // Run semantic checks on valid expression
-      diagnostics.push(...SpelDiagnosticEngine.checkSemantics(expression));
+      diagnostics.push(...checkSemantics(expression));
 
       return { ast, diagnostics };
     } catch (e) {

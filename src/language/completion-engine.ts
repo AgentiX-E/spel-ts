@@ -210,8 +210,7 @@ const STATIC_COMPLETIONS: CompletionItem[] = [
  * When a ContextSchema is available, suggestions include variable names,
  * property names, method names, bean names, and type names.
  */
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class SpelCompletionEngine {
+export namespace SpelCompletionEngine {
   /**
    * Get completion suggestions at a given cursor position.
    *
@@ -220,26 +219,24 @@ export class SpelCompletionEngine {
    * @param contextSchema Optional context schema for context-aware completions
    * @returns Sorted list of completion items
    */
-  static getCompletions(
+  export function getCompletions(
     expression: string,
     position: number,
     contextSchema?: ContextSchema,
   ): CompletionItem[] {
-    const prefix = SpelCompletionEngine.#getPrefixAt(expression, position);
+    const prefix = getPrefixAt(expression, position);
     const items: CompletionItem[] = [];
 
     // Always include static completions filtered by prefix
     for (const item of STATIC_COMPLETIONS) {
-      if (SpelCompletionEngine.#matchesPrefix(item.label, prefix)) {
+      if (matchesPrefix(item.label, prefix)) {
         items.push(item);
       }
     }
 
     // Add context-aware completions if schema is available
     if (contextSchema) {
-      items.push(
-        ...SpelCompletionEngine.getContextCompletions(expression, position, contextSchema, prefix),
-      );
+      items.push(...getContextCompletions(expression, position, contextSchema, prefix));
     }
 
     // Sort by priority (descending) then alphabetically
@@ -254,14 +251,14 @@ export class SpelCompletionEngine {
   /**
    * Get static keyword and operator completions (no context needed).
    */
-  static getStaticCompletions(): CompletionItem[] {
+  export function getStaticCompletions(): CompletionItem[] {
     return [...STATIC_COMPLETIONS];
   }
 
   /**
    * Get context-aware completions based on a ContextSchema.
    */
-  static getContextCompletions(
+  export function getContextCompletions(
     _expression: string,
     _position: number,
     contextSchema: ContextSchema,
@@ -272,7 +269,7 @@ export class SpelCompletionEngine {
     // Variables from context schema
     for (const [name, schema] of Object.entries(contextSchema.variables)) {
       const label = '#' + name;
-      if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
+      if (matchesPrefix(label, prefix)) {
         items.push({
           label,
           kind: CompletionKind.VARIABLE,
@@ -286,7 +283,7 @@ export class SpelCompletionEngine {
     // Root object fields
     if (contextSchema.root) {
       for (const [name, schema] of Object.entries(contextSchema.root.fields)) {
-        if (SpelCompletionEngine.#matchesPrefix(name, prefix)) {
+        if (matchesPrefix(name, prefix)) {
           items.push({
             label: name,
             kind: CompletionKind.PROPERTY,
@@ -299,7 +296,7 @@ export class SpelCompletionEngine {
 
       // Root object methods
       for (const [name, schema] of Object.entries(contextSchema.root.methods)) {
-        if (SpelCompletionEngine.#matchesPrefix(name, prefix)) {
+        if (matchesPrefix(name, prefix)) {
           items.push({
             label: name + '()',
             kind: CompletionKind.METHOD,
@@ -314,7 +311,7 @@ export class SpelCompletionEngine {
     // Registered functions
     for (const [name, schema] of Object.entries(contextSchema.functions)) {
       const label = '#' + name;
-      if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
+      if (matchesPrefix(label, prefix)) {
         items.push({
           label: label + '()',
           kind: CompletionKind.FUNCTION,
@@ -328,7 +325,7 @@ export class SpelCompletionEngine {
     // Registered beans
     for (const [name, schema] of Object.entries(contextSchema.beans)) {
       const label = '@' + name;
-      if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
+      if (matchesPrefix(label, prefix)) {
         items.push({
           label,
           kind: CompletionKind.BEAN,
@@ -342,7 +339,7 @@ export class SpelCompletionEngine {
     // Registered types
     for (const [name, schema] of Object.entries(contextSchema.types)) {
       const label = 'T(' + name + ')';
-      if (SpelCompletionEngine.#matchesPrefix(label, prefix)) {
+      if (matchesPrefix(label, prefix)) {
         items.push({
           label,
           kind: CompletionKind.TYPE,
@@ -361,7 +358,7 @@ export class SpelCompletionEngine {
   /**
    * Extract the word at the cursor position as the completion prefix.
    */
-  static #getPrefixAt(expression: string, position: number): string {
+  function getPrefixAt(expression: string, position: number): string {
     const before = expression.substring(0, position);
     const match = /(#|@|T\()?[\w.]*$/.exec(before);
     return match ? match[0] : '';
@@ -370,7 +367,7 @@ export class SpelCompletionEngine {
   /**
    * Check if a label matches the current prefix (case-insensitive).
    */
-  static #matchesPrefix(label: string, prefix: string): boolean {
+  function matchesPrefix(label: string, prefix: string): boolean {
     if (!prefix) return true;
     return label.toLowerCase().startsWith(prefix.toLowerCase());
   }

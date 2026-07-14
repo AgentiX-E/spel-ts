@@ -41,12 +41,10 @@ export interface AstVisitor {
 /**
  * AST Walker — utilities for traversing and querying SpEL ASTs.
  *
- * All methods are static — no instantiation required.
  * Designed to be the single traversal utility used by editors,
  * validators, formatters, and code generators.
  */
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class AstWalker {
+export namespace AstWalker {
   /**
    * Depth-first traversal of the AST.
    *
@@ -57,9 +55,9 @@ export class AstWalker {
    * @param root The AST root node
    * @param visitor Callback object
    */
-  static walk(root: SpelNodeImpl, visitor: AstVisitor): void {
+  export function walk(root: SpelNodeImpl, visitor: AstVisitor): void {
     const ancestors: SpelNodeImpl[] = [];
-    AstWalker.#walkNode(root, ancestors, visitor);
+    walkNode(root, ancestors, visitor);
   }
 
   /**
@@ -69,9 +67,12 @@ export class AstWalker {
    * @param predicate Filter function
    * @returns All matching nodes in depth-first order
    */
-  static collect(root: SpelNodeImpl, predicate: (node: SpelNodeImpl) => boolean): SpelNodeImpl[] {
+  export function collect(
+    root: SpelNodeImpl,
+    predicate: (node: SpelNodeImpl) => boolean,
+  ): SpelNodeImpl[] {
     const result: SpelNodeImpl[] = [];
-    AstWalker.walk(root, {
+    walk(root, {
       enterNode(node) {
         if (predicate(node)) {
           result.push(node);
@@ -92,9 +93,9 @@ export class AstWalker {
    * @param position Character offset in the source expression
    * @returns Array of nodes from root to target (inclusive), or empty if not found
    */
-  static findNodePath(root: SpelNodeImpl, position: number): SpelNodeImpl[] {
+  export function findNodePath(root: SpelNodeImpl, position: number): SpelNodeImpl[] {
     const path: SpelNodeImpl[] = [];
-    AstWalker.#findPath(root, position, path);
+    findPath(root, position, path);
     return path;
   }
 
@@ -105,8 +106,8 @@ export class AstWalker {
    * @param position Character offset in the source expression
    * @returns The deepest node containing the position, or null
    */
-  static findNodeAt(root: SpelNodeImpl, position: number): SpelNodeImpl | null {
-    const path = AstWalker.findNodePath(root, position);
+  export function findNodeAt(root: SpelNodeImpl, position: number): SpelNodeImpl | null {
+    const path = findNodePath(root, position);
     return path.length > 0 ? (path[path.length - 1] ?? null) : null;
   }
 
@@ -117,13 +118,13 @@ export class AstWalker {
    * @param nodeType The node type to filter by
    * @returns All matching nodes
    */
-  static collectOfType(root: SpelNodeImpl, nodeType: NodeType): SpelNodeImpl[] {
-    return AstWalker.collect(root, (node) => node.nodeType === nodeType);
+  export function collectOfType(root: SpelNodeImpl, nodeType: NodeType): SpelNodeImpl[] {
+    return collect(root, (node) => node.nodeType === nodeType);
   }
 
   // ===== Private helpers =====
 
-  static #walkNode(node: SpelNodeImpl, ancestors: SpelNodeImpl[], visitor: AstVisitor): void {
+  function walkNode(node: SpelNodeImpl, ancestors: SpelNodeImpl[], visitor: AstVisitor): void {
     // Enter
     const shouldContinue = visitor.enterNode?.(node, ancestors);
     if (shouldContinue === false) return;
@@ -133,7 +134,7 @@ export class AstWalker {
 
     // Traverse children
     for (let i = 0; i < node.getChildCount(); i++) {
-      AstWalker.#walkNode(node.getChild(i), ancestors, visitor);
+      walkNode(node.getChild(i), ancestors, visitor);
     }
 
     // Pop current node from ancestors
@@ -143,7 +144,7 @@ export class AstWalker {
     visitor.leaveNode?.(node, ancestors);
   }
 
-  static #findPath(node: SpelNodeImpl, position: number, path: SpelNodeImpl[]): boolean {
+  function findPath(node: SpelNodeImpl, position: number, path: SpelNodeImpl[]): boolean {
     // Check if position falls within this node's span
     if (position < node.startPos || position > node.endPos) {
       return false;
@@ -153,7 +154,7 @@ export class AstWalker {
 
     // Try children — find the deepest match
     for (let i = 0; i < node.getChildCount(); i++) {
-      if (AstWalker.#findPath(node.getChild(i), position, path)) {
+      if (findPath(node.getChild(i), position, path)) {
         return true; // Found in a child, path already contains child chain
       }
     }

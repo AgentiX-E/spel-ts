@@ -113,6 +113,7 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
         getRootObject?(): { getValue?(): unknown };
       }
       const internals = ctx as unknown as StandardContextInternals;
+      // typeof null === 'object' is true in JS, so both checks are required
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const rootObj = internals.getRootObject?.()?.getValue?.();
       if (typeof rootObj === 'object' && rootObj !== null) {

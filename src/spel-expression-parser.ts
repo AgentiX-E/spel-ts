@@ -319,7 +319,6 @@ export class InternalSpelExpressionParser {
   private eatProductExpression(): SpelNodeImpl {
     let left = this.eatPowerExpression();
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
       const kind = this.peek().kind;
       if (
@@ -428,7 +427,6 @@ export class InternalSpelExpressionParser {
   private eatPostfixOrPrimary(): SpelNodeImpl {
     let node = this.eatPrimaryExpression();
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
       const kind = this.peek().kind;
 
@@ -703,7 +701,6 @@ export class InternalSpelExpressionParser {
     }
 
     // Postfix chain: .prop / ?.prop / [index]
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
       const kind = this.peek().kind;
 

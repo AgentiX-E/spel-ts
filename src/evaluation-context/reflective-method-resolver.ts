@@ -20,8 +20,7 @@ export class ReflectiveMethodResolver implements MethodResolver {
     const fn = targetObj[name];
     if (typeof fn === 'function') {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const result = fn.apply(target, args);
+        const result = (fn as (...args: unknown[]) => unknown).apply(target, args);
         return new TypedValue(result);
       } catch (e) {
         throw new SpelEvaluationException(

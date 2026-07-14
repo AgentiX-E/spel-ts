@@ -70,6 +70,8 @@ export default tseslint.config(
     rules: {
       // Non-null assertions on array index access that is always in-bounds
       '@typescript-eslint/no-non-null-assertion': 'off',
+      // while(true) is the standard parser combinator pattern
+      '@typescript-eslint/no-unnecessary-condition': 'off',
     },
   },
   {
@@ -77,6 +79,14 @@ export default tseslint.config(
     rules: {
       // Constructors delegate different param types (operatorName string) to parent
       '@typescript-eslint/no-useless-constructor': 'off',
+    },
+  },
+  {
+    files: ['src/language/ast-walker.ts', 'src/language/completion-engine.ts', 'src/language/diagnostic-engine.ts', 'src/language/spel-formatter.ts', 'src/language/reference-extractor.ts'],
+    rules: {
+      // Namespace pattern used intentionally for static-only utility modules
+      // to avoid the no-extraneous-class anti-pattern
+      '@typescript-eslint/no-namespace': 'off',
     },
   },
   {

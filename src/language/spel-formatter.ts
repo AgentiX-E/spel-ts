@@ -15,16 +15,15 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
   maxLineWidth: 120,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class SpelFormatter {
-  static format(expression: string, options?: FormatOptions): string {
+export namespace SpelFormatter {
+  export function format(expression: string, options?: FormatOptions): string {
     const opts = { ...DEFAULT_OPTIONS, ...options };
     try {
       const parser = new SpelExpressionParser();
       const ast = parser.parseRaw(expression);
       const formatted = ast.toStringAST();
       if (opts.spacing === 'compact') {
-        return SpelFormatter.#compactSpaces(formatted);
+        return compactSpaces(formatted);
       }
       return formatted;
     } catch {
@@ -32,7 +31,7 @@ export class SpelFormatter {
     }
   }
 
-  static minify(expression: string): string {
+  export function minify(expression: string): string {
     let inString: string | null = null;
     let result = '';
     for (let i = 0; i < expression.length; i++) {
@@ -50,7 +49,7 @@ export class SpelFormatter {
         continue;
       }
       if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
-        if (prev && prev !== ' ' && SpelFormatter.#isTokenChar(prev)) {
+        if (prev && prev !== ' ' && isTokenChar(prev)) {
           result += ' ';
         }
         continue;
@@ -60,7 +59,7 @@ export class SpelFormatter {
     return result.trim();
   }
 
-  static semanticallyEqual(a: string, b: string): boolean {
+  export function semanticallyEqual(a: string, b: string): boolean {
     try {
       const parser = new SpelExpressionParser();
       return parser.parseRaw(a).toStringAST() === parser.parseRaw(b).toStringAST();
@@ -69,14 +68,14 @@ export class SpelFormatter {
     }
   }
 
-  static #compactSpaces(expr: string): string {
+  function compactSpaces(expr: string): string {
     return expr
       .replace(/\s*([+\-*/%=<>!&|^?:.,;()[\]{}])\s*/g, '$1')
       .replace(/\s+(and|or|not|eq|ne|lt|gt|le|ge|mod|matches|between|instanceof|new)\s+/gi, ' $1 ')
       .trim();
   }
 
-  static #isTokenChar(ch: string): boolean {
+  function isTokenChar(ch: string): boolean {
     return /[\w#@]/.test(ch);
   }
 }

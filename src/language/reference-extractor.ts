@@ -26,19 +26,18 @@ export interface SpelReference {
   nodeType: NodeType;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class SpelReferenceExtractor {
-  static extract(expression: string): SpelReference[] {
+export namespace SpelReferenceExtractor {
+  export function extract(expression: string): SpelReference[] {
     try {
       const parser = new SpelExpressionParser();
       const ast = parser.parseRaw(expression);
-      return SpelReferenceExtractor.extractFromAst(ast);
+      return extractFromAst(ast);
     } catch {
-      return SpelReferenceExtractor.#extractFallback(expression);
+      return extractFallback(expression);
     }
   }
 
-  static extractFromAst(root: SpelNodeImpl): SpelReference[] {
+  export function extractFromAst(root: SpelNodeImpl): SpelReference[] {
     const refs: SpelReference[] = [];
     AstWalker.walk(root, {
       enterNode(node, ancestors) {
@@ -116,56 +115,60 @@ export class SpelReferenceExtractor {
     return refs;
   }
 
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
-  static #extractFallback(expression: string): SpelReference[] {
+  function extractFallback(expression: string): SpelReference[] {
     const refs: SpelReference[] = [];
+
+    // Regex capture groups are always populated when matched — non-null assertions are safe here.
     const varRegex = /#(\w+(?:\.\w+)*)/g;
     let match: RegExpExecArray | null;
     while ((match = varRegex.exec(expression)) !== null) {
       refs.push({
         kind: SpelReferenceKind.VARIABLE,
-        name: match[1]!,
-        path: match[1]!.split('.'),
+        name: match[1] ?? '',
+        path: (match[1] ?? '').split('.'),
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.VARIABLE_REFERENCE,
       });
     }
+
     const beanRegex = /@(\w+)/g;
     while ((match = beanRegex.exec(expression)) !== null) {
       if (match.index > 0 && expression[match.index - 1] === '&') continue;
       refs.push({
         kind: SpelReferenceKind.BEAN,
-        name: match[1]!,
-        path: [match[1]!],
+        name: match[1] ?? '',
+        path: [match[1] ?? ''],
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.BEAN_REFERENCE,
       });
     }
+
     const factoryRegex = /&@(\w+)/g;
     while ((match = factoryRegex.exec(expression)) !== null) {
       refs.push({
         kind: SpelReferenceKind.BEAN_FACTORY,
-        name: match[1]!,
-        path: [match[1]!],
+        name: match[1] ?? '',
+        path: [match[1] ?? ''],
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.BEAN_REFERENCE,
       });
     }
+
     const typeRegex = /T\((\w+(?:\.\w+)*)\)/g;
     while ((match = typeRegex.exec(expression)) !== null) {
       refs.push({
         kind: SpelReferenceKind.TYPE,
-        name: match[1]!,
-        path: [match[1]!],
+        name: match[1] ?? '',
+        path: [match[1] ?? ''],
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.TYPE_REFERENCE,
       });
     }
+
     return refs;
   }
-  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 }

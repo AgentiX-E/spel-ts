@@ -25,13 +25,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
 
-    // strictFunctionTypes must remain false because the test suite and
-    // reflective method registrar API accept (...args: unknown[]) => unknown
-    // as a generic function signature. With strictFunctionTypes enabled,
-    // assigning (x: number) => number or (name: string) => string would
-    // become a type error. The runtime already validates argument counts
-    // and types, so this does not weaken safety in practice.
-    "strictFunctionTypes": false,
+    "strictFunctionTypes": true,
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "vitest.config.ts"],
