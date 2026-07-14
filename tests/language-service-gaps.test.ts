@@ -1305,3 +1305,98 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
     expect(refs.some((r) => r.kind === SpelReferenceKind.ROOT_PROPERTY)).toBe(true);
   });
 });
+
+// =====================================================================
+// 17. REFERENCE-EXTRACTOR FALLBACK BRANCHES
+// =====================================================================
+describe('ReferenceExtractor fallback regex branches', () => {
+  it('extract returns factory beans via fallback', () => {
+    const refs = SpelReferenceExtractor.extract('&@myFactory');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN_FACTORY)).toBe(true);
+  });
+
+  it('extract returns types via fallback', () => {
+    const refs = SpelReferenceExtractor.extract('T(Math)');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.TYPE)).toBe(true);
+  });
+
+  it('extract returns empty for expression with no references', () => {
+    const refs = SpelReferenceExtractor.extract('42 + 17');
+    expect(refs.length).toBe(0);
+  });
+
+  it('extract returns bean refs for @ references', () => {
+    const refs = SpelReferenceExtractor.extract('@myService');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN)).toBe(true);
+  });
+});
+
+// =====================================================================
+// 18. DIAGNOSTIC-ENGINE REMAINING BRANCHES
+// =====================================================================
+describe('DiagnosticEngine remaining branches', () => {
+  it('checkSemantics detects self-comparison with == (equality path)', () => {
+    const diags = SpelDiagnosticEngine.checkSemantics('#x == #x');
+    expect(diags.some((d) => d.code === 'SEMANTIC-SELF_COMPARISON')).toBe(true);
+    expect(diags.some((d) => d.message.includes('always true'))).toBe(true);
+  });
+
+  it('checkSemantics detects self-comparison with eq keyword', () => {
+    const diags = SpelDiagnosticEngine.checkSemantics('#x eq #x');
+    expect(diags.some((d) => d.code === 'SEMANTIC-SELF_COMPARISON')).toBe(true);
+  });
+
+  it('validate runs context stage with schema', () => {
+    const schema = {
+      root: null,
+      variables: { x: { type: 'number' } },
+      beans: {},
+      types: {},
+      functions: {},
+    };
+    const diags = SpelDiagnosticEngine.validate('#x > 5', schema);
+    expect(diags.filter((d) => d.severity === DiagnosticSeverity.ERROR).length).toBe(0);
+  });
+
+  it('checkContext BEAN_FACTORY missing bean warns', () => {
+    const origExtract = SpelReferenceExtractor.extract;
+    SpelReferenceExtractor.extract = () => [
+      {
+        kind: SpelReferenceKind.BEAN_FACTORY,
+        name: 'myFactory',
+        path: ['myFactory'],
+        startPos: 0,
+        endPos: 9,
+        nodeType: 'bean_reference' as never,
+      },
+    ];
+    const schema = { root: null, variables: {}, beans: {}, types: {}, functions: {} };
+    const diags = SpelDiagnosticEngine.checkContext('&@myFactory', schema);
+    expect(diags.some((d) => d.code === 'CONTEXT-UNDEFINED_BEAN')).toBe(true);
+  });
+
+  it('checkContext BEAN_FACTORY defined bean no warn', () => {
+    const origExtract = SpelReferenceExtractor.extract;
+    SpelReferenceExtractor.extract = () => [
+      {
+        kind: SpelReferenceKind.BEAN_FACTORY,
+        name: 'myBean',
+        path: ['myBean'],
+        startPos: 0,
+        endPos: 6,
+        nodeType: 'bean_reference' as never,
+      },
+    ];
+    const schema = {
+      root: null,
+      variables: {},
+      beans: { myBean: { type: 'MyBean' } },
+      types: {},
+      functions: {},
+    };
+    const diags = SpelDiagnosticEngine.checkContext('&@myBean', schema);
+    expect(diags.filter((d) => d.code === 'CONTEXT-UNDEFINED_BEAN').length).toBe(0);
+  });
+});
+
+// =====================================================================
