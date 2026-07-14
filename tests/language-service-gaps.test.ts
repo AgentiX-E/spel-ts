@@ -363,9 +363,7 @@ describe('SpelEvaluatorAdapter — validateContext & error paths', () => {
         throw new Error('internal error');
       },
     };
-    const adapter = new SpelEvaluatorAdapter(
-      mockCtx as unknown as StandardEvaluationContext,
-    );
+    const adapter = new SpelEvaluatorAdapter(mockCtx as unknown as StandardEvaluationContext);
     const schema = adapter.getContextSchema();
     expect(schema).toBeNull();
   });
