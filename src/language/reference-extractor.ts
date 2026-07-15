@@ -122,10 +122,12 @@ export namespace SpelReferenceExtractor {
     const varRegex = /#(\w+(?:\.\w+)*)/g;
     let match: RegExpExecArray | null;
     while ((match = varRegex.exec(expression)) !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- regex capture group 1 always populated
+      const varName = match[1]!;
       refs.push({
         kind: SpelReferenceKind.VARIABLE,
-        name: match[1] ?? '',
-        path: (match[1] ?? '').split('.'),
+        name: varName,
+        path: varName.split('.'),
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.VARIABLE_REFERENCE,
@@ -135,10 +137,12 @@ export namespace SpelReferenceExtractor {
     const beanRegex = /@(\w+)/g;
     while ((match = beanRegex.exec(expression)) !== null) {
       if (match.index > 0 && expression[match.index - 1] === '&') continue;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- regex capture group 1 always populated
+      const beanName = match[1]!;
       refs.push({
         kind: SpelReferenceKind.BEAN,
-        name: match[1] ?? '',
-        path: [match[1] ?? ''],
+        name: beanName,
+        path: [beanName],
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.BEAN_REFERENCE,
@@ -147,10 +151,12 @@ export namespace SpelReferenceExtractor {
 
     const factoryRegex = /&@(\w+)/g;
     while ((match = factoryRegex.exec(expression)) !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- regex capture group 1 always populated
+      const factoryName = match[1]!;
       refs.push({
         kind: SpelReferenceKind.BEAN_FACTORY,
-        name: match[1] ?? '',
-        path: [match[1] ?? ''],
+        name: factoryName,
+        path: [factoryName],
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.BEAN_REFERENCE,
@@ -159,10 +165,12 @@ export namespace SpelReferenceExtractor {
 
     const typeRegex = /T\((\w+(?:\.\w+)*)\)/g;
     while ((match = typeRegex.exec(expression)) !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- regex capture group 1 always populated
+      const typeName = match[1]!;
       refs.push({
         kind: SpelReferenceKind.TYPE,
-        name: match[1] ?? '',
-        path: [match[1] ?? ''],
+        name: typeName,
+        path: [typeName],
         startPos: match.index,
         endPos: match.index + match[0].length,
         nodeType: NodeType.TYPE_REFERENCE,
@@ -170,5 +178,10 @@ export namespace SpelReferenceExtractor {
     }
 
     return refs;
+  }
+
+  /** @internal — exported for testing the fallback regex paths */
+  export function _testExtractFallback(expression: string): SpelReference[] {
+    return extractFallback(expression);
   }
 }

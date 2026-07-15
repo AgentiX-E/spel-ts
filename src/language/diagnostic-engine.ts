@@ -110,7 +110,8 @@ export namespace SpelDiagnosticEngine {
     const selfCompPattern = /#(\w+)\s*(==|!=|eq|ne)\s*#\1/g;
     let scMatch: RegExpExecArray | null;
     while ((scMatch = selfCompPattern.exec(expression)) !== null) {
-      const op = scMatch[2] ?? '';
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- regex guarantees group 2 exists when matched
+      const op = scMatch[2]!;
       const isNeq = op === '!=' || op.toLowerCase() === 'ne';
       diagnostics.push({
         severity: DiagnosticSeverity.WARNING,

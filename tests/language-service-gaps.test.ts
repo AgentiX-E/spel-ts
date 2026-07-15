@@ -7,7 +7,7 @@
  *   - SpelFormatter          (83% stmts / 82% branches → target ≥90%)
  *   - SpelEvaluatorAdapter   (93% stmts / 59% branches → target ≥85%)
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest';
 import {
   SpelExpressionParser,
   StandardEvaluationContext,
@@ -22,7 +22,15 @@ import {
   CompletionKind,
   AstWalker,
   NodeType,
+  SpelParseException,
+  SpelMessage,
+  VariableReference,
+  PropertyOrFieldReference,
+  MethodReference,
+  TypedValue,
+  SpelNodeImpl,
 } from '../src/index.js';
+import type { ExpressionState } from '../src/expression-state.js';
 
 // =====================================================================
 // 1. SPELDIAGNOSTICENGINE — SEMANTIC gaps
@@ -968,12 +976,10 @@ describe('SpelCompletionEngine — TYPE and prefix branches', () => {
 describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   let _saved: typeof SpelReferenceExtractor.extract;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   beforeAll(() => {
     _saved = SpelReferenceExtractor.extract;
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   afterAll(() => {
     SpelReferenceExtractor.extract = _saved;
   });
@@ -1330,12 +1336,10 @@ describe('ReferenceExtractor fallback regex branches', () => {
 describe('DiagnosticEngine remaining branches', () => {
   let _saved18: typeof SpelReferenceExtractor.extract;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   beforeAll(() => {
     _saved18 = SpelReferenceExtractor.extract;
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   afterAll(() => {
     SpelReferenceExtractor.extract = _saved18;
   });
@@ -1430,5 +1434,225 @@ describe('ReferenceExtractor fallback via unparseable expressions', () => {
   it('fallback handles mixed references', () => {
     const refs = SpelReferenceExtractor.extract('#var @bean &@factory T(String) +');
     expect(refs.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// =====================================================================
+// 20. REFERENCE-EXTRACTOR — _testExtractFallback direct coverage
+// =====================================================================
+describe('_testExtractFallback — direct regex coverage', () => {
+  // Access the internal export for direct fallback testing
+  const _internals = (SpelReferenceExtractor as unknown as Record<string, unknown>)
+    ._testExtractFallback;
+  const fallback = _internals as (
+    expr: string,
+  ) => import('../src/language/reference-extractor.js').SpelReference[];
+
+  it('extracts multiple variables', () => {
+    const refs = fallback('#var #var2');
+    expect(refs.filter((r) => r.kind === SpelReferenceKind.VARIABLE).length).toBe(2);
+  });
+
+  it('extracts bean reference', () => {
+    const refs = fallback('@bean');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN)).toBe(true);
+  });
+
+  it('extracts factory bean reference', () => {
+    const refs = fallback('&@factory');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN_FACTORY)).toBe(true);
+  });
+
+  it('extracts type reference', () => {
+    const refs = fallback('T(Math)');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.TYPE)).toBe(true);
+  });
+
+  it('extracts mixed references of all 4 types', () => {
+    const refs = fallback('#var @bean &@factory T(String)');
+    const kinds = refs.map((r) => r.kind);
+    expect(kinds).toContain(SpelReferenceKind.VARIABLE);
+    expect(kinds).toContain(SpelReferenceKind.BEAN);
+    expect(kinds).toContain(SpelReferenceKind.BEAN_FACTORY);
+    expect(kinds).toContain(SpelReferenceKind.TYPE);
+  });
+
+  it('returns empty for expression with no references', () => {
+    const refs = fallback('42 + 17');
+    expect(refs.length).toBe(0);
+  });
+
+  it('handles edge case — @ followed by nothing', () => {
+    const refs = fallback('@');
+    // No word chars after @, so BEAN regex won't match
+    expect(refs.filter((r) => r.kind === SpelReferenceKind.BEAN).length).toBe(0);
+  });
+
+  it('handles edge case — &@ followed by nothing', () => {
+    const refs = fallback('&@');
+    // No word chars after &@, so factory regex won't match
+    expect(refs.filter((r) => r.kind === SpelReferenceKind.BEAN_FACTORY).length).toBe(0);
+  });
+
+  it('handles edge case — T() with nothing inside', () => {
+    const refs = fallback('T()');
+    // No word chars inside T(), so type regex won't match
+    expect(refs.filter((r) => r.kind === SpelReferenceKind.TYPE).length).toBe(0);
+  });
+
+  it('handles dotted variable names', () => {
+    const refs = fallback('#a.b.c');
+    const varRef = refs.find((r) => r.kind === SpelReferenceKind.VARIABLE);
+    expect(varRef).toBeDefined();
+    expect(varRef!.name).toBe('a.b.c');
+    expect(varRef!.path).toEqual(['a', 'b', 'c']);
+  });
+});
+
+// =====================================================================
+// 21. DIAGNOSTIC-ENGINE — remaining branch coverage (BRDA 71, 113, 295, 308)
+// =====================================================================
+describe('DiagnosticEngine — BRDA branch coverage', () => {
+  let origParseExpression: typeof SpelExpressionParser.prototype.parseExpression | undefined;
+
+  afterEach(() => {
+    if (origParseExpression) {
+      SpelExpressionParser.prototype.parseExpression = origParseExpression;
+      origParseExpression = undefined;
+    }
+  });
+
+  // --- Line 295: getAST?.() ?? null when getAST returns undefined ---
+  it('parseWithDiagnostics — ast is null when getAST returns undefined', () => {
+    origParseExpression = SpelExpressionParser.prototype.parseExpression;
+    // Return a mock that has getAST as undefined (not a function)
+    // undefined?.() returns undefined → ?? null returns null
+    SpelExpressionParser.prototype.parseExpression = function () {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return { getAST: undefined } as unknown as ReturnType<typeof origParseExpression>;
+    };
+    const result = SpelDiagnosticEngine.parseWithDiagnostics('1');
+    expect(result.ast).toBeNull();
+  });
+
+  // --- Lines 71, 308: || 'UNKNOWN' when messageCode is empty string ---
+  it('checkSyntax — falls back to UNKNOWN code when messageCode is empty', () => {
+    origParseExpression = SpelExpressionParser.prototype.parseExpression;
+    // Create a real SpelParseException, then override messageCode to empty string
+    const ex = new SpelParseException(3, SpelMessage.OODES);
+    (ex as Record<string, unknown>).messageCode = '';
+    SpelExpressionParser.prototype.parseExpression = function () {
+      throw ex;
+    };
+    const diags = SpelDiagnosticEngine.checkSyntax('test');
+    expect(diags.length).toBe(1);
+    expect(diags[0].code).toBe('SYNTAX-UNKNOWN');
+  });
+
+  it('parseWithDiagnostics — falls back to UNKNOWN code when messageCode is empty', () => {
+    origParseExpression = SpelExpressionParser.prototype.parseExpression;
+    const ex = new SpelParseException(5, SpelMessage.OODES);
+    (ex as Record<string, unknown>).messageCode = '';
+    SpelExpressionParser.prototype.parseExpression = function () {
+      throw ex;
+    };
+    const result = SpelDiagnosticEngine.parseWithDiagnostics('test');
+    expect(result.ast).toBeNull();
+    expect(result.diagnostics.length).toBe(1);
+    expect(result.diagnostics[0].code).toBe('SYNTAX-UNKNOWN');
+  });
+
+  // --- Line 113: ?? '' defensive operator (regex always populates group 2) ---
+  it('checkSemantics #x == #x self-comparison produces expected diagnostic', () => {
+    const diags = SpelDiagnosticEngine.checkSemantics('#x == #x');
+    expect(diags.some((d) => d.code === 'SEMANTIC-SELF_COMPARISON')).toBe(true);
+  });
+});
+
+// =====================================================================
+// 22. REFERENCEEXTRACTOR — ROOT_PROPERTY branch (extractFromAst line 68)
+// =====================================================================
+describe('SpelReferenceExtractor — ROOT_PROPERTY from manually constructed AST', () => {
+  it('extractFromAst produces ROOT_PROPERTY when PropertyOrField is child of VariableReference', () => {
+    // The standard parser always wraps VariableReference + PropertyOrFieldReference
+    // as siblings in a CompoundExpression. ROOT_PROPERTY is only reachable when
+    // PropertyOrFieldReference is a DIRECT child of VariableReference.
+    // Construct such a tree manually.
+    const varRef = new VariableReference(0, 2, 'x');
+    const propRef = new PropertyOrFieldReference(3, 11, 'property');
+    // Inject propRef as a child of varRef
+    (varRef as unknown as { children: unknown[] }).children = [propRef];
+
+    const refs = SpelReferenceExtractor.extractFromAst(varRef);
+    expect(refs.length).toBeGreaterThanOrEqual(1);
+    const rootProps = refs.filter((r) => r.kind === SpelReferenceKind.ROOT_PROPERTY);
+    expect(rootProps.length).toBe(1);
+    expect(rootProps[0].name).toBe('property');
+  });
+});
+
+// =====================================================================
+// 23. REFERENCEEXTRACTOR — FUNCTION kind + typeof false branches
+// =====================================================================
+describe('SpelReferenceExtractor — FUNCTION and typeof defensive fallbacks', () => {
+  it('extractFromAst produces FUNCTION kind when VariableRef is child of MethodRef', () => {
+    const varRef = new VariableReference(0, 2, 'myFunc');
+    // MethodReference stores children (= arguments) via constructor spread
+    const methodRef = new MethodReference(0, 10, 'functionName', varRef);
+    const refs = SpelReferenceExtractor.extractFromAst(methodRef);
+    expect(refs.some((r) => r.kind === SpelReferenceKind.FUNCTION)).toBe(true);
+  });
+
+  it('extractFromAst — typeof getVariableName false branch falls back to empty', () => {
+    // A node with VariableReference type but without getVariableName method
+    const fakeVarNode = {
+      nodeType: NodeType.VARIABLE_REFERENCE,
+      startPos: 0,
+      endPos: 5,
+      getChildCount: () => 0,
+      getChild: () => null as unknown,
+    } as unknown as SpelNodeImpl;
+    const refs = SpelReferenceExtractor.extractFromAst(fakeVarNode);
+    expect(refs.length).toBeGreaterThanOrEqual(1);
+    expect(refs[0].name).toBe('');
+  });
+
+  it('extractFromAst — typeof getName false branch falls back to empty', () => {
+    const fakePropNode = {
+      nodeType: NodeType.PROPERTY_OR_FIELD_REFERENCE,
+      startPos: 0,
+      endPos: 5,
+      getChildCount: () => 0,
+      getChild: () => null as unknown,
+    } as unknown as SpelNodeImpl;
+    const refs = SpelReferenceExtractor.extractFromAst(fakePropNode);
+    expect(refs.length).toBeGreaterThanOrEqual(1);
+    expect(refs[0].name).toBe('');
+  });
+
+  it('extractFromAst — typeof getBeanName false branch falls back to empty', () => {
+    const fakeBeanNode = {
+      nodeType: NodeType.BEAN_REFERENCE,
+      startPos: 0,
+      endPos: 5,
+      getChildCount: () => 0,
+      getChild: () => null as unknown,
+    } as unknown as SpelNodeImpl;
+    const refs = SpelReferenceExtractor.extractFromAst(fakeBeanNode);
+    expect(refs.length).toBeGreaterThanOrEqual(1);
+    expect(refs[0].name).toBe('');
+  });
+
+  it('extractFromAst — typeof getTypeName false branch falls back to empty', () => {
+    const fakeTypeNode = {
+      nodeType: NodeType.TYPE_REFERENCE,
+      startPos: 0,
+      endPos: 5,
+      getChildCount: () => 0,
+      getChild: () => null as unknown,
+    } as unknown as SpelNodeImpl;
+    const refs = SpelReferenceExtractor.extractFromAst(fakeTypeNode);
+    expect(refs.length).toBeGreaterThanOrEqual(1);
+    expect(refs[0].name).toBe('');
   });
 });
