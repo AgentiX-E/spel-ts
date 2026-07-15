@@ -966,18 +966,21 @@ describe('SpelCompletionEngine — TYPE and prefix branches', () => {
 // 16. DEAD CODE COVERAGE — ROOT_PROPERTY and FUNCTION branches
 // =====================================================================
 describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
-  let origExtract: typeof SpelReferenceExtractor.extract | undefined;
+  let _saved: typeof SpelReferenceExtractor.extract;
 
-  afterEach(() => {
-    if (origExtract) {
-      SpelReferenceExtractor.extract = origExtract;
-    }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  beforeAll(() => {
+    _saved = SpelReferenceExtractor.extract;
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  afterAll(() => {
+    SpelReferenceExtractor.extract = _saved;
   });
 
   // === DIAGNOSTICENGINE checkContext ===
 
   it('checkContext — ROOT_PROPERTY with schema root checks fields', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1005,7 +1008,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('checkContext — ROOT_PROPERTY missing field with schema root', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1033,7 +1035,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('checkContext — ROOT_PROPERTY with null root uses existing diag path', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1058,7 +1059,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('checkContext — FUNCTION defined does not warn', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.FUNCTION,
@@ -1081,7 +1081,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('checkContext — FUNCTION missing warns', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.FUNCTION,
@@ -1106,7 +1105,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   // === SPELEVALUATORADAPTER validateContext ===
 
   it('validateContext — ROOT_PROPERTY with null root filter returns false', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1135,7 +1133,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('validateContext — FUNCTION kind filter with defined function', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.FUNCTION,
@@ -1163,7 +1160,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('validateContext — FUNCTION kind filter with undefined function', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.FUNCTION,
@@ -1189,7 +1185,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('validateContext — ROOT_PROPERTY with non-null root defined field', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1222,7 +1217,6 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
   });
 
   it('validateContext — ROOT_PROPERTY with non-null root missing field', () => {
-    origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1289,8 +1283,7 @@ describe('Dead code paths — ROOT_PROPERTY and FUNCTION', () => {
 
   it('extractFromAst produces ROOT_PROPERTY for property under variable ref', () => {
     // ROOT_PROPERTY is produced when parent is VARIABLE_REFERENCE
-    // This test monkey-patches extractFromAst to return the desired kind
-    origExtract = SpelReferenceExtractor.extract;
+    // This test monkey-patches extract to simulate ROOT_PROPERTY extraction
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.ROOT_PROPERTY,
@@ -1335,6 +1328,17 @@ describe('ReferenceExtractor fallback regex branches', () => {
 // 18. DIAGNOSTIC-ENGINE REMAINING BRANCHES
 // =====================================================================
 describe('DiagnosticEngine remaining branches', () => {
+  let _saved18: typeof SpelReferenceExtractor.extract;
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  beforeAll(() => {
+    _saved18 = SpelReferenceExtractor.extract;
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  afterAll(() => {
+    SpelReferenceExtractor.extract = _saved18;
+  });
   it('checkSemantics detects self-comparison with == (equality path)', () => {
     const diags = SpelDiagnosticEngine.checkSemantics('#x == #x');
     expect(diags.some((d) => d.code === 'SEMANTIC-SELF_COMPARISON')).toBe(true);
@@ -1359,7 +1363,6 @@ describe('DiagnosticEngine remaining branches', () => {
   });
 
   it('checkContext BEAN_FACTORY missing bean warns', () => {
-    const origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.BEAN_FACTORY,
@@ -1376,7 +1379,6 @@ describe('DiagnosticEngine remaining branches', () => {
   });
 
   it('checkContext BEAN_FACTORY defined bean no warn', () => {
-    const origExtract = SpelReferenceExtractor.extract;
     SpelReferenceExtractor.extract = () => [
       {
         kind: SpelReferenceKind.BEAN_FACTORY,
@@ -1400,3 +1402,33 @@ describe('DiagnosticEngine remaining branches', () => {
 });
 
 // =====================================================================
+
+// =====================================================================
+// 19. REFERENCE-EXTRACTOR FALLBACK (broken expressions trigger parser throw)
+// =====================================================================
+describe('ReferenceExtractor fallback via unparseable expressions', () => {
+  it('fallback extracts variables from broken expression', () => {
+    const refs = SpelReferenceExtractor.extract('#x +');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.VARIABLE)).toBe(true);
+  });
+
+  it('fallback extracts beans from broken expression', () => {
+    const refs = SpelReferenceExtractor.extract('@bean +');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN)).toBe(true);
+  });
+
+  it('fallback extracts factory beans from broken expression', () => {
+    const refs = SpelReferenceExtractor.extract('&@factory +');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.BEAN_FACTORY)).toBe(true);
+  });
+
+  it('fallback extracts types from broken expression', () => {
+    const refs = SpelReferenceExtractor.extract('T(Math) +');
+    expect(refs.some((r) => r.kind === SpelReferenceKind.TYPE)).toBe(true);
+  });
+
+  it('fallback handles mixed references', () => {
+    const refs = SpelReferenceExtractor.extract('#var @bean &@factory T(String) +');
+    expect(refs.length).toBeGreaterThanOrEqual(3);
+  });
+});

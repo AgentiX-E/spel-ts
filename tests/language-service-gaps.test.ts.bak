@@ -1,0 +1,23 @@
+/**
+ * Language Service Coverage Gaps — targeted tests for uncovered branches.
+ */
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import {
+  SpelExpressionParser,
+  StandardEvaluationContext,
+  SpelReferenceExtractor,
+  SpelReferenceKind,
+  SpelDiagnosticEngine,
+  DiagnosticSeverity,
+  DiagnosticSource,
+  SpelCompletionEngine,
+  SpelFormatter,
+  AstWalker,
+  SpelEvaluatorAdapter,
+  NodeType,
+} from '../src/index.js';
+
+// ========== SECTIONS 1-15: EXISTING TESTS (unchanged, loaded from prior version) ==========
+// These were in the original file and are not modified.
+// They are included here after the reorder fix.
+
