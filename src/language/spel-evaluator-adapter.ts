@@ -119,10 +119,12 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
       if (typeof rootObj === 'object' && rootObj !== null) {
         const extractFields = (
           obj: Record<string, unknown>,
-          depth = 0,
+          visited: WeakSet<object> = new WeakSet(),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ): any => {
-          if (depth > 3 || typeof obj !== 'object') return {};
+          if (typeof obj !== 'object') return {};
+          if (visited.has(obj)) return {};
+          visited.add(obj);
           const fields: Record<string, unknown> = {};
           for (const key of Object.keys(obj)) {
             const val = obj[key];
@@ -142,7 +144,7 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
                           : 'string',
             };
             if (t === 'object' && val !== null && !Array.isArray(val)) {
-              field.fields = extractFields(val as Record<string, unknown>, depth + 1);
+              field.fields = extractFields(val as Record<string, unknown>, visited);
             }
             fields[key] = field;
           }
