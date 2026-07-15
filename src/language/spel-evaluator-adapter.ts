@@ -128,7 +128,18 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
             const val = obj[key];
             const t = typeof val;
             const field: Record<string, unknown> = {
-              type: val === null ? 'string' : Array.isArray(val) ? 'array' : t === 'number' ? 'number' : t === 'boolean' ? 'boolean' : t === 'object' ? 'object' : 'string',
+              type:
+                val === null
+                  ? 'string'
+                  : Array.isArray(val)
+                    ? 'array'
+                    : t === 'number'
+                      ? 'number'
+                      : t === 'boolean'
+                        ? 'boolean'
+                        : t === 'object'
+                          ? 'object'
+                          : 'string',
             };
             if (t === 'object' && val !== null && !Array.isArray(val)) {
               field.fields = extractFields(val as Record<string, unknown>, depth + 1);
