@@ -117,14 +117,30 @@ export class SpelEvaluatorAdapter implements SpelEvaluator {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const rootObj = internals.getRootObject?.()?.getValue?.();
       if (typeof rootObj === 'object' && rootObj !== null) {
-        const fields: Record<string, { type: string }> = {};
-        for (const key of Object.keys(rootObj)) {
-          fields[key] = { type: typeof (rootObj as Record<string, unknown>)[key] };
-        }
+        const extractFields = (
+          obj: Record<string, unknown>,
+          depth = 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ): any => {
+          if (depth > 3 || typeof obj !== 'object') return {};
+          const fields: Record<string, unknown> = {};
+          for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            const t = typeof val;
+            const field: Record<string, unknown> = {
+              type: val === null ? 'string' : Array.isArray(val) ? 'array' : t === 'number' ? 'number' : t === 'boolean' ? 'boolean' : t === 'object' ? 'object' : 'string',
+            };
+            if (t === 'object' && val !== null && !Array.isArray(val)) {
+              field.fields = extractFields(val as Record<string, unknown>, depth + 1);
+            }
+            fields[key] = field;
+          }
+          return fields;
+        };
         schema.root = {
           name: 'root',
           type: (rootObj as { constructor?: { name?: string } }).constructor?.name ?? 'object',
-          fields: fields as Record<
+          fields: extractFields(rootObj as Record<string, unknown>) as Record<
             string,
             { type: 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'map' }
           >,
