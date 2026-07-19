@@ -58,12 +58,39 @@ jobs:
           cat > pages/index.html << 'HTML'
           <!DOCTYPE html>
           <html lang="en">
-          <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>@agentix-e/spel-ts — Documentation</title>
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>@agentix-e/spel-ts — Pure TypeScript SpEL Evaluator</title>
+          <meta name="description" content="Pure TypeScript Spring Expression Language (SpEL) evaluator — zero native dependencies, 1030+ tests, 94%+ coverage. Full API docs and coverage reports. Browser & Node.js ready.">
+          <meta name="keywords" content="SpEL, Spring Expression Language, TypeScript, expression evaluator, expression parser, browser, Node.js, zero dependencies">
+          <!-- Open Graph -->
+          <meta property="og:title" content="@agentix-e/spel-ts — Pure TypeScript SpEL Evaluator">
+          <meta property="og:description" content="Production-grade TypeScript port of Spring Expression Language. Zero dependencies. Browser & Node.js ready. 1030+ tests passing at 94%+ coverage.">
+          <meta property="og:type" content="website">
+          <meta property="og:url" content="https://AgentiX-E.github.io/spel-ts/">
+          <meta property="og:site_name" content="AgentiX-E">
+          <!-- Twitter Card -->
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:title" content="@agentix-e/spel-ts — Pure TypeScript SpEL Evaluator">
+          <meta name="twitter:description" content="Production-grade TypeScript port of Spring Expression Language. Zero dependencies. 1030+ tests.">
+          <!-- Schema.org -->
+          <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "SoftwareSourceCode",
+            "name": "@agentix-e/spel-ts",
+            "description": "Pure TypeScript Spring Expression Language (SpEL) evaluator",
+            "programmingLanguage": "TypeScript",
+            "license": "https://opensource.org/licenses/MIT",
+            "codeRepository": "https://github.com/AgentiX-E/spel-ts",
+            "author": { "@type": "Organization", "name": "AgentiX-E", "url": "https://github.com/AgentiX-E" }
+          }
+          </script>
           <style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:800px;margin:48px auto;padding:0 24px;line-height:1.6;background:#0d1117;color:#c9d1d9}h1{font-size:2rem;border-bottom:2px solid #30363d;padding-bottom:12px}a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;margin:16px 0}.card h2{margin:0 0 8px;font-size:1.25rem}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;background:#238636;color:#fff}</style>
           </head><body>
           <h1>@agentix-e/spel-ts</h1>
-          <p>Pure TypeScript Spring Expression Language (SpEL) evaluator.</p>
+          <p>Pure TypeScript Spring Expression Language (SpEL) evaluator — zero native dependencies, browser & Node.js ready.</p>
           <div class="card"><h2><a href="./api/">API Reference</a> <span class="badge">TypeDoc</span></h2><p>Complete API documentation generated from source code.</p></div>
           <div class="card"><h2><a href="./coverage/">Coverage Report</a> <span class="badge">Istanbul</span></h2><p>Test coverage report with per-file line and branch details.</p></div>
           <p style="margin-top:32px"><a href="https://github.com/AgentiX-E/spel-ts">GitHub Repository</a> · <a href="https://www.npmjs.com/package/@agentix-e/spel-ts">npm Package</a></p>
