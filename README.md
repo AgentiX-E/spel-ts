@@ -3,8 +3,12 @@
 > Pure TypeScript Spring Expression Language (SpEL) evaluator — zero native dependencies, browser & Node.js ready.
 
 [![CI](https://github.com/AgentiX-E/spel-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/AgentiX-E/spel-ts/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@agentix-e/spel-ts)](https://www.npmjs.com/package/@agentix-e/spel-ts)
+[![npm](https://img.shields.io/npm/v/@agentix-e/spel-ts?color=blue)](https://www.npmjs.com/package/@agentix-e/spel-ts)
+[![Docs](https://img.shields.io/badge/docs-TypeDoc-blue)](https://AgentiX-E.github.io/spel-ts/api/)
+[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://AgentiX-E.github.io/spel-ts/coverage/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org/)
 
 ## What is @agentix-e/spel-ts?
 

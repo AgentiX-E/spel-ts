@@ -97,6 +97,10 @@ jobs:
           </body></html>
           HTML
 
+      - name: Setup Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/configure-pages@v6
+
       - name: Upload Pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v4
@@ -104,5 +108,10 @@ jobs:
           path: pages
 
       - name: Deploy to GitHub Pages
+        id: deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/deploy-pages@v4
+
+      - name: Retry deploy on transient error
+        if: ${{ failure() && steps.deployment.outcome == 'failure' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         uses: actions/deploy-pages@v4
