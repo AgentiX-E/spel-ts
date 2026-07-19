@@ -53,10 +53,12 @@ pnpm build       # Build ESM + CJS bundles
 
 ### Coverage Thresholds
 
-- **Statements**: >= 80%
-- **Branches**: >= 80%
-- **Functions**: >= 80%
-- **Lines**: >= 80%
+The CI pipeline enforces these minimum coverage thresholds (`vitest.config.ts`):
+
+- **Statements**: >= 92%
+- **Branches**: >= 90%
+- **Functions**: >= 94%
+- **Lines**: >= 92%
 
 ## Test Requirements
 

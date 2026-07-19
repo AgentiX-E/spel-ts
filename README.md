@@ -5,9 +5,9 @@
 [![CI](https://github.com/AgentiX-E/spel-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/AgentiX-E/spel-ts/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@agentix-e/spel-ts?color=blue)](https://www.npmjs.com/package/@agentix-e/spel-ts)
 [![Docs](https://img.shields.io/badge/docs-TypeDoc-blue)](https://AgentiX-E.github.io/spel-ts/api/)
-[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://AgentiX-E.github.io/spel-ts/coverage/)
+[![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen)](https://AgentiX-E.github.io/spel-ts/coverage/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org/)
 
 ## What is @agentix-e/spel-ts?
@@ -64,9 +64,10 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 | Arithmetic | `+`, `-`, `*`, `/`, `%`, `mod`, `^` |
 | Comparison | `==`, `eq`, `!=`, `ne`, `<`, `lt`, `<=`, `le`, `>`, `gt`, `>=`, `ge` |
 | Logical | `&&`, `and`, `\|\|`, `or`, `!`, `not` |
-| Special | `matches`, `between`, `instanceof` |
+| Special | `matches`, `between`, `instanceof`, `..` (range) |
 | Conditional | `? :` (ternary), `?:` (elvis) |
 | Assignment | `=` |
+| Increment/Decrement | `++`, `--` (prefix & postfix) |
 
 ### Collections & Navigation
 | Feature | Syntax |
@@ -76,6 +77,8 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 | Property chain | `a.b.c` |
 | Safe navigation | `a?.b` |
 | Selection | `list.?[#this > 5]` |
+| Selection (first) | `list.^[#this > 5]` or `list.$[#this > 5]` |
+| Selection (last) | `list.*[#this > 5]` |
 | Projection | `list.![#this.name]` |
 | Indexer | `a[0]`, `map['key']` |
 | Variable | `#varName`, `#this` |
@@ -101,7 +104,7 @@ import {
   StandardEvaluationContext, // Default evaluation context
   SpelParserConfiguration,  // Parser options
   TypedValue,               // Value + type descriptor wrapper
-  SpelMessage,              // Error code enum (40+)
+  SpelMessage,              // Error code enum (49 entries)
   // Interfaces
   EvaluationContext,
   PropertyAccessor,
@@ -115,8 +118,8 @@ import {
 
 | Metric | Value |
 |--------|-------|
-| Tests | 1030 passing |
-| Coverage | 94.51% statements / 93.32% branches |
+| Tests | 1,110 passing |
+| Coverage | 96.16% statements / 95.17% branches |
 | TypeScript | 5.x strict mode |
 | Bundles | ESM + CJS |
 | Dependencies | 0 runtime dependencies |
@@ -124,7 +127,7 @@ import {
 ## FAQ
 
 ### Is spel-ts fully compatible with Spring's SpEL?
-Yes. spel-ts implements the complete SpEL grammar specification and passes 1,030+ test cases covering all operator types, collection operations, type references, and edge cases defined in the Spring reference manual.
+Yes. spel-ts implements the complete SpEL grammar specification and passes 1,110+ test cases covering all operator types, collection operations, type references, and edge cases defined in the Spring reference manual.
 
 ### Can I use it in the browser?
 Yes. spel-ts has zero native dependencies and ships as both ESM and CJS bundles. It has been tested in Chrome, Firefox, Safari, and Edge.
@@ -133,7 +136,7 @@ Yes. spel-ts has zero native dependencies and ships as both ESM and CJS bundles.
 Unlike generic expression parsers (mathjs, expr-eval), spel-ts specifically targets Spring SpEL compatibility — making it the only choice for projects migrating from or integrating with Spring ecosystems.
 
 ### What's the performance like?
-The parser is hand-written (not generated) and optimized for TypeScript. Typical expressions evaluate in microseconds. 1,030+ tests validate correctness and performance characteristics.
+The parser is hand-written (not generated) and optimized for TypeScript. Typical expressions evaluate in microseconds. 1,110+ tests validate correctness and performance characteristics.
 
 ## License
 
