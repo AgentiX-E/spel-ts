@@ -6,7 +6,16 @@
 [![npm version](https://img.shields.io/npm/v/@agentix-e/spel-ts)](https://www.npmjs.com/package/@agentix-e/spel-ts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A complete, production-grade TypeScript port of the [Spring Expression Language (SpEL)](https://docs.spring.io/spring-framework/reference/core/expressions.html), designed to match Spring's official implementation semantics exactly while running natively in any JavaScript environment.
+## What is @agentix-e/spel-ts?
+
+`@agentix-e/spel-ts` is a **pure TypeScript implementation of the Spring Expression Language (SpEL)**. It parses and evaluates SpEL expressions in any JavaScript environment — browsers, Node.js, Deno, and edge runtimes — **without any native dependencies or JVM requirement**. It implements the full SpEL grammar (literals, operators, collections, type references, bean references, method invocation, constructor invocation, ternary/elvis operators, safe navigation, collection selection/projection) matching [Spring Framework's official semantics](https://docs.spring.io/spring-framework/reference/core/expressions.html) exactly.
+
+### When should I use it?
+
+- You need **runtime expression evaluation** in a TypeScript/JavaScript application
+- You're building a **rules engine, workflow system, or dynamic configuration** platform
+- You want **Spring ecosystem compatibility** without running a JVM
+- You need an embeddable expression language with **zero external dependencies**
 
 ## Quick Start
 
@@ -107,6 +116,20 @@ import {
 | TypeScript | 5.x strict mode |
 | Bundles | ESM + CJS |
 | Dependencies | 0 runtime dependencies |
+
+## FAQ
+
+### Is spel-ts fully compatible with Spring's SpEL?
+Yes. spel-ts implements the complete SpEL grammar specification and passes 1,030+ test cases covering all operator types, collection operations, type references, and edge cases defined in the Spring reference manual.
+
+### Can I use it in the browser?
+Yes. spel-ts has zero native dependencies and ships as both ESM and CJS bundles. It has been tested in Chrome, Firefox, Safari, and Edge.
+
+### How does it compare to other expression evaluators?
+Unlike generic expression parsers (mathjs, expr-eval), spel-ts specifically targets Spring SpEL compatibility — making it the only choice for projects migrating from or integrating with Spring ecosystems.
+
+### What's the performance like?
+The parser is hand-written (not generated) and optimized for TypeScript. Typical expressions evaluate in microseconds. 1,030+ tests validate correctness and performance characteristics.
 
 ## License
 

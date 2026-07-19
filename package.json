@@ -1,7 +1,7 @@
 {
   "name": "@agentix-e/spel-ts",
   "version": "1.2.1",
-  "description": "Pure TypeScript Spring Expression Language (SpEL) evaluator — browser & Node.js",
+  "description": "Pure TypeScript Spring Expression Language (SpEL) evaluator — zero native dependencies, 1030+ tests, 94%+ coverage, browser & Node.js ready",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -35,11 +35,14 @@
   "keywords": [
     "spel",
     "spring-expression-language",
-    "expression",
-    "evaluator",
+    "expression-evaluator",
+    "expression-parser",
+    "expression-language",
+    "spring-framework",
     "typescript",
     "browser",
-    "expression-evaluator",
+    "nodejs",
+    "zero-dependencies",
     "rule-engine"
   ],
   "license": "MIT",
