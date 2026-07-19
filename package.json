@@ -1,6 +1,6 @@
 {
   "name": "@agentix-e/spel-ts",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Pure TypeScript Spring Expression Language (SpEL) evaluator — zero native dependencies, 1030+ tests, 94%+ coverage, browser & Node.js ready",
   "type": "module",
   "sideEffects": false,
