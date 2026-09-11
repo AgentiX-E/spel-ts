@@ -2,7 +2,12 @@ import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
+import { numericOperand, remainder as remainderOf } from '../../type/numeric.js';
 
+/**
+ * Remainder. The sign follows the dividend, and a zero divisor is rejected
+ * for the integral kinds.
+ */
 export class OpModulus extends Operator {
   constructor(
     operatorName: string,
@@ -14,8 +19,13 @@ export class OpModulus extends Operator {
   }
 
   public override getValueInternal(state: ExpressionState): TypedValue {
-    const left = this.children[0]!.getValue(state).getValue() as number;
-    const right = this.children[1]!.getValue(state).getValue() as number;
-    return new TypedValue(left % right);
+    const leftValue = this.children[0]!.getValue(state);
+    const rightValue = this.children[1]!.getValue(state);
+    const remainder = remainderOf(
+      numericOperand(leftValue.getValue(), leftValue.getNumericKind(), this.startPos),
+      numericOperand(rightValue.getValue(), rightValue.getNumericKind(), this.startPos),
+      this.startPos,
+    );
+    return new TypedValue(remainder.value, null, remainder.kind);
   }
 }

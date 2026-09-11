@@ -398,16 +398,14 @@ export class InternalSpelExpressionParser {
     const kind = this.peek().kind;
 
     // Prefix: -expr
+    //
+    // Emitted with a single operand. Previously a NullLiteral was synthesised as
+    // a placeholder left operand, which made this node indistinguishable from a
+    // genuine `null - x` and dragged unary negation through binary arithmetic.
     if (kind === TokenKind.MINUS) {
       const opToken = this.advance();
       const operand = this.eatUnaryExpression();
-      return new OpMinus(
-        '-',
-        opToken.startPos,
-        operand.endPos,
-        new NullLiteral(opToken.startPos, opToken.endPos),
-        operand,
-      );
+      return new OpMinus('-', opToken.startPos, operand.endPos, operand);
     }
 
     // Prefix: +expr (no-op, just return operand)

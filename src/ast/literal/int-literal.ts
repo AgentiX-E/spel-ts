@@ -17,7 +17,7 @@ export class IntLiteral extends Literal {
   }
 
   public getValueInternal(_state: ExpressionState): TypedValue {
-    return new TypedValue(this.value);
+    return new TypedValue(this.value, null, 'int');
   }
 
   public toStringAST(): string {

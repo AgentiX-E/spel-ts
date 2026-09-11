@@ -2,7 +2,11 @@ import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
+import { requireBoolean } from './operand-guards.js';
 
+/**
+ * Logical negation. The operand must be Boolean.
+ */
 export class OpNot extends Operator {
   constructor(
     operatorName: string,
@@ -14,7 +18,6 @@ export class OpNot extends Operator {
   }
 
   public override getValueInternal(state: ExpressionState): TypedValue {
-    const val = this.children[0]!.getValue(state).getValue();
-    return new TypedValue(!val);
+    return new TypedValue(!requireBoolean(this.children[0]!, state));
   }
 }

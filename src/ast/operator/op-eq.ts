@@ -2,7 +2,11 @@ import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
+import { equalityCheck } from './equality.js';
 
+/**
+ * Equality, following Spring equality rules rather than JavaScript coercion.
+ */
 export class OpEQ extends Operator {
   constructor(
     operatorName: string,
@@ -16,26 +20,6 @@ export class OpEQ extends Operator {
   public override getValueInternal(state: ExpressionState): TypedValue {
     const left = this.children[0]!.getValue(state).getValue();
     const right = this.children[1]!.getValue(state).getValue();
-
-    // Both strings: string comparison
-    if (typeof left === 'string' && typeof right === 'string') {
-      return new TypedValue(left === right);
-    }
-
-    // Both numbers, or coercible: numeric comparison
-    if (typeof left === 'number' && typeof right === 'number') {
-      return new TypedValue(left === right);
-    }
-
-    // SpEL coercion: boolean ↔ number
-    if (
-      (typeof left === 'boolean' && typeof right === 'number') ||
-      (typeof left === 'number' && typeof right === 'boolean')
-    ) {
-      return new TypedValue(Number(left) === Number(right));
-    }
-
-    // Default: convert both to strings and compare
-    return new TypedValue(String(left) === String(right));
+    return new TypedValue(equalityCheck(left, right));
   }
 }

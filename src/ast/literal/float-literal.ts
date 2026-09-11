@@ -16,7 +16,7 @@ export class FloatLiteral extends Literal {
   }
 
   public getValueInternal(_state: ExpressionState): TypedValue {
-    return new TypedValue(this.value);
+    return new TypedValue(this.value, null, 'float');
   }
 
   public toStringAST(): string {

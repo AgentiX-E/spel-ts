@@ -64,12 +64,27 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
         expect(parser.parseExpression('10 / 2').getValue()).toBe(5);
       });
 
-      it('7 / 2 = 3.5', () => {
-        expect(parser.parseExpression('7 / 2').getValue()).toBe(3.5);
+      // Integer division truncates toward zero, as Java's `int` division does.
+      // Spring has no separate integer-division operator, so `7 / 2` is 3, not
+      // 3.5; a floating result requires a floating operand on one side.
+      it('7 / 2 = 3', () => {
+        expect(parser.parseExpression('7 / 2').getValue()).toBe(3);
+      });
+
+      it('7.0 / 2 = 3.5', () => {
+        expect(parser.parseExpression('7.0 / 2').getValue()).toBe(3.5);
+      });
+
+      it('7 / 2.0 = 3.5', () => {
+        expect(parser.parseExpression('7 / 2.0').getValue()).toBe(3.5);
       });
 
       it('throws on divide by zero', () => {
         expect(() => parser.parseExpression('1 / 0').getValue()).toThrow();
+      });
+
+      it('yields Infinity for a floating divide by zero', () => {
+        expect(parser.parseExpression('1.0 / 0.0').getValue()).toBe(Number.POSITIVE_INFINITY);
       });
     });
 
