@@ -23,6 +23,9 @@ export enum CharFlag {
 // which exceed Uint8Array max (255).
 const CHAR_FLAG_TABLE = new Uint16Array(128);
 
+const UNDERSCORE = 0x5f;
+const DOLLAR = 0x24;
+
 function buildCharTable(): void {
   for (let c = 0; c < 128; c++) {
     const ch = String.fromCharCode(c);
@@ -78,17 +81,48 @@ function buildCharTable(): void {
 buildCharTable();
 
 /**
- * Get character flag bitmask
+ * Get character flag bitmask.
+ *
+ * The pre-computed table covers ASCII only; callers that need Unicode
+ * awareness (identifier letters) must use {@link isLetter} instead.
  */
 export function getCharFlag(ch: number): number {
   return ch >= 0 && ch < 128 ? CHAR_FLAG_TABLE[ch]! : CharFlag.NONE;
 }
 
 /**
- * Check if character is a letter (a-z, A-Z)
+ * Unicode letter test used as the slow path for non-ASCII input.
+ *
+ * Spring's `Tokenizer#isAlphabetic` delegates to `Character.isLetter`, which
+ * accepts every Unicode letter — CJK ideographs, accented Latin, Greek and
+ * Cyrillic alike. Mirroring that is load-bearing rather than cosmetic: it is
+ * what makes identifiers such as `年龄` or `café` legal, and the Chinese
+ * natural-language pipeline emits exactly those.
+ */
+const UNICODE_LETTER = /\p{L}/u;
+
+/** Highest UTF-16 code unit. The tokenizer never supplies a value above this. */
+const MAX_CODE_UNIT = 0xffff;
+
+/**
+ * Check whether a UTF-16 code unit is a letter in identifier position.
+ *
+ * ASCII is answered from the pre-computed table; everything else falls back to
+ * a Unicode letter test.
+ *
+ * The parameter is a code *unit*, not a code point, because the tokenizer
+ * advances with `charCodeAt`. Two consequences follow, and both match Spring's
+ * `char`-based tokenizer: a surrogate half of an astral-plane character is not
+ * a letter, and a value above the BMP is not a letter either.
  */
 export function isLetter(ch: number): boolean {
-  return (getCharFlag(ch) & CharFlag.LETTER) !== 0;
+  if (ch >= 0 && ch < 128) {
+    return (CHAR_FLAG_TABLE[ch]! & CharFlag.LETTER) !== 0;
+  }
+  if (ch < 0 || ch > MAX_CODE_UNIT) {
+    return false;
+  }
+  return UNICODE_LETTER.test(String.fromCharCode(ch));
 }
 
 /**
@@ -134,14 +168,15 @@ export function isQuote(ch: number): boolean {
  * Check if character is a valid identifier start (letter, _, $)
  */
 export function isIdentifierStart(ch: number): boolean {
-  const flag = getCharFlag(ch);
-  return (flag & (CharFlag.LETTER | CharFlag.UNDERSCORE | CharFlag.DOLLAR)) !== 0;
+  return isLetter(ch) || ch === UNDERSCORE || ch === DOLLAR;
 }
 
 /**
  * Check if character is a valid identifier part (letter, digit, _, $)
+ *
+ * Note that `isDigit` stays ASCII-only, matching Spring's `FLAGS` table which
+ * marks only `0`-`9`; a full-width digit is therefore not an identifier part.
  */
 export function isIdentifierPart(ch: number): boolean {
-  const flag = getCharFlag(ch);
-  return (flag & (CharFlag.LETTER | CharFlag.DIGIT | CharFlag.UNDERSCORE | CharFlag.DOLLAR)) !== 0;
+  return isLetter(ch) || isDigit(ch) || ch === UNDERSCORE || ch === DOLLAR;
 }

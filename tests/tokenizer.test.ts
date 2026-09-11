@@ -66,38 +66,61 @@ describe('Tokenizer', () => {
     });
   });
 
-  // ===== Test Group 3: Keywords =====
-  describe('keywords', () => {
-    const keywordCases: [string, TokenKind, unknown][] = [
-      ['null', TokenKind.LITERAL_NULL, null],
-      ['true', TokenKind.LITERAL_BOOLEAN, true],
-      ['false', TokenKind.LITERAL_BOOLEAN, false],
-      ['eq', TokenKind.EQ, undefined],
-      ['ne', TokenKind.NE, undefined],
-      ['lt', TokenKind.LT, undefined],
-      ['le', TokenKind.LE, undefined],
-      ['gt', TokenKind.GT, undefined],
-      ['ge', TokenKind.GE, undefined],
-      ['and', TokenKind.AND, undefined],
-      ['or', TokenKind.OR, undefined],
-      ['not', TokenKind.NOT, undefined],
-      ['mod', TokenKind.MOD, undefined],
-      ['matches', TokenKind.MATCHES, undefined],
-      ['between', TokenKind.BETWEEN, undefined],
-      ['instanceof', TokenKind.INSTANCEOF, undefined],
-      ['new', TokenKind.NEW, undefined],
+  // ===== Test Group 3: Textual operators and parser keywords =====
+  //
+  // Spring splits these into two categories and the split is load-bearing. The
+  // tokenizer recognises only the names listed in AlternateOperatorNames,
+  // matching them after folding to upper case. The words `and`, `or`, `matches`,
+  // `between`, `instanceof`, `new`, `true`, `false` and `null` stay identifiers
+  // and are resolved by the parser with equalsIgnoreCase, which is also what
+  // lets them be used as ordinary property and method names.
+  describe('textual operators', () => {
+    const operatorCases: [string, TokenKind][] = [
+      ['eq', TokenKind.EQ],
+      ['ne', TokenKind.NE],
+      ['lt', TokenKind.LT],
+      ['le', TokenKind.LE],
+      ['gt', TokenKind.GT],
+      ['ge', TokenKind.GE],
+      ['mod', TokenKind.MOD],
+      ['div', TokenKind.DIV],
+      ['not', TokenKind.NOT],
     ];
 
-    for (const [word, expectedKind, expectedPayload] of keywordCases) {
-      it(`should recognize "${word}" as keyword`, () => {
-        const tokens = new Tokenizer(word).tokenize();
-        expect(tokens[0].kind).toBe(expectedKind);
-        if (expectedPayload !== undefined) {
-          expect(tokens[0].payload).toBe(expectedPayload);
-        }
+    for (const [word, expectedKind] of operatorCases) {
+      it(`should recognize "${word}" as an operator`, () => {
+        expect(new Tokenizer(word).tokenize()[0].kind).toBe(expectedKind);
+      });
+
+      it(`should recognize "${word.toUpperCase()}" as the same operator`, () => {
+        expect(new Tokenizer(word.toUpperCase()).tokenize()[0].kind).toBe(expectedKind);
       });
     }
+  });
 
+  describe('parser keywords remain identifiers', () => {
+    const identifierCases = [
+      'and',
+      'or',
+      'matches',
+      'between',
+      'instanceof',
+      'new',
+      'true',
+      'false',
+      'null',
+    ];
+
+    for (const word of identifierCases) {
+      it(`should lex "${word}" as an identifier for the parser to resolve`, () => {
+        const tokens = new Tokenizer(word).tokenize();
+        expect(tokens[0].kind).toBe(TokenKind.IDENTIFIER);
+        expect(tokens[0].literal).toBe(word);
+      });
+    }
+  });
+
+  describe('keyword matching is whole-token only', () => {
     it('should treat "matchesx" as identifier, not keyword', () => {
       const tokens = new Tokenizer('matchesx').tokenize();
       expect(tokens[0].kind).toBe(TokenKind.IDENTIFIER);
@@ -107,6 +130,18 @@ describe('Tokenizer', () => {
     it('should treat "match" as identifier (not keyword)', () => {
       const tokens = new Tokenizer('match').tokenize();
       expect(tokens[0].kind).toBe(TokenKind.IDENTIFIER);
+    });
+
+    it('should treat "android" as identifier, not "and" plus a suffix', () => {
+      const tokens = new Tokenizer('android').tokenize();
+      expect(tokens[0].kind).toBe(TokenKind.IDENTIFIER);
+      expect(tokens[0].literal).toBe('android');
+    });
+
+    it('should treat "division" as identifier, not "div" plus a suffix', () => {
+      const tokens = new Tokenizer('division').tokenize();
+      expect(tokens[0].kind).toBe(TokenKind.IDENTIFIER);
+      expect(tokens[0].literal).toBe('division');
     });
   });
 

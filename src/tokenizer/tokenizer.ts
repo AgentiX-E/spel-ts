@@ -1,6 +1,8 @@
 import { TokenKind } from './token-kind.js';
+import { OPERATOR_KEYWORDS } from './keyword-table.js';
 import { Token } from './token.js';
 import { isLetter, isDigit, isHexDigit, isWhitespace } from './char-flags.js';
+import { foldAsciiUpper } from '../util/ascii.js';
 import { SpelParseException } from '../error/spel-parse-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 
@@ -75,47 +77,21 @@ export class Tokenizer {
   }
 
   /**
-   * Classify identifier string as Token: keyword or plain identifier
+   * Classify an identifier string as a textual operator or a plain identifier.
+   *
+   * Spring folds the scanned text to upper case and searches
+   * `ALTERNATIVE_OPERATOR_NAMES`, so every casing of a textual operator is
+   * accepted: `div`, `Div`, `DIV`. Words such as `and`, `or`, `matches`,
+   * `between`, `instanceof`, `new`, `true`, `false` and `null` are *not*
+   * operators here — Spring resolves them in the parser with
+   * `equalsIgnoreCase`, which keeps them usable as ordinary identifiers.
    */
   private identifierOrKeyword(start: number, text: string): Token {
-    switch (text) {
-      case 'null':
-        return new Token(TokenKind.LITERAL_NULL, start, this.pos, text, null);
-      case 'true':
-        return new Token(TokenKind.LITERAL_BOOLEAN, start, this.pos, text, true);
-      case 'false':
-        return new Token(TokenKind.LITERAL_BOOLEAN, start, this.pos, text, false);
-      case 'eq':
-        return new Token(TokenKind.EQ, start, this.pos, text);
-      case 'ne':
-        return new Token(TokenKind.NE, start, this.pos, text);
-      case 'lt':
-        return new Token(TokenKind.LT, start, this.pos, text);
-      case 'le':
-        return new Token(TokenKind.LE, start, this.pos, text);
-      case 'gt':
-        return new Token(TokenKind.GT, start, this.pos, text);
-      case 'ge':
-        return new Token(TokenKind.GE, start, this.pos, text);
-      case 'and':
-        return new Token(TokenKind.AND, start, this.pos, text);
-      case 'or':
-        return new Token(TokenKind.OR, start, this.pos, text);
-      case 'not':
-        return new Token(TokenKind.NOT, start, this.pos, text);
-      case 'mod':
-        return new Token(TokenKind.MOD, start, this.pos, text);
-      case 'matches':
-        return new Token(TokenKind.MATCHES, start, this.pos, text);
-      case 'between':
-        return new Token(TokenKind.BETWEEN, start, this.pos, text);
-      case 'instanceof':
-        return new Token(TokenKind.INSTANCEOF, start, this.pos, text);
-      case 'new':
-        return new Token(TokenKind.NEW, start, this.pos, text);
-      default:
-        return new Token(TokenKind.IDENTIFIER, start, this.pos, text);
+    const operator = OPERATOR_KEYWORDS.get(foldAsciiUpper(text));
+    if (operator !== undefined) {
+      return new Token(operator, start, this.pos, text);
     }
+    return new Token(TokenKind.IDENTIFIER, start, this.pos, text);
   }
 
   /**

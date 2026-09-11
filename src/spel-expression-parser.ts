@@ -6,6 +6,7 @@ import { Token } from './tokenizer/token.js';
 import { TokenKind } from './tokenizer/token-kind.js';
 import { SpelParseException } from './error/spel-parse-exception.js';
 import { SpelMessage } from './error/spel-message.js';
+import { equalsIgnoreCaseAscii } from './util/ascii.js';
 
 // AST Literal Nodes
 import { NullLiteral } from './ast/literal/null-literal.js';
@@ -163,7 +164,7 @@ export class InternalSpelExpressionParser {
   private eatOrExpression(): SpelNodeImpl {
     let left = this.eatAndExpression();
 
-    while (this.peek().kind === TokenKind.OR) {
+    while (this.peek().kind === TokenKind.OR || this.peekIdentifierToken('or')) {
       const opToken = this.advance();
       const right = this.eatAndExpression();
       left = new OpOr('||', opToken.startPos, right.endPos, left, right);
@@ -180,7 +181,7 @@ export class InternalSpelExpressionParser {
   private eatAndExpression(): SpelNodeImpl {
     let left = this.eatRelationalExpression();
 
-    while (this.peek().kind === TokenKind.AND) {
+    while (this.peek().kind === TokenKind.AND || this.peekIdentifierToken('and')) {
       const opToken = this.advance();
       const right = this.eatRelationalExpression();
       left = new OpAnd('&&', opToken.startPos, right.endPos, left, right);
@@ -210,7 +211,11 @@ export class InternalSpelExpressionParser {
     }
 
     const kind = this.peek().kind;
-    if (this.isRelationalOp(kind)) {
+    if (
+      this.isRelationalOp(kind) ||
+      this.peekIdentifierToken('matches') ||
+      this.peekIdentifierToken('instanceof')
+    ) {
       const opToken = this.advance();
       const right = this.eatSumExpression();
       return this.buildRelationalOp(opToken, left, right);
@@ -219,7 +224,7 @@ export class InternalSpelExpressionParser {
     // 'between' has two forms:
     //   1. value between {lower, upper}  (list form)
     //   2. value between lower and upper (and form)
-    if (kind === TokenKind.BETWEEN) {
+    if (this.peekIdentifierToken('between')) {
       const betweenToken = this.advance();
 
       // Check if next is inline list: {lower, upper}
@@ -243,7 +248,7 @@ export class InternalSpelExpressionParser {
 
       // Form 2: value between lower and upper
       const lower = this.eatSumExpression();
-      if (this.peek().kind === TokenKind.AND) {
+      if (this.peek().kind === TokenKind.AND || this.peekIdentifierToken('and')) {
         this.advance(); // consume 'and'
       }
       const upper = this.eatSumExpression();
@@ -253,6 +258,14 @@ export class InternalSpelExpressionParser {
     return left;
   }
 
+  /**
+   * Operators that the tokenizer emits directly, from Spring's
+   * ALTERNATIVE_OPERATOR_NAMES plus the symbolic forms.
+   *
+   * `matches` and `instanceof` are absent on purpose: Spring keeps them as
+   * identifiers and matches them in the parser, so they are handled by
+   * {@link peekIdentifierToken} at the call site.
+   */
   private isRelationalOp(kind: TokenKind): boolean {
     return (
       kind === TokenKind.EQ ||
@@ -260,9 +273,7 @@ export class InternalSpelExpressionParser {
       kind === TokenKind.LT ||
       kind === TokenKind.LE ||
       kind === TokenKind.GT ||
-      kind === TokenKind.GE ||
-      kind === TokenKind.MATCHES ||
-      kind === TokenKind.INSTANCEOF
+      kind === TokenKind.GE
     );
   }
 
@@ -280,10 +291,16 @@ export class InternalSpelExpressionParser {
         return new OpGT('>', opToken.startPos, right.endPos, left, right);
       case TokenKind.GE:
         return new OpGE('>=', opToken.startPos, right.endPos, left, right);
-      case TokenKind.MATCHES:
-        return new OpMatches('matches', opToken.startPos, right.endPos, left, right);
-      case TokenKind.INSTANCEOF:
-        return new OpInstanceof('instanceof', opToken.startPos, right.endPos, left, right);
+      case TokenKind.IDENTIFIER: {
+        const name = (opToken.literal ?? '').toLowerCase();
+        if (name === 'matches') {
+          return new OpMatches('matches', opToken.startPos, right.endPos, left, right);
+        }
+        if (name === 'instanceof') {
+          return new OpInstanceof('instanceof', opToken.startPos, right.endPos, left, right);
+        }
+        throw this.raise(SpelMessage.OODES, name);
+      }
       default:
         throw this.raise(SpelMessage.OODES, TokenKind[opToken.kind]);
     }
@@ -314,7 +331,7 @@ export class InternalSpelExpressionParser {
 
   /**
    * product_expression := power_expression
-   *     (('*' | '/' | '%' | 'mod') power_expression)*
+   *     (('*' | '/' | 'div' | '%' | 'mod') power_expression)*
    */
   private eatProductExpression(): SpelNodeImpl {
     let left = this.eatPowerExpression();
@@ -324,6 +341,7 @@ export class InternalSpelExpressionParser {
       if (
         kind !== TokenKind.STAR &&
         kind !== TokenKind.SLASH &&
+        kind !== TokenKind.DIV &&
         kind !== TokenKind.PERCENT &&
         kind !== TokenKind.MOD
       ) {
@@ -337,6 +355,7 @@ export class InternalSpelExpressionParser {
           left = new OpMultiply('*', opToken.startPos, right.endPos, left, right);
           break;
         case TokenKind.SLASH:
+        case TokenKind.DIV:
           left = new OpDivide('/', opToken.startPos, right.endPos, left, right);
           break;
         default:
@@ -584,14 +603,6 @@ export class InternalSpelExpressionParser {
 
     switch (token.kind) {
       // Literals
-      case TokenKind.LITERAL_NULL:
-        this.advance();
-        return new NullLiteral(token.startPos, token.endPos);
-
-      case TokenKind.LITERAL_BOOLEAN:
-        this.advance();
-        return new BooleanLiteral(token.startPos, token.endPos, token.payload as boolean);
-
       case TokenKind.LITERAL_INT:
         this.advance();
         return new IntLiteral(token.startPos, token.endPos, token.payload as number);
@@ -640,13 +651,28 @@ export class InternalSpelExpressionParser {
         return this.eatInlineCollection();
       }
 
-      // Identifier — may be T(type), new, or compound expression
+      // Identifier — may be a literal keyword, T(type), new, or a compound expression
       case TokenKind.IDENTIFIER: {
+        // Spring resolves these words in the parser with equalsIgnoreCase rather
+        // than in the tokenizer, so `true` is a literal while `android` is a
+        // property. Matching on the whole token also prevents `android` from
+        // being mistaken for the `and` operator.
+        if (this.peekIdentifierToken('true')) {
+          const keyword = this.advance();
+          return new BooleanLiteral(keyword.startPos, keyword.endPos, true);
+        }
+        if (this.peekIdentifierToken('false')) {
+          const keyword = this.advance();
+          return new BooleanLiteral(keyword.startPos, keyword.endPos, false);
+        }
+        if (this.peekIdentifierToken('null')) {
+          const keyword = this.advance();
+          return new NullLiteral(keyword.startPos, keyword.endPos);
+        }
+        if (this.peekIdentifierToken('new')) {
+          return this.eatConstructorReference();
+        }
         return this.eatIdentifierStart();
-      }
-
-      case TokenKind.NEW: {
-        return this.eatConstructorReference();
       }
 
       default:
@@ -997,6 +1023,24 @@ export class InternalSpelExpressionParser {
       return new Token(TokenKind.EOF, eofPos, eofPos);
     }
     return this.tokens[index]!;
+  }
+
+  /**
+   * Spring's `peekIdentifierToken`: match the upcoming token against a keyword
+   * case-insensitively.
+   *
+   * Spring leaves `and`, `or`, `matches`, `between`, `instanceof`, `new`,
+   * `true`, `false` and `null` as IDENTIFIER tokens and resolves them here.
+   * Doing the same means those words keep working as ordinary property and
+   * method names — `'abc'.matches('a.*')` and a field named `and` both parse.
+   */
+  private peekIdentifierToken(name: string, offset = 0): boolean {
+    const token = this.peek(offset);
+    return (
+      token.kind === TokenKind.IDENTIFIER &&
+      token.literal !== undefined &&
+      equalsIgnoreCaseAscii(token.literal, name)
+    );
   }
 
   private advance(): Token {
