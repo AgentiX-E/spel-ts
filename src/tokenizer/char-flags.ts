@@ -23,6 +23,9 @@ export enum CharFlag {
 // which exceed Uint8Array max (255).
 const CHAR_FLAG_TABLE = new Uint16Array(128);
 
+const UNDERSCORE = 0x5f;
+const DOLLAR = 0x24;
+
 function buildCharTable(): void {
   for (let c = 0; c < 128; c++) {
     const ch = String.fromCharCode(c);
@@ -165,7 +168,7 @@ export function isQuote(ch: number): boolean {
  * Check if character is a valid identifier start (letter, _, $)
  */
 export function isIdentifierStart(ch: number): boolean {
-  return isLetter(ch) || ch === 95 /* _ */ || ch === 36 /* $ */;
+  return isLetter(ch) || ch === UNDERSCORE || ch === DOLLAR;
 }
 
 /**
@@ -175,5 +178,5 @@ export function isIdentifierStart(ch: number): boolean {
  * marks only `0`-`9`; a full-width digit is therefore not an identifier part.
  */
 export function isIdentifierPart(ch: number): boolean {
-  return isLetter(ch) || isDigit(ch) || ch === 95 /* _ */ || ch === 36 /* $ */;
+  return isLetter(ch) || isDigit(ch) || ch === UNDERSCORE || ch === DOLLAR;
 }
