@@ -20,7 +20,8 @@
 import { describe, expect, it } from 'vitest';
 import { CORPUS } from './corpus.js';
 import { KNOWN_DIVERGENCES } from './known-divergences.js';
-import { runCorpus, summarise, type CaseResult } from './run-corpus.js';
+import { runCorpus, summarise } from './run-corpus.js';
+import type { CaseResult } from './run-corpus.js';
 import { ownershipOf } from './support/ownership.js';
 import {
   describeExpected,
@@ -33,6 +34,17 @@ const results = runCorpus(CORPUS);
 const backlog = new Map(KNOWN_DIVERGENCES.map((entry) => [entry.caseId, entry]));
 const divergences = results.filter((result) => result.verdict !== 'match');
 const divergingIds = new Set(divergences.map((result) => result.testCase.id));
+const summary = summarise(results);
+
+/**
+ * Backlog size per remediation phase. Surfaced in a test name so the CI log
+ * shows progress; the test tsconfig declares no DOM or Node lib, so writing to
+ * a stream is not available here.
+ */
+const phaseBreakdown = [...new Set(KNOWN_DIVERGENCES.map((entry) => entry.phase))]
+  .sort((left, right) => left.localeCompare(right))
+  .map((phase) => `${phase}:${KNOWN_DIVERGENCES.filter((entry) => entry.phase === phase).length}`)
+  .join(' ');
 
 function failureReport(result: CaseResult): string {
   const entry = backlog.get(result.testCase.id);
@@ -138,27 +150,12 @@ describe('divergence backlog', () => {
     expect(unattributed, 'Every divergence needs an owner.').toEqual([]);
   });
 
-  it('reports the divergence ledger', () => {
-    const summary = summarise(results);
-    const byPhase = new Map<string, number>();
-    for (const entry of KNOWN_DIVERGENCES) {
-      byPhase.set(entry.phase, (byPhase.get(entry.phase) ?? 0) + 1);
-    }
-    const phaseBreakdown = [...byPhase.entries()]
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([phase, count]) => `${phase}=${count}`)
-      .join('  ');
-
-    console.log(renderDivergenceTable(results));
-    console.log(
-      `conformance: ${summary.byVerdict.match}/${summary.total} match Spring  |  ` +
-        `divergences ${summary.divergences} ` +
-        `(rejects-valid=${summary.byVerdict['rejects-valid']}, ` +
-        `accepts-invalid=${summary.byVerdict['accepts-invalid']}, ` +
-        `wrong-value=${summary.byVerdict['wrong-value']})\n` +
-        `backlog by phase: ${phaseBreakdown}\n`,
-    );
-
+  it(`balances the ledger (${summary.byVerdict.match} match, ${summary.divergences} diverging)`, () => {
     expect(summary.byVerdict.match + summary.divergences).toBe(summary.total);
+  });
+
+  it(`records ${KNOWN_DIVERGENCES.length} divergences across ${phaseBreakdown}`, () => {
+    expect(KNOWN_DIVERGENCES, renderDivergenceTable(results)).toHaveLength(summary.divergences);
+    expect(new Set(KNOWN_DIVERGENCES.map((entry) => entry.caseId))).toEqual(divergingIds);
   });
 });

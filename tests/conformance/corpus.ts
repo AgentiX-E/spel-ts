@@ -87,7 +87,10 @@ function build(drafts: readonly DraftCase[]): ConformanceCase[] {
 
 type CaseForm = (word: string) => string;
 
-const CASE_FORMS: ReadonlyArray<readonly [string, CaseForm]> = [
+/** A casing variant: its name, and the transform that produces it. */
+type CaseFormEntry = readonly [name: string, form: CaseForm];
+
+const CASE_FORMS: readonly CaseFormEntry[] = [
   ['lower', (w) => w.toLowerCase()],
   ['upper', (w) => w.toUpperCase()],
   ['capitalised', (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()],
@@ -100,6 +103,9 @@ const CASE_FORMS: ReadonlyArray<readonly [string, CaseForm]> = [
         .join(''),
   ],
 ];
+
+/** A table row: the expression, the value Spring produces, and the citation. */
+type ValueRow = readonly [expr: string, expected: unknown, ref: string];
 
 interface KeywordTemplate {
   readonly kw: string;
@@ -153,7 +159,7 @@ function keywordCases(): DraftCase[] {
 
 /** Literal keywords, resolved by the Spring parser with equalsIgnoreCase. */
 function literalKeywordCases(): DraftCase[] {
-  const literals: ReadonlyArray<readonly [string, unknown, string]> = [
+  const literals: readonly ValueRow[] = [
     ['true', true, 'parser#eatPrimaryExpression'],
     ['false', false, 'parser#eatPrimaryExpression'],
     ['null', null, 'parser#eatPrimaryExpression'],
@@ -299,7 +305,7 @@ function unicodeIdentifierCases(): DraftCase[] {
  * integer arithmetic wraps at 32 bits; only a floating operand yields a float.
  */
 function numericTowerCases(): DraftCase[] {
-  const numeric: ReadonlyArray<readonly [string, unknown, string]> = [
+  const numeric: readonly ValueRow[] = [
     ['8 / 5', 1, 'jls 15.17.2 integer division'],
     ['7 / 2', 3, 'jls 15.17.2 integer division'],
     ['-7 / 2', -3, 'jls 15.17.2 truncate toward zero'],
@@ -389,7 +395,7 @@ function logicalOperandCases(): DraftCase[] {
 
 /** Operator.equalityCheck never coerces a String to a Number. */
 function equalityCases(): DraftCase[] {
-  const eq: ReadonlyArray<readonly [string, unknown, string]> = [
+  const eq: readonly ValueRow[] = [
     ["'1' == 1", false, 'op#equalityCheck'],
     ['true == 1', false, 'op#equalityCheck'],
     ['null == 0', false, 'op#equalityCheck'],
@@ -464,7 +470,7 @@ function divisionByZeroCases(): DraftCase[] {
 
 /** Baseline behaviour that already conforms; these must never regress. */
 function baselineCases(): DraftCase[] {
-  const baseline: ReadonlyArray<readonly [string, unknown, string]> = [
+  const baseline: readonly ValueRow[] = [
     ['1 + 2 * 3', 7, 'docs#mathematical precedence'],
     ["'it''s'", "it's", 'tok#lexQuotedStringLiteral doubled quote escapes'],
     ['"a""b"', 'a"b', 'tok#lexDoubleQuotedStringLiteral'],
@@ -500,7 +506,7 @@ function baselineCases(): DraftCase[] {
  * from the JavaScript equivalents.
  */
 function javaStringMethodCases(): DraftCase[] {
-  const cases: ReadonlyArray<readonly [string, unknown, string]> = [
+  const cases: readonly ValueRow[] = [
     ["'abc'.matches('a.*')", true, 'java.lang.String#matches (regex, whole-string)'],
     ["'abc'.matches('b')", false, 'java.lang.String#matches (whole-string, not substring)'],
     ["'abc'.isEmpty()", false, 'java.lang.String#isEmpty'],
