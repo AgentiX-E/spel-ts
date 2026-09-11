@@ -177,9 +177,12 @@ describe('Golden: Comparison Expressions', () => {
     expect(parser.parseExpression('5 ge 3').getValue()).toBe(true);
   });
 
-  // SPR-32: Spring SpEL boolean true coerces to number 1 for comparison with number
-  it('SPR-32: boolean equals number', () => {
-    expect(parser.parseExpression('true == 1').getValue()).toBe(true);
+  // SPR-32: Spring does not coerce a Boolean to a Number for equality.
+  // Operator#equalityCheck compares numerically only between two numbers;
+  // Boolean and Integer share no common Comparable type, so they fall through to
+  // equals() and are unequal.
+  it('SPR-32: boolean is not equal to a number', () => {
+    expect(parser.parseExpression('true == 1').getValue()).toBe(false);
   });
 
   // SPR-33: Spring SpEL == is equality, not assignment (single = is assignment)
@@ -358,9 +361,11 @@ describe('Golden: Collections', () => {
 describe('Golden: Edge Cases', () => {
   const parser = new SpelExpressionParser();
 
-  // SPR-60: null + null — null coerces to 0 for arithmetic when no string operand present
+  // SPR-60: OperatorPlus works on numbers, or concatenates when a String is
+  // present. `null + null` is neither, so Spring fails rather than coercing null
+  // to zero.
   it('SPR-60: null arithmetic', () => {
-    expect(parser.parseExpression('null + null').getValue()).toBe(0);
+    expect(() => parser.parseExpression('null + null').getValue()).toThrow();
   });
 
   // SPR-61: Spring SpEL parenthesized null evaluates to null
@@ -393,14 +398,17 @@ describe('Golden: Edge Cases', () => {
     expect(parser.parseExpression('"x" ? 1 : 2').getValue()).toBe(1);
   });
 
-  // SPR-67: Spring SpEL && returns right operand when left is truthy (short-circuit behavior)
+  // SPR-67: OperatorAnd coerces both operands to Boolean and returns a Boolean.
+  // It never returns an operand, so `true && 42` raises a type-conversion error
+  // rather than yielding 42. Short-circuiting is still honoured.
   it('SPR-67: boolean AND numeric', () => {
-    expect(parser.parseExpression('true && 42').getValue()).toBe(42);
+    expect(() => parser.parseExpression('true && 42').getValue()).toThrow();
   });
 
-  // SPR-68: Spring SpEL || returns first truthy value (0 is falsy, 42 is truthy)
+  // SPR-68: OperatorOr likewise coerces both operands to Boolean, so `0 || 42`
+  // raises a type-conversion error instead of yielding the first truthy value.
   it('SPR-68: OR returns first truthy', () => {
-    expect(parser.parseExpression('0 || 42').getValue()).toBe(42);
+    expect(() => parser.parseExpression('0 || 42').getValue()).toThrow();
   });
 
   // SPR-69: Spring SpEL division by zero throws SpelEvaluationException (DIVISION_BY_ZERO)

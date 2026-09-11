@@ -437,13 +437,17 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
 
   // ==================== EDGE CASES ====================
   describe('edge cases', () => {
+    // OperatorPlus works on numbers, or concatenates when a String is present.
+    // null is neither, so Spring fails rather than treating it as zero.
     it('null in arithmetic', () => {
-      expect(parser.parseExpression('null + 5').getValue()).toBe(5);
+      expect(() => parser.parseExpression('null + 5').getValue()).toThrow();
     });
 
     it('boolean as number in comparison', () => {
-      // true coerced to 1: 1 == 1 → true
-      expect(parser.parseExpression('true == 1').getValue()).toBe(true);
+      // Operator#equalityCheck compares numerically only between two numbers.
+      // Boolean and Integer share no common Comparable type, so `true == 1` is
+      // false in Spring rather than a coercion to `1 == 1`.
+      expect(parser.parseExpression('true == 1').getValue()).toBe(false);
     });
 
     it('0 is falsy', () => {

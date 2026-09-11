@@ -166,14 +166,14 @@ describe('Coverage: Operator edge cases', () => {
       expect(parser.parseExpression('5 < 3').getValue()).toBe(false);
     });
 
-    it('OpEQ mixed type coercion', () => {
-      // boolean-number coercion: true == 1 should be true
-      expect(parser.parseExpression('true == 1').getValue()).toBe(true);
-      // number-boolean: 1 == true should be true
-      expect(parser.parseExpression('1 == true').getValue()).toBe(true);
-      // string-number: 5 == '5' — in SpEL this is string comparison, so false
-      // Use explicit coercion: parseInt for verification
-      expect(typeof parser.parseExpression('5 == 5').getValue()).toBe('boolean');
+    it('OpEQ does not coerce across types', () => {
+      // Spring compares numerically only between two numbers and otherwise falls
+      // back to equals(), so a Boolean is never equal to a Number and a String is
+      // never equal to a Number.
+      expect(parser.parseExpression('true == 1').getValue()).toBe(false);
+      expect(parser.parseExpression('1 == true').getValue()).toBe(false);
+      expect(parser.parseExpression("5 == '5'").getValue()).toBe(false);
+      expect(parser.parseExpression('5 == 5').getValue()).toBe(true);
     });
 
     it('OpNE mixed type coercion', () => {
