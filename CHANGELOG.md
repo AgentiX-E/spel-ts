@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Spring conformance suite (`tests/conformance/`) with an executable corpus of
+  154 expressions, each citing the Spring source that justifies its expected
+  result. The suite distinguishes `rejects-valid`, `accepts-invalid` and
+  `wrong-value` divergences.
+- `tests/conformance/known-divergences.ts`, an enumerated record of the
+  remaining divergences, guarded by a ratchet that fails the build on any new
+  divergence and on any recorded divergence that has been resolved without being
+  removed.
+- `src/util/ascii.ts` — locale-independent ASCII case folding, used for keyword
+  recognition.
+- `src/tokenizer/keyword-table.ts` — the textual operator keyword table,
+  mirroring Spring's `ALTERNATIVE_OPERATOR_NAMES`.
+
+### Changed
+- Textual operators are now matched case-insensitively, as Spring documents:
+  `AND`, `Or`, `Div`, `MOD` and every other casing are accepted.
+- `and`, `or`, `matches`, `between`, `instanceof`, `new`, `true`, `false` and
+  `null` are resolved by the parser rather than the tokenizer, mirroring Spring.
+  This also lets those words be used as ordinary property and method names, so
+  `'abc'.matches('a.*')` and a field named `and` now parse correctly.
+- Identifiers may contain any Unicode letter, matching Spring's use of
+  `Character.isLetter`. Identifiers such as `年龄`, `café` and `αβγ` are now
+  accepted, which the natural-language pipeline relies on.
+
+### Fixed
+- Textual operators were only recognised in lower case, so valid expressions
+  such as `true AND false`, `2 EQ 2` and `7 MOD 4` failed to parse.
+- The `div` operator was missing entirely, so `6 div 3` failed to parse.
+- The literal keywords `true`, `false` and `null` were case-sensitive, so `TRUE`
+  and `NULL` failed.
+- Non-ASCII identifiers were rejected because the character table stopped at
+  ASCII 127.
+
 ## [1.2.2] - 2026-07-20
 ### Changed
 - Unified badge style with CI/Docs/Coverage/TypeScript/Node.js badges

@@ -24,6 +24,7 @@ export enum TokenKind {
   STAR, // *
   SLASH, // /
   PERCENT, // %
+  DIV, // div (textual form, listed in Spring's ALTERNATIVE_OPERATOR_NAMES)
   MOD, // mod
   POWER, // ^ or **
 
