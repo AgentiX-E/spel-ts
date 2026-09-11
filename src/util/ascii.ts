@@ -59,13 +59,3 @@ export function foldAsciiUpper(text: string): string {
 export function equalsIgnoreCaseAscii(left: string, right: string): boolean {
   return foldAsciiUpper(left) === foldAsciiUpper(right);
 }
-
-/** True when the string is composed entirely of ASCII characters. */
-export function isAscii(text: string): boolean {
-  for (const character of text) {
-    if (character.charCodeAt(0) > ASCII_MAX) {
-      return false;
-    }
-  }
-  return true;
-}

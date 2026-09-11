@@ -7,7 +7,7 @@
  * never depends on the host locale.
  */
 import { describe, expect, it } from 'vitest';
-import { equalsIgnoreCaseAscii, foldAsciiUpper, isAscii } from '../../src/util/ascii.js';
+import { equalsIgnoreCaseAscii, foldAsciiUpper } from '../../src/util/ascii.js';
 
 describe('foldAsciiUpper', () => {
   it('returns the empty string unchanged', () => {
@@ -79,21 +79,5 @@ describe('equalsIgnoreCaseAscii', () => {
 
   it('does not treat non-ASCII as equal to an ASCII keyword', () => {
     expect(equalsIgnoreCaseAscii('and', 'ånd')).toBe(false);
-  });
-});
-
-describe('isAscii', () => {
-  it('accepts the empty string', () => {
-    expect(isAscii('')).toBe(true);
-  });
-
-  it('accepts ASCII text', () => {
-    expect(isAscii('abc123_$')).toBe(true);
-  });
-
-  it('rejects any non-ASCII character', () => {
-    expect(isAscii('aé')).toBe(false);
-    expect(isAscii('年龄')).toBe(false);
-    expect(isAscii('a😀')).toBe(false);
   });
 });

@@ -88,34 +88,38 @@ export function getCharFlag(ch: number): number {
 }
 
 /**
- * Unicode letter test used as the slow path for non-ASCII code units.
+ * Unicode letter test used as the slow path for non-ASCII input.
  *
  * Spring's `Tokenizer#isAlphabetic` delegates to `Character.isLetter`, which
  * accepts every Unicode letter — CJK ideographs, accented Latin, Greek and
  * Cyrillic alike. Mirroring that is load-bearing rather than cosmetic: it is
  * what makes identifiers such as `年龄` or `café` legal, and the Chinese
  * natural-language pipeline emits exactly those.
- *
- * Astral-plane letters are intentionally not supported: the tokenizer advances
- * by UTF-16 code unit via `charCodeAt`, so a surrogate half is never a letter,
- * which matches Spring's `char`-based tokenizer.
  */
 const UNICODE_LETTER = /\p{L}/u;
+
+/** Highest UTF-16 code unit. The tokenizer never supplies a value above this. */
+const MAX_CODE_UNIT = 0xffff;
 
 /**
  * Check whether a UTF-16 code unit is a letter in identifier position.
  *
  * ASCII is answered from the pre-computed table; everything else falls back to
  * a Unicode letter test.
+ *
+ * The parameter is a code *unit*, not a code point, because the tokenizer
+ * advances with `charCodeAt`. Two consequences follow, and both match Spring's
+ * `char`-based tokenizer: a surrogate half of an astral-plane character is not
+ * a letter, and a value above the BMP is not a letter either.
  */
 export function isLetter(ch: number): boolean {
   if (ch >= 0 && ch < 128) {
     return (CHAR_FLAG_TABLE[ch]! & CharFlag.LETTER) !== 0;
   }
-  if (ch < 0 || ch > 0x10ffff) {
+  if (ch < 0 || ch > MAX_CODE_UNIT) {
     return false;
   }
-  return UNICODE_LETTER.test(String.fromCodePoint(ch));
+  return UNICODE_LETTER.test(String.fromCharCode(ch));
 }
 
 /**

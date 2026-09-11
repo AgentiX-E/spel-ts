@@ -60,11 +60,11 @@ export function renderDivergenceTable(results: readonly CaseResult[]): string {
       describeOutcome(result),
       result.verdict,
     ];
-    return cells.map((cell, index) => padRight(cell, widths[index]!)).join('| ');
+    return cells.map((cell, index) => padRight(cell, widths[index])).join('| ');
   });
 
   const header = ['GROUP', 'EXPRESSION', 'SPRING', 'ENGINE', 'VERDICT']
-    .map((cell, index) => padRight(cell, widths[index]!))
+    .map((cell, index) => padRight(cell, widths[index]))
     .join('| ');
 
   return ['', rule, header, rule, ...rows, rule, ''].join('\n');
