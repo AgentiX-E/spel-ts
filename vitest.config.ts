@@ -26,13 +26,15 @@ export default defineConfig({
       // v1.1.0: Language service modules (coverage being built up)
       'src/types/context-schema.ts',
     ],
-    // v1.1.0: thresholds temporarily adjusted for new language service modules
-    // Will return to 96/95/96/96 once language service coverage is above 95%
+    // Thresholds raised to 95 on every dimension. They had been lowered to
+    // 92/90/94/92 for the v1.1.0 language-service modules; measured coverage is
+    // now statements 96.19, branches 95.30, functions 96.27, lines 96.19, so the
+    // gate can enforce the intended standard instead of merely recording it.
     thresholds: {
-      statements: 92,
-      branches: 90,
-      functions: 94,
-      lines: 92,
+      statements: 95,
+      branches: 95,
+      functions: 95,
+      lines: 95,
     },
       reporter: ['text', 'lcov', 'html'],
     },
