@@ -166,20 +166,21 @@ describe('Coverage: Operator edge cases', () => {
       expect(parser.parseExpression('5 < 3').getValue()).toBe(false);
     });
 
-    it('OpEQ mixed type coercion', () => {
-      // boolean-number coercion: true == 1 should be true
-      expect(parser.parseExpression('true == 1').getValue()).toBe(true);
-      // number-boolean: 1 == true should be true
-      expect(parser.parseExpression('1 == true').getValue()).toBe(true);
-      // string-number: 5 == '5' — in SpEL this is string comparison, so false
-      // Use explicit coercion: parseInt for verification
-      expect(typeof parser.parseExpression('5 == 5').getValue()).toBe('boolean');
+    it('OpEQ does not coerce across types', () => {
+      // Spring compares numerically only between two numbers and otherwise falls
+      // back to equals(), so a Boolean is never equal to a Number and a String is
+      // never equal to a Number.
+      expect(parser.parseExpression('true == 1').getValue()).toBe(false);
+      expect(parser.parseExpression('1 == true').getValue()).toBe(false);
+      expect(parser.parseExpression("5 == '5'").getValue()).toBe(false);
+      expect(parser.parseExpression('5 == 5').getValue()).toBe(true);
     });
 
     it('OpNE mixed type coercion', () => {
       expect(parser.parseExpression('true != 0').getValue()).toBe(true);
       expect(parser.parseExpression('false != 1').getValue()).toBe(true);
-      expect(parser.parseExpression('0 != false').getValue()).toBe(false);
+      // A Number is never equal to a Boolean, so the inequality holds.
+      expect(parser.parseExpression('0 != false').getValue()).toBe(true);
     });
   });
 
@@ -207,15 +208,29 @@ describe('Coverage: Operator edge cases', () => {
 
   // --- OpOr short-circuit branch ---
   describe('logical short-circuit branches', () => {
-    it('OpOr returns right when left is falsy', () => {
-      expect(parser.parseExpression('null || 42').getValue()).toBe(42);
-      expect(parser.parseExpression('0 || 99').getValue()).toBe(99);
+    // OperatorAnd and OperatorOr coerce both operands to Boolean and return a
+    // Boolean. They never return an operand, so a non-boolean operand is a
+    // type-conversion error rather than a truthiness test.
+    it('OpOr requires boolean operands', () => {
+      expect(() => parser.parseExpression('null || 42').getValue()).toThrow();
+      expect(() => parser.parseExpression('0 || 99').getValue()).toThrow();
+      expect(parser.parseExpression('true || false').getValue()).toBe(true);
       expect(parser.parseExpression('false || true').getValue()).toBe(true);
+      expect(parser.parseExpression('false || false').getValue()).toBe(false);
     });
 
-    it('OpAnd returns left when left is falsy', () => {
-      expect(parser.parseExpression('null && 42').getValue()).toBeNull();
-      expect(parser.parseExpression('0 && 99').getValue()).toBe(0);
+    it('OpAnd requires boolean operands', () => {
+      expect(() => parser.parseExpression('null && 42').getValue()).toThrow();
+      expect(() => parser.parseExpression('0 && 99').getValue()).toThrow();
+      expect(parser.parseExpression('false && true').getValue()).toBe(false);
+      expect(parser.parseExpression('true && false').getValue()).toBe(false);
+      expect(parser.parseExpression('true && true').getValue()).toBe(true);
+    });
+
+    it('the right operand is not evaluated when the left decides the result', () => {
+      // Were the right operand evaluated, the division by zero would raise.
+      expect(parser.parseExpression('false && (1 / 0 == 1)').getValue()).toBe(false);
+      expect(parser.parseExpression('true || (1 / 0 == 1)').getValue()).toBe(true);
     });
   });
 
@@ -917,11 +932,19 @@ describe('Coverage: Final precision hits', () => {
   });
 
   // OpOr/OpAnd short-circuit both branches
-  it('OpAnd both truthy returns right', () => {
-    expect(parser.parseExpression('1 && 42').getValue()).toBe(42);
+  it('OpAnd with two boolean operands returns a boolean', () => {
+    expect(parser.parseExpression('true && true').getValue()).toBe(true);
   });
 
-  it('OpOr both falsy returns right', () => {
-    expect(parser.parseExpression('0 || false').getValue()).toBe(false);
+  it('OpAnd with a non-boolean operand raises a type-conversion error', () => {
+    expect(() => parser.parseExpression('1 && 42').getValue()).toThrow();
+  });
+
+  it('OpOr with two boolean operands returns a boolean', () => {
+    expect(parser.parseExpression('false || false').getValue()).toBe(false);
+  });
+
+  it('OpOr with a non-boolean operand raises a type-conversion error', () => {
+    expect(() => parser.parseExpression('0 || false').getValue()).toThrow();
   });
 });

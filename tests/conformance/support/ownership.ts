@@ -21,6 +21,7 @@ export const GROUP_OWNERSHIP: Readonly<Record<string, DefectOwnership>> = {
   'grammar-strictness': { defect: 'D12', phase: 'Phase 4' },
   collections: { defect: 'D35', phase: 'Phase 4' },
   'java-string-methods': { defect: 'D37', phase: 'Phase 6' },
+  'long-precision': { defect: 'D38', phase: 'Phase 3' },
 };
 
 export function ownershipOf(group: string): DefectOwnership | undefined {

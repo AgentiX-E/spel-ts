@@ -2,7 +2,11 @@ import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
+import { add, numericOperand } from '../../type/numeric.js';
 
+/**
+ * Addition, or concatenation when either operand is a String.
+ */
 export class OpPlus extends Operator {
   constructor(
     operatorName: string,
@@ -14,18 +18,21 @@ export class OpPlus extends Operator {
   }
 
   public override getValueInternal(state: ExpressionState): TypedValue {
-    const left = this.children[0]!.getValue(state);
-    const right = this.children[1]!.getValue(state);
+    const leftValue = this.children[0]!.getValue(state);
+    const rightValue = this.children[1]!.getValue(state);
+    const left = leftValue.getValue();
+    const right = rightValue.getValue();
 
-    const leftVal = left.getValue();
-    const rightVal = right.getValue();
-
-    // String concatenation: if either operand is a string, convert both to string
-    if (typeof leftVal === 'string' || typeof rightVal === 'string') {
-      return new TypedValue(String(leftVal) + String(rightVal));
+    // A String operand promotes the whole expression to concatenation, as in
+    // Java, so this takes precedence over numeric addition.
+    if (typeof left === 'string' || typeof right === 'string') {
+      return new TypedValue(String(left) + String(right));
     }
 
-    // Number addition
-    return new TypedValue((leftVal as number) + (rightVal as number));
+    const sum = add(
+      numericOperand(left, leftValue.getNumericKind(), this.startPos),
+      numericOperand(right, rightValue.getNumericKind(), this.startPos),
+    );
+    return new TypedValue(sum.value, null, sum.kind);
   }
 }

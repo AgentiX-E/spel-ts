@@ -6,11 +6,22 @@
  */
 import type { CaseResult } from '../run-corpus.js';
 
+/**
+ * Render a value for reporting.
+ *
+ * BigInt is handled explicitly because JSON.stringify throws on it, and the
+ * corpus uses a BigInt expectation to state a long value that a JavaScript
+ * number cannot represent.
+ */
+function renderValue(value: unknown): string {
+  return typeof value === 'bigint' ? `${value}n` : JSON.stringify(value);
+}
+
 /** What Spring is expected to do with the expression. */
 export function describeExpected(result: CaseResult): string {
   const { expect } = result.testCase;
   return expect.kind === 'value'
-    ? `value ${JSON.stringify(expect.value)}`
+    ? `value ${renderValue(expect.value)}`
     : `throws ${expect.errorName}`;
 }
 
@@ -18,7 +29,7 @@ export function describeExpected(result: CaseResult): string {
 export function describeOutcome(result: CaseResult): string {
   const { outcome } = result;
   return outcome.kind === 'value'
-    ? `value ${JSON.stringify(outcome.value)}`
+    ? `value ${renderValue(outcome.value)}`
     : `throws ${outcome.errorName}: ${outcome.message}`;
 }
 

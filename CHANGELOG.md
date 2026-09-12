@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recognition.
 - `src/tokenizer/keyword-table.ts` — the textual operator keyword table,
   mirroring Spring's `ALTERNATIVE_OPERATOR_NAMES`.
+- `src/type/numeric.ts` — the Java numeric model: binary numeric promotion,
+  truncating integer division, 32-bit and 64-bit wrapping, and IEEE-754
+  behaviour for the floating kinds.
+- Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
+  operands that cannot take part in arithmetic (`operand-typing`), and for long
+  literals beyond float64 precision (`long-precision`).
+- `src/type/numeric.ts` — the Java numeric model: binary numeric promotion,
+  truncating integer division, 32-bit and 64-bit wrapping, and IEEE-754
+  behaviour for the floating kinds.
+- Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
+  operands that cannot take part in arithmetic (`operand-typing`), and for long
+  literals beyond float64 precision (`long-precision`).
 
 ### Changed
 - Textual operators are now matched case-insensitively, as Spring documents:
@@ -39,6 +51,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `NULL` failed.
 - Non-ASCII identifiers were rejected because the character table stopped at
   ASCII 127.
+- Integer division returned a fractional result: `8 / 5` evaluated to `1.6`
+  where Java yields `1`. Integral division and remainder now truncate toward
+  zero, `int` arithmetic wraps at 32 bits and `long` at 64 bits, and a zero
+  divisor throws for the integral kinds while yielding `Infinity` or `NaN` for
+  the floating kinds, as IEEE-754 requires.
+- Logical operators applied JavaScript truthiness and returned an operand, so
+  `true and 5` evaluated to `5`. They now require Boolean operands and return a
+  Boolean, matching Spring's `OperatorAnd`, `OperatorOr` and `OperatorNot`,
+  which still short-circuit.
+- Equality coerced across types by comparing string forms, so `'1' == 1` and
+  `true == 1` were both true. It now follows Spring's `equalityCheck`, which
+  compares numerically only between two numbers and never coerces a String to a
+  Number.
+- Unary minus was represented as a binary subtraction with a synthesised null
+  left operand, which made it indistinguishable from a genuine `null - x` and
+  routed negation through binary arithmetic. It is now a single-operand node.
+- Integer division returned a fractional result: `8 / 5` evaluated to `1.6`
+  where Java yields `1`. Integral division and remainder now truncate toward
+  zero, `int` arithmetic wraps at 32 bits and `long` at 64 bits, and a zero
+  divisor throws for the integral kinds while yielding `Infinity` or `NaN` for
+  the floating kinds, as IEEE-754 requires.
+- Logical operators applied JavaScript truthiness and returned an operand, so
+  `true and 5` evaluated to `5`. They now require Boolean operands and return a
+  Boolean, matching Spring's `OperatorAnd`, `OperatorOr` and `OperatorNot`,
+  which still short-circuit.
+- Equality coerced across types by comparing string forms, so `'1' == 1` and
+  `true == 1` were both true. It now follows Spring's `equalityCheck`, which
+  compares numerically only between two numbers and never coerces a String to a
+  Number.
+- Unary minus was represented as a binary subtraction with a synthesised null
+  left operand, which made it indistinguishable from a genuine `null - x` and
+  routed negation through binary arithmetic. It is now a single-operand node.
 
 ## [1.2.2] - 2026-07-20
 ### Changed

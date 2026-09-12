@@ -16,7 +16,7 @@ export class RealLiteral extends Literal {
   }
 
   public getValueInternal(_state: ExpressionState): TypedValue {
-    return new TypedValue(this.value);
+    return new TypedValue(this.value, null, 'double');
   }
 
   public toStringAST(): string {

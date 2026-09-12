@@ -404,6 +404,10 @@ function equalityCases(): DraftCase[] {
     ['1 == 1', true, 'op#equalityCheck'],
     ['1.0 == 1', true, 'op#equalityCheck numeric promotion'],
     ["1 != '1'", true, 'op#equalityCheck'],
+    ['true == true', true, 'op#equalityCheck'],
+    ['false == false', true, 'op#equalityCheck'],
+    ['true != false', true, 'op#equalityCheck'],
+    ['false == 0', false, 'op#equalityCheck Boolean vs Number'],
   ];
   return eq.map(([expr, val, ref], i) => ({
     group: 'equality',
@@ -605,6 +609,75 @@ function propertyAndCollectionCases(): DraftCase[] {
  * The full corpus. Order is stable and grouped so that divergence reports can
  * be diffed between runs.
  */
+/**
+ * Explicit literal suffixes and the promotions they trigger, so that float and
+ * long arithmetic is exercised end to end rather than only through unit tests.
+ */
+function numericKindCases(): DraftCase[] {
+  const cases: readonly ValueRow[] = [
+    ['5.0f + 1.0f', 6, 'jls 5.6.2 promotion to float'],
+    ['1.5f * 2.0f', 3, 'jls 5.6.2 promotion to float'],
+    ['2L * 3L', 6, 'jls 5.6.2 promotion to long'],
+    ['7L / 2L', 3, 'jls 15.17.2 long division truncates'],
+    ['10L % 3L', 1, 'jls 15.17.3 long remainder'],
+    ['2 + 3L', 5, 'jls 5.6.2 widening to long'],
+    ['2 + 3.0', 5, 'jls 5.6.2 widening to double'],
+    ['-3L', -3, 'unary minus preserves the numeric kind'],
+  ];
+  return cases.map(([expr, val, ref], i) => ({
+    group: 'numeric-kinds',
+    label: `${i}-${expr}`,
+    expr,
+    expect: value(val),
+    ref,
+  }));
+}
+
+/**
+ * Arithmetic operands that are not numbers.
+ *
+ * Spring raises a type-conversion error rather than coercing, so `'a' - 1`
+ * fails instead of quietly producing NaN.
+ */
+function operandTypingCases(): DraftCase[] {
+  return [
+    {
+      group: 'operand-typing',
+      label: 'string-minus-number',
+      expr: "'a' - 1",
+      expect: throwsEval(),
+      ref: 'op#OperatorMinus operates on numbers',
+    },
+    {
+      group: 'operand-typing',
+      label: 'string-times-number',
+      expr: "'a' * 2",
+      expect: throwsEval(),
+      ref: 'op#OperatorMultiply operates on numbers',
+    },
+  ];
+}
+
+/**
+ * Long literals are parsed with parseInt, so magnitudes above 2^53 lose
+ * precision at the lexer, before evaluation ever runs. Spring keeps a 64-bit
+ * value exactly. Recorded as a known divergence rather than silently accepted.
+ */
+function longPrecisionCases(): DraftCase[] {
+  const cases: readonly ValueRow[] = [
+    // A BigInt literal, because 9007199254740993 is not representable as a
+    // JavaScript number and would otherwise round in this very file.
+    ['9007199254740993L', 9007199254740993n, 'jls 3.10.1 long literals are exact'],
+  ];
+  return cases.map(([expr, val, ref], i) => ({
+    group: 'long-precision',
+    label: `${i}-${expr}`,
+    expr,
+    expect: value(val),
+    ref,
+  }));
+}
+
 export const CORPUS: readonly ConformanceCase[] = build([
   ...keywordCases(),
   ...literalKeywordCases(),
@@ -612,6 +685,9 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...unicodeIdentifierCases(),
   ...numericTowerCases(),
   ...logicalOperandCases(),
+  ...numericKindCases(),
+  ...operandTypingCases(),
+  ...longPrecisionCases(),
   ...equalityCases(),
   ...strictnessCases(),
   ...divisionByZeroCases(),
