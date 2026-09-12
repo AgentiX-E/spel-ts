@@ -19,7 +19,9 @@ export class MethodReference extends SpelNodeImpl {
 
   public getValueInternal(state: ExpressionState): TypedValue {
     const target = state.getThis().getValue();
-    const argValues = this.children.map((c) => c.getValue(state).getValue());
+    // Arguments resolve at the expression's root scope, not at the receiver's.
+    const argumentScope = state.getArgumentScope();
+    const argValues = this.children.map((c) => c.getValue(argumentScope).getValue());
 
     if (target === null || target === undefined) {
       throw new SpelEvaluationException(

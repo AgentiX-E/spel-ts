@@ -553,14 +553,24 @@ describe('Coverage: MethodResolver and type converter', () => {
     );
   });
 
-  it('number method: toFixed', () => {
+  it('number method: the Java wrapper conversions', () => {
+    // These exist in Java and had no implementation before.
     const ctx = new StandardEvaluationContext({ n: 3.14159 });
-    expect(parser.parseExpression('n.toFixed()').getValueWithContext(ctx)).toBe('3');
+    expect(parser.parseExpression('n.intValue()').getValueWithContext(ctx)).toBe(3);
+    expect(parser.parseExpression('n.doubleValue()').getValueWithContext(ctx)).toBe(3.14159);
+    expect(parser.parseExpression('n.floatValue()').getValueWithContext(ctx)).toBe(
+      Math.fround(3.14159),
+    );
   });
 
-  it('number method: toExponential', () => {
-    const ctx = new StandardEvaluationContext({ n: 12345 });
-    expect(parser.parseExpression('n.toExponential()').getValueWithContext(ctx)).toContain('e');
+  it('number formatting uses the Java route', () => {
+    // `toFixed` is not a member of any Java type, so Spring raises
+    // method-not-found. String.format is the Java equivalent.
+    const ctx = new StandardEvaluationContext({ n: 3.14159 });
+    expect(parser.parseExpression("T(String).format('%.2f', n)").getValueWithContext(ctx)).toBe(
+      '3.14',
+    );
+    expect(() => parser.parseExpression('n.toFixed()').getValueWithContext(ctx)).toThrow();
   });
 
   it('number method: toString', () => {

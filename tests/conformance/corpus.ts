@@ -980,6 +980,183 @@ function typeSurfaceErrorCases(): DraftCase[] {
   ];
 }
 
+/**
+ * Method calls on a number, resolved against the Java wrapper classes.
+ *
+ * `toFixed` and `toExponential` are absent from the Java types, so they are
+ * absent here too; they were callable only because JavaScript's Number happens
+ * to provide them. The Java conversions that were missing are covered as well.
+ */
+function numberMethodCases(): DraftCase[] {
+  const pi = { n: 3.14159, whole: 42 };
+
+  return [
+    {
+      group: 'number-methods',
+      label: 'intValue',
+      expr: 'n.intValue()',
+      root: pi,
+      expect: value(3),
+      ref: 'java.lang.Double#intValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'doubleValue',
+      expr: 'n.doubleValue()',
+      root: pi,
+      expect: value(3.14159),
+      ref: 'java.lang.Double#doubleValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'floatValue',
+      expr: 'n.floatValue()',
+      root: pi,
+      expect: value(Math.fround(3.14159)),
+      ref: 'java.lang.Double#floatValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'longValue',
+      expr: 'whole.longValue()',
+      root: pi,
+      expect: value(42),
+      ref: 'java.lang.Integer#longValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'byteValue',
+      expr: 'whole.byteValue()',
+      root: pi,
+      expect: value(42),
+      ref: 'java.lang.Integer#byteValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'toString',
+      expr: 'whole.toString()',
+      root: pi,
+      expect: value('42'),
+      ref: 'java.lang.Integer#toString',
+    },
+    {
+      group: 'number-methods',
+      label: 'equals',
+      expr: 'whole.equals(42)',
+      root: pi,
+      expect: value(true),
+      ref: 'java.lang.Integer#equals',
+    },
+    {
+      group: 'number-methods',
+      label: 'compareTo',
+      expr: 'whole.compareTo(4)',
+      root: pi,
+      expect: value(1),
+      ref: 'java.lang.Integer#compareTo',
+    },
+    {
+      group: 'number-methods',
+      label: 'toFixed-does-not-resolve',
+      expr: 'n.toFixed()',
+      root: pi,
+      expect: throwsEval(),
+      ref: 'no Java type has toFixed; Spring raises method-not-found',
+    },
+    {
+      group: 'number-methods',
+      label: 'toExponential-does-not-resolve',
+      expr: 'n.toExponential()',
+      root: pi,
+      expect: throwsEval(),
+      ref: 'no Java type has toExponential',
+    },
+    {
+      group: 'number-methods',
+      label: 'the-java-replacement',
+      expr: "T(String).format('%.2f', n)",
+      root: pi,
+      expect: value('3.14'),
+      ref: 'java.lang.String#format is the Java route to a formatted number',
+    },
+  ];
+}
+
+/**
+ * Where a method's arguments are resolved (D41).
+ *
+ * A compound expression rebinds the receiver as the root of the state handed to
+ * the following node, so an argument used to be read as a member of the receiver:
+ * `s.substring(i)` looked up `i` on the string and failed, while `i.toString()`
+ * worked because a bare name at the top level resolves against the root.
+ *
+ * Arguments now resolve at the expression's root scope. A receiver still
+ * resolves in its own scope, which is what keeps selection predicates reading
+ * their field from the element.
+ */
+function argumentScopeCases(): DraftCase[] {
+  const root = {
+    s: 'hello world',
+    i: 6,
+    items: [
+      { name: 'ab', price: 1 },
+      { name: 'bc', price: 50 },
+    ],
+    prefix: 'a',
+  };
+
+  return [
+    {
+      group: 'argument-scope',
+      label: 'a1',
+      expr: 's.substring(i)',
+      root,
+      expect: value('world'),
+      ref: 'a bare argument resolves against the root',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a2',
+      expr: 's.charAt(i)',
+      root,
+      expect: value('w'),
+      ref: 'a bare argument resolves against the root',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a3',
+      expr: 's.concat(s)',
+      root,
+      expect: value('hello worldhello world'),
+      ref: 'the receiver and an argument name the same root property',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a4',
+      expr: 'T(Math).max(i, 5)',
+      root,
+      expect: value(6),
+      ref: 'a static call resolves its arguments at the root',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a5',
+      expr: 'items.?[price > 20]',
+      root,
+      expect: value([{ name: 'bc', price: 50 }]),
+      ref: 'a receiver still resolves in its own scope',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a6',
+      expr: 'items.?[name.startsWith(prefix)]',
+      root,
+      expect: value([{ name: 'ab', price: 1 }]),
+      ref: 'a receiver resolves on the element, an argument at the root',
+    },
+  ];
+}
+
 export const CORPUS: readonly ConformanceCase[] = build([
   ...keywordCases(),
   ...literalKeywordCases(),
@@ -990,6 +1167,8 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...numericKindCases(),
   ...operandTypingCases(),
   ...bigintCases(),
+  ...numberMethodCases(),
+  ...argumentScopeCases(),
   ...equalityCases(),
   ...strictnessCases(),
   ...divisionByZeroCases(),

@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
   operands that cannot take part in arithmetic (`operand-typing`), and for long
   literals beyond float64 precision (`long-precision`).
+- `src/evaluation-context/java-number-methods.ts` — the numeric wrapper method
+  table: `byteValue`, `shortValue`, `intValue`, `longValue`, `floatValue`,
+  `doubleValue`, `toString`, `equals` and `compareTo`, which had no
+  implementation before.
 - `bigint` as a numeric kind, standing in for `java.math.BigInteger`. It ranks
   between `long` and `float`, so a BigInt combined with an `int` or a `long` stays
   exact while a BigInt combined with a `double` widens to a double.
@@ -130,6 +134,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An unknown member of a type returned null instead of reporting, so
   `T(Math).noSuchField` produced a value rather than an error and a misspelled
   field name was presented as a legitimate null.
+- A method's arguments were resolved against the method's receiver rather than
+  against the object the expression started from. `s.substring(i)`,
+  `s.charAt(i)` and `T(String).format('%.2f', n)` all failed when the argument was
+  a bare name, while `i.toString()` worked — a compound expression rebinds the
+  receiver as the root of the state handed to the following node, so the argument
+  was read as a member of the receiver. Arguments now resolve at the expression's
+  root scope, and a receiver still resolves in its own scope, so
+  `items.?[price > 20]` continues to read `price` from the element.
+- `toFixed` and `toExponential` resolved on a number, although no Java type has
+  either method. They were callable only because JavaScript's `Number` provides
+  them, so an expression using one worked here and failed in Spring. A number is
+  now resolved against the Java wrapper classes only. `T(String).format('%.2f', n)`
+  is the Java route to a formatted number, and `T(Math).round(n * 100) / 100` for a
+  rounded value.
 - An integer outside the range a JavaScript number holds exactly was either
   rejected or silently mis-compared. Arithmetic on a BigInt supplied by the
   environment threw, `10n == 10` and `10n > 5` were both false, and a long literal

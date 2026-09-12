@@ -60,10 +60,18 @@ describe('ReflectiveMethodResolver — other targets', () => {
     expect(resolver.resolve(context, { a: 1 }, 'a', [])).toBeNull();
   });
 
-  it('resolves a number method through its own methods', () => {
+  it('resolves a Java wrapper method on a number', () => {
     expect(resolver.resolve(context, 42, 'toString', [])?.getValue()).toBe('42');
-    expect(resolver.resolve(context, 42, 'toFixed', [])?.getValue()).toBe('42');
+    expect(resolver.resolve(context, 42, 'intValue', [])?.getValue()).toBe(42);
+    expect(resolver.resolve(context, 42, 'doubleValue', [])?.getValue()).toBe(42);
     expect(resolver.resolve(context, 42, 'nonExistent', [])).toBeNull();
+  });
+
+  it('does not resolve a JavaScript-only number method', () => {
+    // Java has no toFixed, so it must not resolve.
+    expect(resolver.resolve(context, 42, 'toFixed', [])).toBeNull();
+    expect(resolver.resolve(context, 42, 'toExponential', [])).toBeNull();
+    expect(resolver.resolve(context, 42, 'toPrecision', [])).toBeNull();
   });
 
   it('invokes a method on an array', () => {

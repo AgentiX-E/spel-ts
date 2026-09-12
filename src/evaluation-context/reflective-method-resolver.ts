@@ -5,6 +5,7 @@ import { SpelEvaluationException } from '../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 import { invokeStringMethod } from './java-string-methods.js';
 import { isTypeDescriptor } from '../type/type-descriptor.js';
+import { invokeNumberMethod } from './java-number-methods.js';
 
 export class ReflectiveMethodResolver implements MethodResolver {
   public resolve(
@@ -35,11 +36,16 @@ export class ReflectiveMethodResolver implements MethodResolver {
       return new TypedValue(target.callStaticMethod(name, ...args));
     }
 
-    // Objects, arrays, maps and numbers fall back to their own methods. For a
-    // number that means JavaScript's, so `toFixed` and `toExponential` resolve
-    // even though java.lang.Integer and java.lang.Double have no such methods.
-    // Unlike the string case there is no semantic collision to cause a wrong
-    // answer, so this permissiveness is left as is and recorded as D39.
+    // A number is resolved against the Java wrapper classes only, for the same
+    // reason a string is resolved against java.lang.String only: JavaScript's
+    // Number offers a different set under different names, and `toFixed` and
+    // `toExponential` were callable purely because JavaScript provides them while
+    // no Java type does.
+    if (typeof target === 'number' || typeof target === 'bigint') {
+      return invokeNumberMethod(target, name, args);
+    }
+
+    // Objects, arrays and maps fall back to their own methods.
     const targetObj = target as Record<string, unknown>;
     const fn = targetObj[name];
     if (typeof fn === 'function') {
