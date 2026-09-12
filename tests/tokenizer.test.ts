@@ -310,16 +310,14 @@ describe('Tokenizer', () => {
       ['>=', TokenKind.GE],
       ['&&', TokenKind.AND],
       ['||', TokenKind.OR],
-      ['**', TokenKind.POWER],
       ['?.', TokenKind.SAFE_NAV],
       ['?:', TokenKind.ELVIS],
       ['&@', TokenKind.AMP_AT],
       ['..', TokenKind.DOTDOT],
       ['.![', TokenKind.PROJECTION],
       ['.?[', TokenKind.SELECTION],
-      ['.$[', TokenKind.SELECT_FIRST],
+      ['.$[', TokenKind.SELECT_LAST],
       ['.^[', TokenKind.SELECT_FIRST],
-      ['.*[', TokenKind.SELECT_LAST],
     ];
 
     for (const [op, kind] of multiOps) {
@@ -328,6 +326,20 @@ describe('Tokenizer', () => {
         expect(tokens[0].kind).toBe(kind);
       });
     }
+
+    it('should tokenize "**" as two STAR tokens, as Spring does', () => {
+      // Spring has no '**' operator; the parser rejects the resulting pair.
+      const kinds = new Tokenizer('**').tokenize().map((token) => token.kind);
+      expect(kinds[0]).toBe(TokenKind.STAR);
+      expect(kinds[1]).toBe(TokenKind.STAR);
+    });
+
+    it('should not treat ".*[" as a selection modifier', () => {
+      // Only '^[' and '$[' exist, so this is a DOT followed by a STAR.
+      const kinds = new Tokenizer('.*[').tokenize().map((token) => token.kind);
+      expect(kinds[0]).toBe(TokenKind.DOT);
+      expect(kinds[1]).toBe(TokenKind.STAR);
+    });
   });
 
   // ===== Test Group 8: Compound Expressions =====

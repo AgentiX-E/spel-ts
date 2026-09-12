@@ -441,7 +441,22 @@ function strictnessCases(): DraftCase[] {
       expr: '#a = #b = 1',
       root: { a: 0, b: 0 },
       expect: throwsParse(),
-      ref: 'parser#eatExpression assigns from eatLogicalOrExpression',
+      ref: 'parser#eatExpression binds the right-hand side at logical-or precedence',
+    },
+    {
+      group: 'grammar-strictness',
+      label: 'between-list-must-be-ordered',
+      expr: '1 between {5, 1}',
+      expect: value(false),
+      ref: 'docs#operators between is a shortcut for >= lower && <= upper',
+    },
+    {
+      group: 'grammar-strictness',
+      label: 'rejects-star-bracket-selection',
+      expr: 'items.*[price > 20]',
+      root: { items: [] },
+      expect: throwsParse(),
+      ref: "tok#process has no '.*[' modifier; only '^[' and '$[' exist",
     },
   ];
 }

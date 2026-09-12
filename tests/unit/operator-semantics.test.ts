@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import { equalityCheck } from '../../src/ast/operator/equality.js';
 import { SpelExpressionParser } from '../../src/spel-expression-parser.js';
+import { StandardEvaluationContext } from '../../src/standard-evaluation-context.js';
 
 describe('equalityCheck', () => {
   it('treats null as equal only to null', () => {
@@ -54,6 +55,68 @@ describe('equalityCheck', () => {
     expect(equalityCheck(list, list)).toBe(true);
     expect(equalityCheck([1, 2], [1, 2])).toBe(false);
   });
+});
+
+describe('collection selection modes', () => {
+  const parser = new SpelExpressionParser();
+  const root = {
+    items: [
+      { name: 'a', price: 10 },
+      { name: 'b', price: 200 },
+      { name: 'c', price: 30 },
+    ],
+  };
+
+  const evaluate = (expr: string): unknown =>
+    parser.parseExpression(expr).getValueWithContext(new StandardEvaluationContext(root));
+
+  it('binds ^[ to the first match, as Spring does', () => {
+    expect(evaluate('items.^[price > 20]')).toEqual({ name: 'b', price: 200 });
+  });
+
+  it('binds $[ to the last match, as Spring does', () => {
+    // This previously returned the first match, because both modifiers mapped
+    // to SELECT_FIRST and the non-SpEL '.*[' was treated as select-last.
+    expect(evaluate('items.$[price > 20]')).toEqual({ name: 'c', price: 30 });
+  });
+
+  it('rejects the non-SpEL .*[ modifier', () => {
+    expect(() => parser.parseExpression('items.*[price > 20]')).toThrow();
+  });
+
+  it('agrees between the compact and dotted spellings', () => {
+    // The dotted spelling reaches a separate parsing path; a stray token advance
+    // there used to make `items. .![name]` evaluate to [true, true].
+    expect(evaluate('items. .?[price > 20]')).toEqual(evaluate('items.?[price > 20]'));
+    expect(evaluate('items. .![name]')).toEqual(evaluate('items.![name]'));
+    expect(evaluate('items. .^[price > 20]')).toEqual(evaluate('items.^[price > 20]'));
+  });
+});
+
+describe('toStringAST round-trip', () => {
+  const parser = new SpelExpressionParser();
+
+  // Each rendering must parse back to the same value. The unary and between
+  // forms previously rendered as `(true ! )` and `(1 between 1)`, neither of
+  // which parses, so this property would have caught both.
+  const roundTrippable = [
+    'not true',
+    '1 between {1, 5}',
+    '5 - 3',
+    '-3',
+    '2 ^ 3',
+    'true and false',
+    '1 + 2 * 3',
+  ];
+
+  for (const expression of roundTrippable) {
+    it(`re-parses ${expression}`, () => {
+      const rendered = parser.parseRaw(expression).toStringAST();
+      expect(parser.parseExpression(rendered).getValue()).toBe(
+        parser.parseExpression(expression).getValue(),
+      );
+    });
+  }
 });
 
 describe('unary minus rendering', () => {

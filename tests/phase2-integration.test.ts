@@ -301,8 +301,8 @@ describe('Phase 2 — Full SpEL Expression Evaluation', () => {
         expect(result).toBe(true);
       });
 
-      it('0 between 1 and 10 → false (and form)', () => {
-        const result = parser.parseExpression('0 between 1 and 10').getValue();
+      it('0 between {1, 10} → false', () => {
+        const result = parser.parseExpression('0 between {1, 10}').getValue();
         expect(result).toBe(false);
       });
 

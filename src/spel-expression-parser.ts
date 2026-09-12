@@ -116,10 +116,11 @@ export class InternalSpelExpressionParser {
   private eatExpression(): SpelNodeImpl {
     const left = this.eatConditionalExpression();
 
-    // Assignment = lowest precedence, right-associative
+    // The right-hand side binds at logical-or precedence, as Spring's
+    // eatExpression does, so `a = b = 1` is rejected rather than chained.
     if (this.peek().kind === TokenKind.ASSIGN) {
       const assignToken = this.advance();
-      const right = this.eatExpression();
+      const right = this.eatOrExpression();
       return new Assign(assignToken.startPos, right.endPos, left, right);
     }
 
@@ -221,38 +222,21 @@ export class InternalSpelExpressionParser {
       return this.buildRelationalOp(opToken, left, right);
     }
 
-    // 'between' has two forms:
-    //   1. value between {lower, upper}  (list form)
-    //   2. value between lower and upper (and form)
+    // Spring's between has exactly one form: `value between {lower, upper}`.
+    // There is no `between a and b` spelling, so accepting one would produce an
+    // expression that parses here and fails in production Spring.
     if (this.peekIdentifierToken('between')) {
       const betweenToken = this.advance();
 
-      // Check if next is inline list: {lower, upper}
-      if (this.peek().kind === TokenKind.LBRACE) {
-        const savedPos = this.pos;
-        this.advance(); // consume '{'
-        if (this.peek().kind !== TokenKind.RBRACE) {
-          const lower = this.eatExpression();
-          if (this.peek().kind === TokenKind.COMMA) {
-            this.advance(); // consume ','
-            const upper = this.eatExpression();
-            if (this.peek().kind === TokenKind.RBRACE) {
-              this.advance(); // consume '}'
-              return new OpBetween('between', betweenToken.startPos, this.pos, left, lower, upper);
-            }
-          }
-        }
-        // Not a 2-element list — backtrack
-        this.pos = savedPos;
+      if (this.peek().kind !== TokenKind.LBRACE) {
+        throw this.raise(SpelMessage.BETWEEN_RIGHT_OPERAND);
       }
-
-      // Form 2: value between lower and upper
-      const lower = this.eatSumExpression();
-      if (this.peek().kind === TokenKind.AND || this.peekIdentifierToken('and')) {
-        this.advance(); // consume 'and'
-      }
-      const upper = this.eatSumExpression();
-      return new OpBetween('between', betweenToken.startPos, upper.endPos, left, lower, upper);
+      this.advance(); // consume '{'
+      const lower = this.eatExpression();
+      this.expect(TokenKind.COMMA);
+      const upper = this.eatExpression();
+      this.expect(TokenKind.RBRACE);
+      return new OpBetween('between', betweenToken.startPos, this.pos, left, lower, upper);
     }
 
     return left;
@@ -688,8 +672,9 @@ export class InternalSpelExpressionParser {
       throw this.raise(SpelMessage.OODES, token.literal!);
     }
 
-    // T(Type) type reference
-    if (token.literal === 'T' || token.literal === 't') {
+    // T(Type) type reference. Spring tests "T".equals(...), so the operator is
+    // case-sensitive and a lowercase `t(...)` is an ordinary method call.
+    if (token.literal === 'T') {
       const savedPos = this.pos;
       this.advance();
       if (this.peek().kind === TokenKind.LPAREN) {
@@ -765,9 +750,10 @@ export class InternalSpelExpressionParser {
           nextToken.kind === TokenKind.SELECT_FIRST ||
           nextToken.kind === TokenKind.SELECT_LAST
         ) {
+          // The SELECTION/PROJECTION token already consumed '.?[' — eat the
+          // predicate up to ']'. Advancing again here consumed the first token
+          // of the predicate, so `items. .![n]` produced [true, true].
           const selToken = this.advance();
-          this.advance(); // Skip the consumed '['
-          // The SELECTION/PROJECTION token already consumed '.?[' — eat predicate up to ']'
           let predicate: SpelNodeImpl;
           if (this.peek().kind !== TokenKind.RBRACKET) {
             predicate = this.eatExpression();

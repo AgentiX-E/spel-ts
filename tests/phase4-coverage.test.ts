@@ -181,7 +181,7 @@ describe('Phase 4: instanceof Enhanced', () => {
   });
 });
 
-describe('Phase 4: Selection Semantics (.^[ .$[ .*[)', () => {
+describe('Phase 4: Selection Semantics (.^[ .$[)', () => {
   const parser = new SpelExpressionParser();
 
   it('COV-17: .^[ returns first matching element', () => {
@@ -198,18 +198,25 @@ describe('Phase 4: Selection Semantics (.^[ .$[ .*[)', () => {
     expect(result).toBeNull();
   });
 
-  it('COV-19: .*[ returns last matching element', () => {
+  // Spring defines '$[' as select-last. '.*[' is not a SpEL modifier.
+  it('COV-19: .$[ returns last matching element', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('list', [1, 2, 3, 4, 5]);
-    const result = parser.parseExpression('#list.*[#this > 2]').getValueWithContext(ctx);
+    const result = parser.parseExpression('#list.$[#this > 2]').getValueWithContext(ctx);
     expect(result).toBe(5);
   });
 
-  it('COV-20: .*[ returns null when no match', () => {
+  it('COV-20: .$[ returns null when no match', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('list', [1, 2, 3]);
-    const result = parser.parseExpression('#list.*[#this > 10]').getValueWithContext(ctx);
+    const result = parser.parseExpression('#list.$[#this > 10]').getValueWithContext(ctx);
     expect(result).toBeNull();
+  });
+
+  it('COV-20b: the non-SpEL .*[ modifier is rejected', () => {
+    const ctx = new StandardEvaluationContext();
+    ctx.setVariable('list', [1, 2, 3, 4, 5]);
+    expect(() => parser.parseExpression('#list.*[#this > 2]')).toThrow();
   });
 
   it('COV-21: .?[ returns all matching', () => {

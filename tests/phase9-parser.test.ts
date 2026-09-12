@@ -29,12 +29,12 @@ describe('Phase9: Parser branch coverage', () => {
     expect(() => p.parseExpression('a.(b)')).toThrow();
   });
 
-  // Between backtrack: between {not-a-valid-pair}
-  it('between {x} not a pair backtracks', () => {
+  // Between takes a two-element list and has no `and` form in Spring.
+  it('between requires a two-element list', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('val', 5);
-    // between {5, 10} works, but between with non-list throws
-    expect(p.parseExpression('5 between 1 and 10').getValue()).toBe(true);
+    expect(p.parseExpression('5 between {1, 10}').getValue()).toBe(true);
+    expect(() => p.parseExpression('5 between 1 and 10')).toThrow();
   });
 
   // Qualified identifier with dots
@@ -56,9 +56,9 @@ describe('Phase9: Parser branch coverage', () => {
     // "new" without type name throws at expect(TokenKind.IDENTIFIER)
   });
 
-  // Between with and-form (not list form)
-  it('between with and keyword', () => {
-    expect(p.parseExpression('3 between 1 and 5').getValue()).toBe(true);
+  // Between with the list form only
+  it('between with list form', () => {
+    expect(p.parseExpression('3 between {1, 5}').getValue()).toBe(true);
   });
 
   // Postfix DOT without LPAREN after method name
