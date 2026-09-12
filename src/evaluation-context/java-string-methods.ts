@@ -242,7 +242,11 @@ function splitPattern(source: string, args: readonly unknown[], position: number
   }
 
   const parts = source.split(regex);
-  // limit 0 behaves like no limit: trailing empty strings are discarded.
+  // A negative limit keeps every element. A zero limit behaves like no limit,
+  // and both discard trailing empty strings.
+  if (limit !== undefined && limit < 0) {
+    return parts;
+  }
   let end = parts.length;
   while (end > 1 && parts[end - 1] === '') {
     end -= 1;

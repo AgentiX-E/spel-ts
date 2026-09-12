@@ -540,6 +540,11 @@ function javaStringMethodCases(): DraftCase[] {
     // split takes a regular expression in Java and drops trailing empty strings.
     ["'a1b2'.split('\\d')", ['a', 'b'], 'java.lang.String#split takes a regex'],
     ["'a,b,'.split(',')", ['a', 'b'], 'java.lang.String#split drops trailing empty strings'],
+    [
+      "'a,b,'.split(',', -1)",
+      ['a', 'b', ''],
+      'java.lang.String#split keeps all for a negative limit',
+    ],
     ["'a,b,c'.split(',', 2)", ['a', 'b,c'], 'java.lang.String#split limit holds the remainder'],
     ["'abc'.replaceFirst('b', 'z')", 'azc', 'java.lang.String#replaceFirst'],
     ["'abc'.compareTo('abd')", -1, 'java.lang.String#compareTo'],

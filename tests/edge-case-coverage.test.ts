@@ -954,9 +954,10 @@ describe('Edge Case: ReflectiveMethodResolver', () => {
       expect(result!.getValue()).toBe('H');
     });
 
-    it('should call charAt out of range returns empty', () => {
-      const result = resolver.resolve(ctx, target, 'charAt', [999]);
-      expect(result!.getValue()).toBe('');
+    it('should report charAt out of range', () => {
+      // Java throws StringIndexOutOfBoundsException rather than returning an
+      // empty string, so the out-of-range index is reported.
+      expect(() => resolver.resolve(ctx, target, 'charAt', [999])).toThrow();
     });
 
     it('should call substring with one arg', () => {

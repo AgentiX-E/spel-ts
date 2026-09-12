@@ -16,7 +16,7 @@
  * because the backlog is enumerated explicitly, not because failures are
  * suppressed. A regression in an unlisted case fails the build immediately.
  *
- * Snapshot: 1 divergences of 181 corpus cases (Phase 3: 1).
+ * Snapshot: 1 divergences of 182 corpus cases (Phase 3: 1).
  */
 export interface KnownDivergence {
   readonly caseId: string;
