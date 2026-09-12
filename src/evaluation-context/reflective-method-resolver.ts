@@ -25,7 +25,11 @@ export class ReflectiveMethodResolver implements MethodResolver {
       return invokeStringMethod(target, name, args);
     }
 
-    // Objects, arrays and maps fall back to their own methods.
+    // Objects, arrays, maps and numbers fall back to their own methods. For a
+    // number that means JavaScript's, so `toFixed` and `toExponential` resolve
+    // even though java.lang.Integer and java.lang.Double have no such methods.
+    // Unlike the string case there is no semantic collision to cause a wrong
+    // answer, so this permissiveness is left as is and recorded as D39.
     const targetObj = target as Record<string, unknown>;
     const fn = targetObj[name];
     if (typeof fn === 'function') {
@@ -42,25 +46,7 @@ export class ReflectiveMethodResolver implements MethodResolver {
       }
     }
 
-    if (typeof target === 'number') {
-      const numResult = this.tryNumberMethod(target, name);
-      if (numResult !== null) return numResult;
-    }
-
     // Not found — return null so the accessor chain or another resolver can try.
     return null;
-  }
-
-  private tryNumberMethod(target: number, name: string): TypedValue | null {
-    switch (name) {
-      case 'toString':
-        return new TypedValue(target.toString());
-      case 'toFixed':
-        return new TypedValue(target.toFixed());
-      case 'toExponential':
-        return new TypedValue(target.toExponential());
-      default:
-        return null;
-    }
   }
 }
