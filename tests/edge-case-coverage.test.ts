@@ -1035,14 +1035,16 @@ describe('Edge Case: ReflectiveMethodResolver', () => {
       expect(result!.getValue()).toBe('42');
     });
 
-    it('should call toFixed', () => {
-      const result = resolver.resolve(ctx, target, 'toFixed', []);
-      expect(result!.getValue()).toBe('42');
+    it('should call the Java wrapper conversions', () => {
+      expect(resolver.resolve(ctx, target, 'intValue', [])!.getValue()).toBe(42);
+      expect(resolver.resolve(ctx, target, 'doubleValue', [])!.getValue()).toBe(42);
+      expect(resolver.resolve(ctx, target, 'longValue', [])!.getValue()).toBe(42);
     });
 
-    it('should call toExponential', () => {
-      const result = resolver.resolve(ctx, target, 'toExponential', []);
-      expect(result!.getValue()).toBe('4.2e+1');
+    it('should not resolve a JavaScript-only number method', () => {
+      // java.lang.Integer has no toFixed, so Spring raises method-not-found.
+      expect(resolver.resolve(ctx, target, 'toFixed', [])).toBeNull();
+      expect(resolver.resolve(ctx, target, 'toExponential', [])).toBeNull();
     });
 
     it('should return null for unknown number method', () => {

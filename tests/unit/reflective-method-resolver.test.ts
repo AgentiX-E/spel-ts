@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { ReflectiveMethodResolver } from '../../src/evaluation-context/reflective-method-resolver.js';
 import { SpelEvaluationException } from '../../src/error/spel-evaluation-exception.js';
 import { StandardEvaluationContext } from '../../src/standard-evaluation-context.js';
+import { StandardTypeLocator } from '../../src/type/standard-type-locator.js';
 
 const resolver = new ReflectiveMethodResolver();
 const context = new StandardEvaluationContext();
@@ -59,13 +60,45 @@ describe('ReflectiveMethodResolver — other targets', () => {
     expect(resolver.resolve(context, { a: 1 }, 'a', [])).toBeNull();
   });
 
-  it('resolves a number method through its own methods', () => {
+  it('resolves a Java wrapper method on a number', () => {
     expect(resolver.resolve(context, 42, 'toString', [])?.getValue()).toBe('42');
-    expect(resolver.resolve(context, 42, 'toFixed', [])?.getValue()).toBe('42');
+    expect(resolver.resolve(context, 42, 'intValue', [])?.getValue()).toBe(42);
+    expect(resolver.resolve(context, 42, 'doubleValue', [])?.getValue()).toBe(42);
     expect(resolver.resolve(context, 42, 'nonExistent', [])).toBeNull();
+  });
+
+  it('does not resolve a JavaScript-only number method', () => {
+    // Java has no toFixed, so it must not resolve.
+    expect(resolver.resolve(context, 42, 'toFixed', [])).toBeNull();
+    expect(resolver.resolve(context, 42, 'toExponential', [])).toBeNull();
+    expect(resolver.resolve(context, 42, 'toPrecision', [])).toBeNull();
   });
 
   it('invokes a method on an array', () => {
     expect(resolver.resolve(context, [3, 1, 2], 'join', ['-'])?.getValue()).toBe('3-1-2');
+  });
+});
+
+describe('ReflectiveMethodResolver — resolved type handles', () => {
+  const typeLocator = new StandardTypeLocator();
+
+  it('calls a static method on a type handle', () => {
+    const handle = typeLocator.findType('java.lang.Math');
+    expect(resolver.resolve(context, handle, 'abs', [-5])?.getValue()).toBe(5);
+  });
+
+  it('does not let a JavaScript prototype member win the lookup', () => {
+    // `valueOf` exists on Object.prototype. Without an explicit branch the
+    // resolver would call it and hand back the handle itself, so
+    // `T(String).valueOf(42)` returned the handle instead of '42'.
+    const handle = typeLocator.findType('java.lang.String');
+    expect(resolver.resolve(context, handle, 'valueOf', [42])?.getValue()).toBe('42');
+  });
+
+  it('reports an unknown static method', () => {
+    const handle = typeLocator.findType('java.lang.Math');
+    expect(() => resolver.resolve(context, handle, 'noSuchMethod', [])).toThrow(
+      SpelEvaluationException,
+    );
   });
 });

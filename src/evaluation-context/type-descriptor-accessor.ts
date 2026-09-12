@@ -2,6 +2,8 @@ import type { EvaluationContext } from './evaluation-context.js';
 import type { PropertyAccessor } from './property-accessor.js';
 import { TypedValue } from '../typed-value.js';
 import type { TypeDescriptor } from '../type/type-descriptor.js';
+import { SpelEvaluationException } from '../error/spel-evaluation-exception.js';
+import { SpelMessage } from '../error/spel-message.js';
 
 /**
  * TypeDescriptor property accessor
@@ -49,7 +51,13 @@ export class TypeDescriptorAccessor implements PropertyAccessor {
       return new TypedValue(ctor[name]);
     }
 
-    return TypedValue.NULL;
+    // Spring reports an unknown member of a type. Returning null here would mask
+    // a misspelled field name as a legitimate null value.
+    throw new SpelEvaluationException(
+      -1,
+      SpelMessage.PROPERTY_OR_FIELD_NOT_READABLE,
+      `${td.name}.${name}`,
+    );
   }
 
   public canWrite(_context: EvaluationContext, target: unknown, _name: string): boolean {

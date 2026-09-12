@@ -2,17 +2,22 @@ import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Literal } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
-import { integerLiteralKind, type NumericKind } from '../../type/numeric.js';
 
+/**
+ * An unsuffixed integer literal.
+ *
+ * SpEL types it as an `int` whatever its magnitude — the tokenizer rejects a
+ * literal that does not fit, as Spring does — so the numeric kind is fixed. It
+ * previously followed the magnitude, which made `2147483904` a `long` and, in the
+ * other direction, left the `int` arithmetic wrap reachable for values Spring
+ * never reaches.
+ */
 export class IntLiteral extends Literal {
   private readonly value: number;
-  private readonly kind: NumericKind;
 
   constructor(startPos: number, endPos: number, value: number) {
     super(NodeType.INT_LITERAL, startPos, endPos, String(value));
     this.value = Math.trunc(value);
-    // A literal that does not fit in an `int` is a `long` in Java.
-    this.kind = integerLiteralKind(this.value);
   }
 
   /** Get the parsed integer value */
@@ -21,7 +26,7 @@ export class IntLiteral extends Literal {
   }
 
   public getValueInternal(_state: ExpressionState): TypedValue {
-    return new TypedValue(this.value, null, this.kind);
+    return new TypedValue(this.value, null, 'int');
   }
 
   public toStringAST(): string {

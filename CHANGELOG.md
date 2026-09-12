@@ -25,6 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
   operands that cannot take part in arithmetic (`operand-typing`), and for long
   literals beyond float64 precision (`long-precision`).
+- `src/evaluation-context/java-number-methods.ts` — the numeric wrapper method
+  table: `byteValue`, `shortValue`, `intValue`, `longValue`, `floatValue`,
+  `doubleValue`, `toString`, `equals` and `compareTo`, which had no
+  implementation before.
+- `bigint` as a numeric kind, standing in for `java.math.BigInteger`. It ranks
+  between `long` and `float`, so a BigInt combined with an `int` or a `long` stays
+  exact while a BigInt combined with a `double` widens to a double.
+- `src/type/java-types.ts` — the `java.lang` type catalogue: `Math`, `String`,
+  `Integer`, `Long`, `Double`, `Boolean`, `Character`, `Object`, `Number` and
+  `java.util.Date`, with their static fields and a documented subset of
+  `String.format`.
 - `src/evaluation-context/java-string-methods.ts` — the `java.lang.String`
   method table, including `matches`, `equalsIgnoreCase`, `replaceFirst`,
   `compareTo`, `isBlank` and `strip`. A string target is resolved against this
@@ -38,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   literals beyond float64 precision (`long-precision`).
 
 ### Changed
+- `getValue()` returns a `bigint` for an integer outside the range a JavaScript
+  number holds exactly, where it previously returned a rounded `number`. Only
+  values that were already wrong change type: within the safe range the result is
+  still a `number`.
 - Textual operators are now matched case-insensitively, as Spring documents:
   `AND`, `Or`, `Div`, `MOD` and every other casing are accepted.
 - `and`, `or`, `matches`, `between`, `instanceof`, `new`, `true`, `false` and
@@ -47,6 +62,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Identifiers may contain any Unicode letter, matching Spring's use of
   `Character.isLetter`. Identifiers such as `年龄`, `café` and `αβγ` are now
   accepted, which the natural-language pipeline relies on.
+- An unsuffixed integer literal is an `int`, so one that does not fit is now a
+  parse error rather than being retyped as a `long` or a bigint by its magnitude:
+  `3000000000` and `9223372036854775807` must be written `3000000000L` and
+  `9223372036854775807L`. This narrows accepted input — an expression that
+  evaluated before may now throw — and it is deliberate, because SpEL rejects
+  both spellings: `Integer.parseInt` is what converts an unsuffixed literal, and
+  only the `L` suffix selects the long path. Unsuffixed hexadecimal is bounded the
+  same way, so `0xFFFFFFFF` is rejected too. The lowest `int` cannot be written
+  negatively either (`-2147483648` is a parse error, `-2147483648L` is not), which
+  is the same rule that already applied to the lowest `long`.
 
 ### Fixed
 - Textual operators were only recognised in lower case, so valid expressions
@@ -109,6 +134,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `charAt` returned an empty string for an out-of-range index and the JavaScript
   `substring` clamped rather than failing. Java reports both, so a bad index is
   now surfaced instead of being silently masked.
+- `T(...)`, `instanceof` and `new ...` did not work at all, although the README
+  documents all three. `StandardEvaluationContext` installed a stub type locator
+  whose `findType` always threw, and `StandardTypeLocator` shipped with an empty
+  registry and no `java.lang` defaults, so installing it by hand did not help
+  either. A working locator is now installed by default and `java.lang` is
+  imported implicitly, so `T(String)` and `T(java.lang.String)` resolve to the
+  same type.
+- An unknown member of a type returned null instead of reporting, so
+  `T(Math).noSuchField` produced a value rather than an error and a misspelled
+  field name was presented as a legitimate null.
+- A method's arguments were resolved against the method's receiver rather than
+  against the object the expression started from. `s.substring(i)`,
+  `s.charAt(i)` and `T(String).format('%.2f', n)` all failed when the argument was
+  a bare name, while `i.toString()` worked — a compound expression rebinds the
+  receiver as the root of the state handed to the following node, so the argument
+  was read as a member of the receiver. Arguments now resolve at the expression's
+  root scope, and a receiver still resolves in its own scope, so
+  `items.?[price > 20]` continues to read `price` from the element.
+- `toFixed` and `toExponential` resolved on a number, although no Java type has
+  either method. They were callable only because JavaScript's `Number` provides
+  them, so an expression using one worked here and failed in Spring. A number is
+  now resolved against the Java wrapper classes only. `T(String).format('%.2f', n)`
+  is the Java route to a formatted number, and `T(Math).round(n * 100) / 100` for a
+  rounded value.
+- An integer outside the range a JavaScript number holds exactly was either
+  rejected or silently mis-compared. Arithmetic on a BigInt supplied by the
+  environment threw, `10n == 10` and `10n > 5` were both false, and a long literal
+  beyond 2^53 rounded: `9007199254740993L - 9007199254740992L` evaluated to `0`.
+  The numeric model now carries a `bigint` kind, accepts a BigInt operand,
+  compares BigInt against Number exactly, and parses an integer literal exactly —
+  keeping a `number` within the safe range and a `bigint` beyond it. A literal
+  outside the 64-bit `long` range is rejected, because Java has no counterpart
+  for it.
+- `T(String).valueOf(42)` returned the type handle itself. `valueOf` exists on
+  `Object.prototype`, so the JavaScript method won the lookup before the handle's
+  own static members were consulted — the same shadowing that affected string and
+  number receivers.
 - Integer division returned a fractional result: `8 / 5` evaluated to `1.6`
   where Java yields `1`. Integral division and remainder now truncate toward
   zero, `int` arithmetic wraps at 32 bits and `long` at 64 bits, and a zero

@@ -323,6 +323,10 @@ function numericTowerCases(): DraftCase[] {
     ['2 ^ 3', 8, 'docs#mathematical'],
     ['0.1 + 0.2', 0.30000000000000004, 'IEEE-754 double addition'],
     ['2147483647 + 1', -2147483648, 'jls 15.18.2 32-bit wrap'],
+    // An `L` literal is a long whatever its magnitude, so this is 64-bit
+    // arithmetic; typing `1L` by size makes both operands `int` and this wraps.
+    ['2147483647L + 1L', 2147483648, 'jls 15.17.2 a long literal is a long'],
+    ['1L + 1L', 2, 'jls 15.17.2'],
     ['-2 * -3', 6, 'jls 15.17.1'],
   ];
   return numeric.map(([expr, val, ref]) => ({
@@ -689,23 +693,187 @@ function operandTypingCases(): DraftCase[] {
 }
 
 /**
- * Long literals are parsed with parseInt, so magnitudes above 2^53 lose
- * precision at the lexer, before evaluation ever runs. Spring keeps a 64-bit
- * value exactly. Recorded as a known divergence rather than silently accepted.
+ * Integers outside the range a JavaScript number holds exactly (D38).
+ *
+ * A literal beyond 2^53 keeps its exact value as a BigInt, and a BigInt supplied
+ * by the environment participates in arithmetic and comparison. Before this,
+ * arithmetic on a BigInt threw, `10n == 10` was false, and a difference of one
+ * between two large literals evaluated to zero.
+ *
+ * The expectation for a large literal is written as a BigInt on purpose: as a
+ * plain number it would round inside this file, to the same wrong value the
+ * engine produced, and the case would pass while the defect stayed hidden.
  */
-function longPrecisionCases(): DraftCase[] {
-  const cases: readonly ValueRow[] = [
-    // A BigInt literal, because 9007199254740993 is not representable as a
-    // JavaScript number and would otherwise round in this very file.
-    ['9007199254740993L', 9007199254740993n, 'jls 3.10.1 long literals are exact'],
+function bigintCases(): DraftCase[] {
+  const bigRoot = { big: 10n, huge: 9007199254740993n };
+
+  return [
+    // Literal exactness
+    {
+      group: 'bigint',
+      label: 'la',
+      expr: '9007199254740993L',
+      expect: value(9007199254740993n),
+      root: undefined,
+      ref: 'jls 3.10.1 long literals are exact',
+    },
+    {
+      group: 'bigint',
+      label: 'lb',
+      expr: '9223372036854775807L',
+      expect: value(9223372036854775807n),
+      ref: 'jls 3.10.1 Long.MAX_VALUE is exact',
+    },
+    {
+      group: 'bigint',
+      label: 'lc',
+      expr: '9007199254740993L - 9007199254740992L',
+      expect: value(1n),
+      ref: 'exact subtraction of large literals',
+    },
+    {
+      group: 'bigint',
+      label: 'ld',
+      expr: '9007199254740993L + 1L',
+      expect: value(9007199254740994n),
+      ref: 'exact addition of large literals',
+    },
+    {
+      group: 'bigint',
+      label: 'le',
+      expr: '9007199254740991L',
+      expect: value(9007199254740991),
+      ref: 'a literal within the safe range stays a number',
+    },
+    {
+      group: 'bigint',
+      label: 'lf',
+      expr: '42L',
+      expect: value(42),
+      ref: 'a small long literal stays a number',
+    },
+    {
+      group: 'bigint',
+      label: 'lg',
+      expr: '99999999999999999999L',
+      expect: throwsParse(),
+      ref: 'beyond the 64-bit range there is no Java counterpart',
+    },
+    // Arithmetic on a BigInt from the environment
+    {
+      group: 'bigint',
+      label: 'a1',
+      expr: 'big + 1',
+      root: bigRoot,
+      expect: value(11n),
+      ref: 'BigInt arithmetic is exact',
+    },
+    {
+      group: 'bigint',
+      label: 'a2',
+      expr: 'big * 2',
+      root: bigRoot,
+      expect: value(20n),
+      ref: 'BigInt arithmetic is exact',
+    },
+    {
+      group: 'bigint',
+      label: 'a3',
+      expr: 'big / 3',
+      root: bigRoot,
+      expect: value(3n),
+      ref: 'BigInt division truncates toward zero',
+    },
+    {
+      group: 'bigint',
+      label: 'a4',
+      expr: 'big % 3',
+      root: bigRoot,
+      expect: value(1n),
+      ref: 'BigInt remainder follows the dividend',
+    },
+    {
+      group: 'bigint',
+      label: 'a5',
+      expr: '-big',
+      root: bigRoot,
+      expect: value(-10n),
+      ref: 'negation preserves the kind',
+    },
+    {
+      group: 'bigint',
+      label: 'a6',
+      expr: 'big + 0.5',
+      root: bigRoot,
+      expect: value(10.5),
+      ref: 'a BigInt with a double widens to double',
+    },
+    {
+      group: 'bigint',
+      label: 'a7',
+      expr: "'n=' + big",
+      root: bigRoot,
+      expect: value('n=10'),
+      ref: 'string concatenation still wins',
+    },
+    {
+      group: 'bigint',
+      label: 'a8',
+      expr: 'big / 0',
+      root: bigRoot,
+      expect: throwsEval(),
+      ref: 'an integral zero divisor throws',
+    },
+    // Comparison is exact rather than "different families, never equal"
+    {
+      group: 'bigint',
+      label: 'c1',
+      expr: 'big == 10',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'a BigInt compares numerically with an int',
+    },
+    {
+      group: 'bigint',
+      label: 'c2',
+      expr: 'big != 11',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'a BigInt compares numerically with an int',
+    },
+    {
+      group: 'bigint',
+      label: 'c3',
+      expr: 'big > 5',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'relational comparison supports a BigInt',
+    },
+    {
+      group: 'bigint',
+      label: 'c4',
+      expr: 'big <= 9',
+      root: bigRoot,
+      expect: value(false),
+      ref: 'relational comparison supports a BigInt',
+    },
+    {
+      group: 'bigint',
+      label: 'c5',
+      expr: 'huge == 9007199254740993L',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'two large integers compare exactly',
+    },
+    {
+      group: 'bigint',
+      label: 'c6',
+      expr: 'huge > 9007199254740992L',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'two large integers compare exactly',
+    },
   ];
-  return cases.map(([expr, val, ref]) => ({
-    group: 'long-precision',
-    label: expr,
-    expr,
-    expect: value(val),
-    ref,
-  }));
 }
 
 /**
@@ -744,6 +912,319 @@ function javaStringErrorCases(): DraftCase[] {
   ];
 }
 
+/**
+ * The type surface `README.md` advertises.
+ *
+ * Before this was fixed every case below raised, because the default evaluation
+ * context held a stub type locator whose `findType` always threw, so `T(...)`,
+ * `instanceof` and `new ...` were documented but unusable.
+ */
+function typeSurfaceCases(): DraftCase[] {
+  const values: readonly ValueRow[] = [
+    ['T(java.lang.Math).abs(-5)', 5, 'type surface#static method via fully qualified name'],
+    ['T(Math).abs(-5)', 5, 'type surface#java.lang is imported implicitly'],
+    ['T(Math).max(3, 7)', 7, 'type surface#Math.max'],
+    ['T(Math).pow(2, 10)', 1024, 'type surface#Math.pow'],
+    ['T(Math).round(3.6)', 4, 'type surface#Math.round'],
+    ['T(Math).sqrt(16)', 4, 'type surface#Math.sqrt'],
+    ['T(Math).PI', Math.PI, 'type surface#static field'],
+    ['T(Integer).MAX_VALUE', 2147483647, 'type surface#static field'],
+    ['T(Integer).MIN_VALUE', -2147483648, 'type surface#static field'],
+    ["T(Integer).parseInt('42')", 42, 'type surface#Integer.parseInt'],
+    ["T(Long).parseLong('99')", 99, 'type surface#Long.parseLong'],
+    // Long.MAX_VALUE and MIN_VALUE are beyond float64, so they are carried as
+    // BigInt. As numbers they round to ...776000, and `MAX_VALUE - 1` was 0.
+    ['T(Long).MAX_VALUE', 9223372036854775807n, 'type surface#64-bit static field is exact'],
+    ['T(Long).MIN_VALUE', -9223372036854775808n, 'type surface#64-bit static field is exact'],
+    ['T(Long).MAX_VALUE - 1', 9223372036854775806n, 'type surface#64-bit arithmetic is exact'],
+    ["T(Double).parseDouble('1.5')", 1.5, 'type surface#Double.parseDouble'],
+    ["T(Boolean).parseBoolean('true')", true, 'type surface#Boolean.parseBoolean'],
+    ['T(String).valueOf(42)', '42', 'type surface#String.valueOf'],
+    ["T(String).format('%.2f', 3.14159)", '3.14', 'type surface#String.format'],
+    ["T(String).format('%d items', 3)", '3 items', 'type surface#String.format'],
+    ["T(String).join('-', 'a', 'b')", 'a-b', 'type surface#String.join'],
+    ['123 instanceof T(Integer)', true, 'docs#instanceof'],
+    ["'xyz' instanceof T(Integer)", false, 'docs#instanceof'],
+    ["'abc' instanceof T(String)", true, 'docs#instanceof'],
+    ['true instanceof T(Boolean)', true, 'docs#instanceof'],
+    ['1.5 instanceof T(Double)', true, 'docs#instanceof'],
+    ['123 instanceof T(Object)', true, 'docs#instanceof'],
+    // The numeric kind travels with the value, so a boxed check is answered from
+    // what the operand was written as: `1.0` and `1` are the same host number but
+    // a double and an int, and `1 instanceof T(Long)` is false for the same
+    // reason that `1L instanceof T(Long)` is true.
+    ['1.0 instanceof T(Double)', true, 'a real literal is a double'],
+    ['1 instanceof T(Integer)', true, 'an int literal is an int'],
+    ['1 instanceof T(Double)', false, 'an int literal is not a double'],
+    ['1 instanceof T(Long)', false, 'an int literal is not a long'],
+    ['1L instanceof T(Long)', true, 'a suffixed literal is a long'],
+    ['1.0 instanceof T(Integer)', false, 'a real literal is not an int'],
+    ['1.0 + 0.0 instanceof T(Double)', true, 'the kind survives arithmetic'],
+    ['1 + 1L instanceof T(Long)', true, 'the kind survives promotion'],
+    ['9007199254740993L instanceof T(Integer)', false, 'a long is not an int'],
+    ['new java.util.Date(0) instanceof T(java.util.Date)', true, 'docs#constructor reference'],
+  ];
+  return values.map(([expr, val, ref]) => ({
+    group: 'type-surface',
+    label: expr,
+    expr,
+    expect: value(val),
+    ref,
+  }));
+}
+
+/**
+ * Type names and members that do not exist must report, not resolve to null.
+ */
+function typeSurfaceErrorCases(): DraftCase[] {
+  return [
+    {
+      group: 'type-surface',
+      label: 'unknown-type-name',
+      expr: 'T(NoSuchType)',
+      expect: throwsEval(),
+      ref: 'TypeLocator#findType raises TYPE_NOT_FOUND',
+    },
+    {
+      group: 'type-surface',
+      label: 'unknown-static-method',
+      expr: 'T(Math).noSuchMethod(1)',
+      expect: throwsEval(),
+      ref: 'a type resolves only against its own static members',
+    },
+    {
+      group: 'type-surface',
+      label: 'unknown-static-field',
+      expr: 'T(Math).noSuchField',
+      expect: throwsEval(),
+      ref: 'TypeDescriptorAccessor reports an unreadable member',
+    },
+    {
+      group: 'type-surface',
+      label: 'javascript-only-static-method',
+      expr: 'T(Math).truncate(1.5)',
+      // java.lang.Math declares neither `truncate` nor `trunc`; the JavaScript
+      // name was reachable only because Math.trunc exists. `rint` and `round` are
+      // the closest real methods and neither truncates toward zero.
+      expect: throwsEval(),
+      ref: 'java.lang.Math has no truncate; SpEL raises method-not-found',
+    },
+  ];
+}
+
+/**
+ * An unsuffixed integer literal is an `int` in SpEL whatever its magnitude.
+ *
+ * Spring types it that way and converts the digits with `Integer.parseInt`, so a
+ * value that does not fit raises `NOT_AN_INTEGER` and the `L` suffix is the only
+ * spelling. This port classified such a literal by its size, which accepted
+ * `3000000000` — the `accepts-invalid` class the programme exists to remove.
+ *
+ * Labels are the expression, so an identifier stays `int-literal:2147483648`
+ * rather than shifting when a case is inserted.
+ */
+function intLiteralCases(): DraftCase[] {
+  const rows: readonly [string, Expectation, string][] = [
+    ['2147483647', value(2147483647), 'Integer.MAX_VALUE is still an int literal'],
+    ['2147483648', throwsParse(), 'Literal.getIntLiteral raises NOT_AN_INTEGER'],
+    ['3000000000', throwsParse(), 'the L suffix is what widens a literal to long'],
+    [
+      '9223372036854775807',
+      throwsParse(),
+      'an unsuffixed literal is an int whatever its magnitude',
+    ],
+    ['-2147483648', throwsParse(), 'the digits are checked before unary minus applies'],
+    ['2147483648L', value(2147483648), 'the L suffix selects the long path'],
+    ['2147483647L + 1L', value(2147483648), 'long arithmetic does not wrap at 32 bits'],
+    ['0x7FFFFFFF', value(2147483647), 'Integer.parseInt(digits, 16)'],
+    ['0xFFFFFFFF', throwsParse(), 'unsuffixed hexadecimal is an int too'],
+  ];
+  return rows.map(([expr, expect, ref]) => ({
+    group: 'int-literal',
+    label: expr,
+    expr,
+    expect,
+    ref,
+  }));
+}
+
+/**
+ * Method calls on a number, resolved against the Java wrapper classes.
+ *
+ * `toFixed` and `toExponential` are absent from the Java types, so they are
+ * absent here too; they were callable only because JavaScript's Number happens
+ * to provide them. The Java conversions that were missing are covered as well.
+ */
+function numberMethodCases(): DraftCase[] {
+  const pi = { n: 3.14159, whole: 42 };
+
+  return [
+    {
+      group: 'number-methods',
+      label: 'intValue',
+      expr: 'n.intValue()',
+      root: pi,
+      expect: value(3),
+      ref: 'java.lang.Double#intValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'doubleValue',
+      expr: 'n.doubleValue()',
+      root: pi,
+      expect: value(3.14159),
+      ref: 'java.lang.Double#doubleValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'floatValue',
+      expr: 'n.floatValue()',
+      root: pi,
+      expect: value(Math.fround(3.14159)),
+      ref: 'java.lang.Double#floatValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'longValue',
+      expr: 'whole.longValue()',
+      root: pi,
+      expect: value(42),
+      ref: 'java.lang.Integer#longValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'byteValue',
+      expr: 'whole.byteValue()',
+      root: pi,
+      expect: value(42),
+      ref: 'java.lang.Integer#byteValue',
+    },
+    {
+      group: 'number-methods',
+      label: 'toString',
+      expr: 'whole.toString()',
+      root: pi,
+      expect: value('42'),
+      ref: 'java.lang.Integer#toString',
+    },
+    {
+      group: 'number-methods',
+      label: 'equals',
+      expr: 'whole.equals(42)',
+      root: pi,
+      expect: value(true),
+      ref: 'java.lang.Integer#equals',
+    },
+    {
+      group: 'number-methods',
+      label: 'compareTo',
+      expr: 'whole.compareTo(4)',
+      root: pi,
+      expect: value(1),
+      ref: 'java.lang.Integer#compareTo',
+    },
+    {
+      group: 'number-methods',
+      label: 'toFixed-does-not-resolve',
+      expr: 'n.toFixed()',
+      root: pi,
+      expect: throwsEval(),
+      ref: 'no Java type has toFixed; Spring raises method-not-found',
+    },
+    {
+      group: 'number-methods',
+      label: 'toExponential-does-not-resolve',
+      expr: 'n.toExponential()',
+      root: pi,
+      expect: throwsEval(),
+      ref: 'no Java type has toExponential',
+    },
+    {
+      group: 'number-methods',
+      label: 'the-java-replacement',
+      expr: "T(String).format('%.2f', n)",
+      root: pi,
+      expect: value('3.14'),
+      ref: 'java.lang.String#format is the Java route to a formatted number',
+    },
+  ];
+}
+
+/**
+ * Where a method's arguments are resolved (D41).
+ *
+ * A compound expression rebinds the receiver as the root of the state handed to
+ * the following node, so an argument used to be read as a member of the receiver:
+ * `s.substring(i)` looked up `i` on the string and failed, while `i.toString()`
+ * worked because a bare name at the top level resolves against the root.
+ *
+ * Arguments now resolve at the expression's root scope. A receiver still
+ * resolves in its own scope, which is what keeps selection predicates reading
+ * their field from the element.
+ */
+function argumentScopeCases(): DraftCase[] {
+  const root = {
+    s: 'hello world',
+    i: 6,
+    items: [
+      { name: 'ab', price: 1 },
+      { name: 'bc', price: 50 },
+    ],
+    prefix: 'a',
+  };
+
+  return [
+    {
+      group: 'argument-scope',
+      label: 'a1',
+      expr: 's.substring(i)',
+      root,
+      expect: value('world'),
+      ref: 'a bare argument resolves against the root',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a2',
+      expr: 's.charAt(i)',
+      root,
+      expect: value('w'),
+      ref: 'a bare argument resolves against the root',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a3',
+      expr: 's.concat(s)',
+      root,
+      expect: value('hello worldhello world'),
+      ref: 'the receiver and an argument name the same root property',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a4',
+      expr: 'T(Math).max(i, 5)',
+      root,
+      expect: value(6),
+      ref: 'a static call resolves its arguments at the root',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a5',
+      expr: 'items.?[price > 20]',
+      root,
+      expect: value([{ name: 'bc', price: 50 }]),
+      ref: 'a receiver still resolves in its own scope',
+    },
+    {
+      group: 'argument-scope',
+      label: 'a6',
+      expr: 'items.?[name.startsWith(prefix)]',
+      root,
+      expect: value([{ name: 'ab', price: 1 }]),
+      ref: 'a receiver resolves on the element, an argument at the root',
+    },
+  ];
+}
+
 export const CORPUS: readonly ConformanceCase[] = build([
   ...keywordCases(),
   ...literalKeywordCases(),
@@ -753,12 +1234,17 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...logicalOperandCases(),
   ...numericKindCases(),
   ...operandTypingCases(),
-  ...longPrecisionCases(),
+  ...bigintCases(),
+  ...intLiteralCases(),
+  ...numberMethodCases(),
+  ...argumentScopeCases(),
   ...equalityCases(),
   ...strictnessCases(),
   ...divisionByZeroCases(),
   ...baselineCases(),
   ...javaStringMethodCases(),
   ...javaStringErrorCases(),
+  ...typeSurfaceCases(),
+  ...typeSurfaceErrorCases(),
   ...propertyAndCollectionCases(),
 ]);

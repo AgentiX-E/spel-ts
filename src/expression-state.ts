@@ -26,8 +26,16 @@ export class ExpressionState {
    */
   private readonly headIndexStack: TypedValue[] = [];
 
+  /**
+   * The root object the whole expression started from. A compound expression
+   * rebinds a child state's context root to the receiver, so this is kept
+   * separately in order to answer {@link getArgumentScope}.
+   */
+  private originalRoot: TypedValue;
+
   constructor(context: EvaluationContext) {
     this.context = context;
+    this.originalRoot = context.getRootObject();
   }
 
   // ===== scopeStack Management =====
@@ -155,11 +163,35 @@ export class ExpressionState {
    */
   public createChildState(rootObject: unknown): ExpressionState {
     const child = new ExpressionState(this.context.createChildContext(rootObject));
+    child.originalRoot = this.originalRoot;
     // Inherit scopeStack
     for (const scope of this.scopeStack) {
       child.scopeStack.push(scope);
     }
     return child;
+  }
+
+  /**
+   * The scope a method's arguments are evaluated in.
+   *
+   * A compound expression rebinds the receiver as the root of the child state it
+   * hands to the following node, so evaluating an argument in the current state
+   * would read a bare name as a member of the receiver: `s.substring(i)` looked
+   * up `i` on the string instead of on the object the expression started from.
+   *
+   * Arguments therefore resolve at the expression's root scope, which is also
+   * where a top-level bare name resolves. A receiver still resolves in the
+   * current scope, so `items.?[price > 20]` continues to read `price` from the
+   * element.
+   */
+  public getArgumentScope(): ExpressionState {
+    const state = new ExpressionState(
+      this.context.createChildContext(this.originalRoot.getValue()),
+    );
+    for (const scope of this.scopeStack) {
+      state.scopeStack.push(scope);
+    }
+    return state;
   }
 
   // ===== Context access =====

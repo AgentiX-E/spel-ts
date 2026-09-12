@@ -26,6 +26,16 @@ export enum SpelMessage {
   UNEXPECTED_DATA_AFTER_DOTDOT = 1009,
   /** Expected variable reference */
   VARIABLE_REFERENCE_EXPECTED = 1010,
+  /** Invalid number literal: {0} */
+  INVALID_NUMBER = 1011,
+  /**
+   * Not an integer: {0}
+   *
+   * Raised for an unsuffixed literal whose digits do not fit in an `int`, which
+   * is what Spring raises from `Integer.parseInt` in `Literal.getIntLiteral`. The
+   * `L` suffix is what widens a literal to a `long`.
+   */
+  NOT_AN_INTEGER = 1012,
 
   // ===== Evaluation Errors (2xxx) =====
   /** Error reading property: {0} */

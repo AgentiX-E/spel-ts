@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { equalityCheck } from '../../src/ast/operator/equality.js';
 import { SpelExpressionParser } from '../../src/spel-expression-parser.js';
 import { StandardEvaluationContext } from '../../src/standard-evaluation-context.js';
+import { StandardTypeLocator } from '../../src/type/standard-type-locator.js';
 
 describe('equalityCheck', () => {
   it('treats null as equal only to null', () => {
@@ -134,5 +135,18 @@ describe('unary minus rendering', () => {
 
   it('distinguishes a genuine null subtraction from prefix negation', () => {
     expect(parser.parseRaw('null - 3').toStringAST()).toBe('(null - 3)');
+  });
+});
+
+describe('type handle member access', () => {
+  const locator = new StandardTypeLocator();
+
+  it('reads a static field', () => {
+    expect(locator.findType('java.lang.Integer').getStaticField('MAX_VALUE')).toBe(2147483647);
+  });
+
+  it('reports an unknown member instead of yielding null', () => {
+    // Returning null would present a misspelled field name as a legitimate null.
+    expect(() => locator.findType('java.lang.Math').getStaticField('NOPE')).toThrow();
   });
 });

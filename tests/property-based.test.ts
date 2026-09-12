@@ -18,6 +18,15 @@ describe('Property-based: Arithmetic', () => {
     .float({ noNaN: true, noDefaultInfinity: true })
     .filter((x) => !Object.is(x, -0));
 
+  // A float has to be emitted as a real literal. `${x}` for an integer-valued
+  // float carries no decimal point, so the expression would hold an integer
+  // literal instead: rejected outright beyond the 64-bit range, and parsed as an
+  // integer below it, which is not the value the property means to test.
+  const asReal = (value: number): string => {
+    const text = `${value}`;
+    return text.includes('.') || text.includes('e') ? text : `${text}.0`;
+  };
+
   // ===== Addition Properties =====
   describe('addition properties', () => {
     it('commutativity: a + b = b + a', () => {
@@ -51,7 +60,7 @@ describe('Property-based: Arithmetic', () => {
     it('identity with float: a + 0.0 = a', () => {
       fc.assert(
         fc.property(nonNegZero, (a) => {
-          const result = parser.parseExpression(`${a} + 0.0`).getValue();
+          const result = parser.parseExpression(`${asReal(a)} + 0.0`).getValue();
           expect(result).toBe(a);
         }),
       );
@@ -212,10 +221,19 @@ describe('Property-based: Arithmetic', () => {
 describe('Property-based: Comparison', () => {
   const parser = new SpelExpressionParser();
 
+  // An unsuffixed literal is an `int` in SpEL and is rejected outside that range,
+  // and the digits are checked before unary minus applies — so `-2147483648` is
+  // not expressible either, exactly as it is not in Spring. Every value that goes
+  // into an expression stays inside what the language accepts.
+  const intLiteral = fc.integer({ min: -2147483647, max: 2147483647 });
+  // The transitivity case derives two further values by adding to the generated
+  // one, so its generator is bounded well inside the range.
+  const derivedIntLiteral = fc.integer({ min: -1000000, max: 1000000 });
+
   describe('equality properties', () => {
     it('reflexivity: a == a always true', () => {
       fc.assert(
-        fc.property(fc.integer(), (a) => {
+        fc.property(intLiteral, (a) => {
           expect(parser.parseExpression(`${a} == ${a}`).getValue()).toBe(true);
         }),
       );
@@ -223,7 +241,7 @@ describe('Property-based: Comparison', () => {
 
     it('symmetry: a == b ⇔ b == a', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (a, b) => {
+        fc.property(intLiteral, intLiteral, (a, b) => {
           const l = parser.parseExpression(`${a} == ${b}`).getValue();
           const r = parser.parseExpression(`${b} == ${a}`).getValue();
           expect(l).toBe(r);
@@ -233,7 +251,7 @@ describe('Property-based: Comparison', () => {
 
     it('< and > are opposites for distinct integers', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (a, b) => {
+        fc.property(intLiteral, intLiteral, (a, b) => {
           if (a === b) {
             expect(parser.parseExpression(`${a} < ${b}`).getValue()).toBe(false);
             expect(parser.parseExpression(`${a} > ${b}`).getValue()).toBe(false);
@@ -249,7 +267,7 @@ describe('Property-based: Comparison', () => {
 
     it('transitivity: a < b ∧ b < c ⇒ a < c', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (base, offset) => {
+        fc.property(derivedIntLiteral, derivedIntLiteral, (base, offset) => {
           const a = base;
           const b = base + Math.abs(offset) + 1;
           const c = b + Math.abs(offset % 100) + 1;
@@ -262,7 +280,7 @@ describe('Property-based: Comparison', () => {
 
     it('total order: for any a,b, either a<=b or b<=a', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (a, b) => {
+        fc.property(intLiteral, intLiteral, (a, b) => {
           const ale = parser.parseExpression(`${a} <= ${b}`).getValue() as boolean;
           const ble = parser.parseExpression(`${b} <= ${a}`).getValue() as boolean;
           expect(ale || ble).toBe(true);

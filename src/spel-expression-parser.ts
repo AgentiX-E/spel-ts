@@ -591,7 +591,9 @@ export class InternalSpelExpressionParser {
 
       case TokenKind.LITERAL_LONG:
         this.advance();
-        return new LongLiteral(token.startPos, token.endPos, token.payload as number);
+        // A long beyond the range a JavaScript number holds exactly is carried
+        // as a bigint, so the payload is not always a number.
+        return new LongLiteral(token.startPos, token.endPos, token.payload as number | bigint);
 
       case TokenKind.LITERAL_DOUBLE:
         this.advance();

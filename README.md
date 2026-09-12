@@ -5,7 +5,7 @@
 [![CI](https://github.com/AgentiX-E/spel-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/AgentiX-E/spel-ts/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@agentix-e/spel-ts?color=blue)](https://www.npmjs.com/package/@agentix-e/spel-ts)
 [![Docs](https://img.shields.io/badge/docs-TypeDoc-blue)](https://AgentiX-E.github.io/spel-ts/api/)
-[![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen)](https://AgentiX-E.github.io/spel-ts/coverage/)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://AgentiX-E.github.io/spel-ts/coverage/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-green)](https://nodejs.org/)
@@ -58,6 +58,11 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 | float/double | `3.14`, `2.5F`, `1.5E+2` |
 | string | `'hello'`, `"world"`, `'it''s'` |
 
+> Integers outside the range a JavaScript number represents exactly (beyond
+> 2^53) are carried as `BigInt`, so `9007199254740993L` keeps its exact value and
+> `getValue()` returns a `bigint` for it. Smaller integers are returned as
+> `number`, as before.
+
 ### Operators
 | Category | Operators |
 |----------|-----------|
@@ -77,8 +82,8 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 | Property chain | `a.b.c` |
 | Safe navigation | `a?.b` |
 | Selection | `list.?[#this > 5]` |
-| Selection (first) | `list.^[#this > 5]` or `list.$[#this > 5]` |
-| Selection (last) | `list.*[#this > 5]` |
+| Selection (first) | `list.^[#this > 5]` |
+| Selection (last) | `list.$[#this > 5]` |
 | Projection | `list.![#this.name]` |
 | Indexer | `a[0]`, `map['key']` |
 | Variable | `#varName`, `#this` |
@@ -136,7 +141,7 @@ Yes. spel-ts has zero native dependencies and ships as both ESM and CJS bundles.
 Unlike generic expression parsers (mathjs, expr-eval), spel-ts specifically targets Spring SpEL compatibility — making it the only choice for projects migrating from or integrating with Spring ecosystems.
 
 ### What's the performance like?
-The parser is hand-written (not generated) and optimized for TypeScript. Typical expressions evaluate in microseconds. 1,110+ tests validate correctness and performance characteristics.
+The parser is hand-written (not generated) and optimized for TypeScript. Typical expressions evaluate in microseconds. Over 1,500 tests validate correctness and performance characteristics, including an executable conformance corpus that cites the Spring Framework for every case.
 
 ## License
 
