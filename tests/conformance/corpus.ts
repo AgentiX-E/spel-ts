@@ -404,6 +404,10 @@ function equalityCases(): DraftCase[] {
     ['1 == 1', true, 'op#equalityCheck'],
     ['1.0 == 1', true, 'op#equalityCheck numeric promotion'],
     ["1 != '1'", true, 'op#equalityCheck'],
+    ['true == true', true, 'op#equalityCheck'],
+    ['false == false', true, 'op#equalityCheck'],
+    ['true != false', true, 'op#equalityCheck'],
+    ['false == 0', false, 'op#equalityCheck Boolean vs Number'],
   ];
   return eq.map(([expr, val, ref], i) => ({
     group: 'equality',
