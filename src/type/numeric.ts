@@ -98,6 +98,19 @@ export function integerLiteralKind(value: number | bigint): NumericKind {
   return Number.isSafeInteger(truncated) ? 'long' : 'double';
 }
 
+/**
+ * Choose the kind of an `L`-suffixed literal, which is a `long` in Java whatever
+ * its magnitude — unlike an unsuffixed literal, whose kind follows its size.
+ *
+ * Without this, `1L` is typed `int` by magnitude, and `2147483647L + 1L` wraps at
+ * 32 bits to `-2147483648` instead of yielding `2147483648`. A value a JavaScript
+ * number cannot hold exactly is carried as a bigint, and a bigint is the widest
+ * integral kind, so it stays exact through arithmetic.
+ */
+export function longLiteralKind(value: number | bigint): NumericKind {
+  return typeof value === 'bigint' ? 'bigint' : 'long';
+}
+
 /** Exact conversion, used only when the promoted kind is `bigint`. */
 function toBigInt(value: number | bigint): bigint {
   return typeof value === 'bigint' ? value : BigInt(Math.trunc(value));

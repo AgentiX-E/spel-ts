@@ -15,12 +15,18 @@ export class OpInstanceof extends Operator {
   }
 
   public override getValueInternal(state: ExpressionState): TypedValue {
-    const left = this.children[0]!.getValue(state).getValue();
+    const leftValue = this.children[0]!.getValue(state);
+    const left = leftValue.getValue();
     const rightRaw = this.children[1]!.getValue(state).getValue();
 
     // instanceof T(Type): the right side resolves to a type handle
     if (isTypeDescriptor(rightRaw)) {
-      return new TypedValue(rightRaw.isInstance(left));
+      // The numeric kind travels with the value, so a boxed check is answered from
+      // what the operand was written as rather than from the host representation:
+      // `1.0` and `1` are the same JavaScript number but a `double` and an `int`
+      // in Java. It is `undefined` for a value that is not numeric, which the
+      // descriptor then treats as "not a boxed numeric type".
+      return new TypedValue(rightRaw.isInstance(left, leftValue.getNumericKind()));
     }
 
     // String-based: 'string', 'number', 'boolean', 'null', 'object'

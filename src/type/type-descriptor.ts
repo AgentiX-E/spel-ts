@@ -14,8 +14,14 @@ export interface TypeDescriptor {
   /** Static fields */
   readonly staticFields: Record<string, unknown>;
 
-  /** Type check */
-  isInstance(value: unknown): boolean;
+  /**
+   * Type check.
+   *
+   * `kind` is the Java kind the operand was written as, when the engine can
+   * supply it — `1.0` and `1` are the same host value but are a `double` and an
+   * `int` in Java, so a boxed-type check cannot be answered from the value alone.
+   */
+  isInstance(value: unknown, kind?: string): boolean;
 
   /** Create instance */
   newInstance(...args: unknown[]): unknown;

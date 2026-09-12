@@ -25,7 +25,7 @@ interface JavaTypeDefinition {
   readonly constructor: new (...args: unknown[]) => unknown;
   readonly staticMethods?: Readonly<Record<string, (...args: unknown[]) => unknown>>;
   readonly staticFields?: Readonly<Record<string, unknown>>;
-  readonly isInstance: (value: unknown) => boolean;
+  readonly isInstance: (value: unknown, kind?: string) => boolean;
   readonly newInstance?: (...args: unknown[]) => unknown;
   readonly instantiable?: boolean;
 }
@@ -158,30 +158,46 @@ function javaStringFormat(template: string, args: readonly unknown[]): string {
   );
 }
 
-/**
- * Boxed numeric wrappers differ only in the kind the expression engine already
- * tracks, so `instanceof` consults that kind when it is available. Without it,
- * a JavaScript number is assumed to be an integer, which is the closest
- * approximation available.
- */
-function isIntegerOfKind(value: unknown, kind: string | undefined): boolean {
-  if (!isNumberLike(value)) {
-    return false;
-  }
-  if (kind === undefined) {
-    return Number.isInteger(value);
-  }
-  return kind === 'int' || kind === 'long' || kind === 'bigint';
+/** A numeric value in either host representation; `bigint` stands for BigInteger. */
+function isNumericValue(value: unknown): value is number | bigint {
+  return typeof value === 'number' || typeof value === 'bigint';
 }
 
-function isFloatingOfKind(value: unknown, kind: string | undefined): boolean {
-  if (!isNumberLike(value)) {
+/**
+ * The kinds each boxed wrapper accepts. A `bigint` stands in for the Java long
+ * values a JavaScript number cannot hold, so it satisfies `Long`; `float` is
+ * deliberately absent because java.lang.Float is not in the catalogue.
+ */
+const INTEGRAL_KINDS: readonly string[] = ['int'];
+const LONG_KINDS: readonly string[] = ['long', 'bigint'];
+const DOUBLE_KINDS: readonly string[] = ['double'];
+
+const isIntegralValue = (value: number | bigint): boolean =>
+  typeof value === 'bigint' || Number.isInteger(value);
+
+const isFractionalValue = (value: number | bigint): boolean =>
+  typeof value !== 'bigint' && !Number.isInteger(value);
+
+/**
+ * The boxed numeric wrappers differ only in the kind their operand was written
+ * as, so `instanceof` consults that kind whenever the engine can supply it.
+ * `1.0` and `1` are the same host value yet a `double` and an `int` in Java, and
+ * `1 instanceof T(Long)` is false for the same reason: the kinds are not
+ * interchangeable, so each wrapper names the ones it accepts.
+ *
+ * A value arriving from the context carries no Java type in this port, so when
+ * the kind is absent the host representation is the closest approximation.
+ */
+function isBoxedOfKind(
+  value: unknown,
+  kind: string | undefined,
+  accepted: readonly string[],
+  approximate: (value: number | bigint) => boolean,
+): boolean {
+  if (!isNumericValue(value)) {
     return false;
   }
-  if (kind === undefined) {
-    return !Number.isInteger(value);
-  }
-  return kind === 'float' || kind === 'double';
+  return kind === undefined ? approximate(value) : accepted.includes(kind);
 }
 
 /**
@@ -196,7 +212,8 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
   {
     name: 'java.lang.Number',
     constructor: Number,
-    isInstance: (value) => isNumberLike(value),
+    // `bigint` stands in for java.math.BigInteger, which extends Number.
+    isInstance: (value) => isNumericValue(value),
   },
   {
     name: 'java.lang.Math',
@@ -211,7 +228,6 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
       ceil: (value) => Math.ceil(toNumber(value, 'ceil')),
       floor: (value) => Math.floor(toNumber(value, 'floor')),
       round: (value) => Math.round(toNumber(value, 'round')),
-      truncate: (value) => Math.trunc(toNumber(value, 'truncate')),
       signum: (value) => Math.sign(toNumber(value, 'signum')),
       max: (left, right) => Math.max(toNumber(left, 'max'), toNumber(right, 'max')),
       min: (left, right) => Math.min(toNumber(left, 'min'), toNumber(right, 'min')),
@@ -264,7 +280,7 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
       max: (left, right) => Math.max(toNumber(left, 'max'), toNumber(right, 'max')),
       min: (left, right) => Math.min(toNumber(left, 'min'), toNumber(right, 'min')),
     },
-    isInstance: (value) => isIntegerOfKind(value, undefined),
+    isInstance: (value, kind) => isBoxedOfKind(value, kind, INTEGRAL_KINDS, isIntegralValue),
   },
   {
     name: 'java.lang.Long',
@@ -288,7 +304,7 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
           radix === undefined ? 10 : toNumber(radix, 'toString'),
         ),
     },
-    isInstance: (value) => isIntegerOfKind(value, undefined),
+    isInstance: (value, kind) => isBoxedOfKind(value, kind, LONG_KINDS, isIntegralValue),
   },
   {
     name: 'java.lang.Double',
@@ -307,7 +323,7 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
       isInfinite: (value) => !Number.isFinite(toNumber(value, 'isInfinite')),
       toString: (value: unknown) => String(toNumber(value, 'toString')),
     },
-    isInstance: (value) => isFloatingOfKind(value, undefined),
+    isInstance: (value, kind) => isBoxedOfKind(value, kind, DOUBLE_KINDS, isFractionalValue),
   },
   {
     name: 'java.lang.Boolean',

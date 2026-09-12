@@ -74,6 +74,40 @@ describe('java.lang.Math', () => {
       SpelEvaluationException,
     );
   });
+
+  it('exposes the whole declared method table', () => {
+    const call = (name: string, ...args: unknown[]): unknown =>
+      descriptor('Math').callStaticMethod(name, ...args);
+
+    expect(call('abs', -5)).toBe(5);
+    expect(call('ceil', 1.2)).toBe(2);
+    expect(call('floor', 1.8)).toBe(1);
+    expect(call('round', 2.5)).toBe(3);
+    expect(call('signum', -3)).toBe(-1);
+    expect(call('max', 3, 7)).toBe(7);
+    expect(call('min', 3, 7)).toBe(3);
+    expect(call('pow', 2, 10)).toBe(1024);
+    expect(call('sqrt', 16)).toBe(4);
+    expect(call('cbrt', 27)).toBeCloseTo(3, 12);
+    expect(call('exp', 0)).toBe(1);
+    expect(call('log', Math.E)).toBeCloseTo(1, 12);
+    expect(call('log10', 1000)).toBeCloseTo(3, 12);
+    expect(call('hypot', 3, 4)).toBe(5);
+    expect(call('toRadians', 180)).toBeCloseTo(Math.PI, 12);
+    expect(call('toDegrees', Math.PI)).toBeCloseTo(180, 12);
+
+    const random = call('random') as number;
+    expect(random).toBeGreaterThanOrEqual(0);
+    expect(random).toBeLessThan(1);
+  });
+
+  it('does not expose a method java.lang.Math does not declare', () => {
+    // `trunc` is a JavaScript name. Java's closest methods are `rint` and
+    // `round`, and neither truncates toward zero; the catalogue has neither.
+    expect(() => descriptor('Math').callStaticMethod('truncate', 1.5)).toThrow(
+      SpelEvaluationException,
+    );
+  });
 });
 
 describe('java.lang numeric wrappers', () => {
@@ -117,6 +151,66 @@ describe('java.lang numeric wrappers', () => {
     expect(descriptor('Character').isInstance('ab')).toBe(false);
     expect(descriptor('Object').isInstance(1)).toBe(true);
     expect(descriptor('Object').isInstance(null)).toBe(false);
+    expect(descriptor('Number').isInstance(1)).toBe(true);
+    expect(descriptor('Long').isInstance(1)).toBe(true);
+    expect(descriptor('Long').isInstance(1.5)).toBe(false);
+    // A static-only class has no instances.
+    expect(descriptor('Math').isInstance(1)).toBe(false);
+    expect(descriptor('Boolean').newInstance(true)).toBe(true);
+  });
+
+  it('classifies a boxed type from the kind, not from the host value', () => {
+    // `1.0` and `1` are the same JavaScript number; only the kind tells them
+    // apart, and it is what `instanceof T(Double)` has to consult.
+    expect(descriptor('Double').isInstance(1, 'double')).toBe(true);
+    expect(descriptor('Integer').isInstance(1, 'double')).toBe(false);
+    expect(descriptor('Long').isInstance(1, 'int')).toBe(false);
+    expect(descriptor('Long').isInstance(1, 'long')).toBe(true);
+    expect(descriptor('Long').isInstance(9007199254740993n, 'bigint')).toBe(true);
+    expect(descriptor('Integer').isInstance(9007199254740993n, 'bigint')).toBe(false);
+    // A non-numeric operand is not a boxed numeric type, whatever the kind says.
+    expect(descriptor('Double').isInstance('1.5', 'double')).toBe(false);
+  });
+
+  it('exposes the boxed conversions', () => {
+    expect(descriptor('Integer').callStaticMethod('valueOf', '42')).toBe(42);
+    expect(descriptor('Integer').callStaticMethod('toString', 42)).toBe('42');
+    expect(descriptor('Integer').callStaticMethod('toString', 255, 16)).toBe('ff');
+    expect(descriptor('Integer').callStaticMethod('compare', 1, 2)).toBe(-1);
+    expect(descriptor('Integer').callStaticMethod('max', 3, 7)).toBe(7);
+    expect(descriptor('Integer').callStaticMethod('min', 3, 7)).toBe(3);
+
+    expect(descriptor('Long').callStaticMethod('valueOf', '99')).toBe(99);
+    expect(descriptor('Long').callStaticMethod('toString', 99)).toBe('99');
+
+    expect(descriptor('Double').callStaticMethod('valueOf', '1.5')).toBe(1.5);
+    expect(descriptor('Double').callStaticMethod('toString', 1.5)).toBe('1.5');
+    expect(descriptor('Double').callStaticMethod('isNaN', Number.NaN)).toBe(true);
+    expect(descriptor('Double').callStaticMethod('isNaN', 1)).toBe(false);
+    expect(descriptor('Double').callStaticMethod('isInfinite', Number.POSITIVE_INFINITY)).toBe(
+      true,
+    );
+    expect(descriptor('Double').callStaticMethod('isInfinite', 1)).toBe(false);
+
+    expect(descriptor('Boolean').callStaticMethod('valueOf', 'true')).toBe(true);
+  });
+
+  it('exposes the remaining numeric constants', () => {
+    expect(descriptor('Double').getStaticField('NEGATIVE_INFINITY')).toBe(Number.NEGATIVE_INFINITY);
+    expect(Number.isNaN(descriptor('Double').getStaticField('NaN') as number)).toBe(true);
+    expect(descriptor('Boolean').getStaticField('TRUE')).toBe(true);
+    expect(descriptor('Boolean').getStaticField('FALSE')).toBe(false);
+  });
+});
+
+describe('java.lang.Character statics', () => {
+  it('classifies and converts a single character', () => {
+    expect(descriptor('Character').callStaticMethod('isDigit', '5')).toBe(true);
+    expect(descriptor('Character').callStaticMethod('isDigit', 'a')).toBe(false);
+    expect(descriptor('Character').callStaticMethod('isLetter', 'a')).toBe(true);
+    expect(descriptor('Character').callStaticMethod('isLetter', '5')).toBe(false);
+    expect(descriptor('Character').callStaticMethod('toUpperCase', 'a')).toBe('A');
+    expect(descriptor('Character').callStaticMethod('toLowerCase', 'A')).toBe('a');
   });
 });
 
@@ -181,6 +275,12 @@ describe('java.util.Date', () => {
     expect((epoch as Date).getTime()).toBe(0);
     expect(descriptor('java.util.Date').isInstance(epoch)).toBe(true);
     expect(descriptor('java.util.Date').isInstance('1970-01-01')).toBe(false);
+  });
+
+  it('exposes the date statics', () => {
+    const now = descriptor('java.util.Date').callStaticMethod('now') as number;
+    expect(now).toBeGreaterThan(0);
+    expect(descriptor('java.util.Date').callStaticMethod('parse', '1970-01-01T00:00:00Z')).toBe(0);
   });
 });
 

@@ -16,6 +16,7 @@ import {
   compareNumericValues,
   integerLiteralKind,
   isIntegral,
+  longLiteralKind,
   multiply,
   negate,
   numericOf,
@@ -66,6 +67,20 @@ describe('inferKind', () => {
   it('treats fractional values as double', () => {
     expect(inferKind(1.5)).toBe('double');
     expect(inferKind(-0.25)).toBe('double');
+  });
+});
+
+describe('longLiteralKind', () => {
+  it('types a suffixed literal as long whatever its magnitude', () => {
+    // Unlike an unsuffixed literal, whose kind follows its size: typing `1L` as
+    // `int` makes `2147483647L + 1L` wrap at 32 bits.
+    expect(longLiteralKind(1)).toBe('long');
+    expect(longLiteralKind(2147483647)).toBe('long');
+    expect(longLiteralKind(2147483648)).toBe('long');
+  });
+
+  it('types a suffixed literal a JavaScript number cannot hold as bigint', () => {
+    expect(longLiteralKind(9007199254740993n)).toBe('bigint');
   });
 });
 

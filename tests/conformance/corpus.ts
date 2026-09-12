@@ -323,6 +323,10 @@ function numericTowerCases(): DraftCase[] {
     ['2 ^ 3', 8, 'docs#mathematical'],
     ['0.1 + 0.2', 0.30000000000000004, 'IEEE-754 double addition'],
     ['2147483647 + 1', -2147483648, 'jls 15.18.2 32-bit wrap'],
+    // An `L` literal is a long whatever its magnitude, so this is 64-bit
+    // arithmetic; typing `1L` by size makes both operands `int` and this wraps.
+    ['2147483647L + 1L', 2147483648, 'jls 15.17.2 a long literal is a long'],
+    ['1L + 1L', 2, 'jls 15.17.2'],
     ['-2 * -3', 6, 'jls 15.17.1'],
   ];
   return numeric.map(([expr, val, ref]) => ({
@@ -945,6 +949,19 @@ function typeSurfaceCases(): DraftCase[] {
     ['true instanceof T(Boolean)', true, 'docs#instanceof'],
     ['1.5 instanceof T(Double)', true, 'docs#instanceof'],
     ['123 instanceof T(Object)', true, 'docs#instanceof'],
+    // The numeric kind travels with the value, so a boxed check is answered from
+    // what the operand was written as: `1.0` and `1` are the same host number but
+    // a double and an int, and `1 instanceof T(Long)` is false for the same
+    // reason that `1L instanceof T(Long)` is true.
+    ['1.0 instanceof T(Double)', true, 'a real literal is a double'],
+    ['1 instanceof T(Integer)', true, 'an int literal is an int'],
+    ['1 instanceof T(Double)', false, 'an int literal is not a double'],
+    ['1 instanceof T(Long)', false, 'an int literal is not a long'],
+    ['1L instanceof T(Long)', true, 'a suffixed literal is a long'],
+    ['1.0 instanceof T(Integer)', false, 'a real literal is not an int'],
+    ['1.0 + 0.0 instanceof T(Double)', true, 'the kind survives arithmetic'],
+    ['1 + 1L instanceof T(Long)', true, 'the kind survives promotion'],
+    ['9007199254740993L instanceof T(Integer)', false, 'a long is not an int'],
     ['new java.util.Date(0) instanceof T(java.util.Date)', true, 'docs#constructor reference'],
   ];
   return values.map(([expr, val, ref]) => ({
@@ -981,6 +998,16 @@ function typeSurfaceErrorCases(): DraftCase[] {
       expr: 'T(Math).noSuchField',
       expect: throwsEval(),
       ref: 'TypeDescriptorAccessor reports an unreadable member',
+    },
+    {
+      group: 'type-surface',
+      label: 'javascript-only-static-method',
+      expr: 'T(Math).truncate(1.5)',
+      // java.lang.Math declares neither `truncate` nor `trunc`; the JavaScript
+      // name was reachable only because Math.trunc exists. `rint` and `round` are
+      // the closest real methods and neither truncates toward zero.
+      expect: throwsEval(),
+      ref: 'java.lang.Math has no truncate; SpEL raises method-not-found',
     },
   ];
 }
