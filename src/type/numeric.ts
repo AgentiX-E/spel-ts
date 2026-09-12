@@ -58,6 +58,23 @@ export function inferKind(value: number): NumericKind {
   return Number.isInteger(value) ? 'int' : 'double';
 }
 
+/**
+ * Choose the numeric kind for an integer literal, following Java's rule that a
+ * literal too large for `int` is typed `long`.
+ *
+ * Without this, `2147483904` would be treated as an `int`, and the 32-bit wrap
+ * would turn it into a negative number before any arithmetic ran.
+ */
+export function integerLiteralKind(value: number): NumericKind {
+  const truncated = Math.trunc(value);
+  if (truncated >= -2147483648 && truncated <= 2147483647) {
+    return 'int';
+  }
+  // Beyond `long` precision a JavaScript number cannot hold the literal
+  // exactly, so the closest faithful kind is `double`.
+  return Number.isSafeInteger(truncated) ? 'long' : 'double';
+}
+
 export function numericOf(value: number, kind?: NumericKind): Numeric {
   return { value, kind: kind ?? inferKind(value) };
 }

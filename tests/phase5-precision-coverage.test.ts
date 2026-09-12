@@ -179,7 +179,8 @@ describe('Coverage: Operator edge cases', () => {
     it('OpNE mixed type coercion', () => {
       expect(parser.parseExpression('true != 0').getValue()).toBe(true);
       expect(parser.parseExpression('false != 1').getValue()).toBe(true);
-      expect(parser.parseExpression('0 != false').getValue()).toBe(false);
+      // A Number is never equal to a Boolean, so the inequality holds.
+      expect(parser.parseExpression('0 != false').getValue()).toBe(true);
     });
   });
 
@@ -209,7 +210,9 @@ describe('Coverage: Operator edge cases', () => {
   describe('logical short-circuit branches', () => {
     it('OpOr returns right when left is falsy', () => {
       expect(parser.parseExpression('null || 42').getValue()).toBe(42);
-      expect(parser.parseExpression('0 || 99').getValue()).toBe(99);
+      // OperatorOr coerces both operands to Boolean, so a numeric operand is a
+      // type-conversion error rather than a truthiness test.
+      expect(() => parser.parseExpression('0 || 99').getValue()).toThrow();
       expect(parser.parseExpression('false || true').getValue()).toBe(true);
     });
 

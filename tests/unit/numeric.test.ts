@@ -13,6 +13,7 @@ import {
   add,
   divide,
   inferKind,
+  integerLiteralKind,
   isIntegral,
   multiply,
   negate,
@@ -64,6 +65,28 @@ describe('inferKind', () => {
   it('treats fractional values as double', () => {
     expect(inferKind(1.5)).toBe('double');
     expect(inferKind(-0.25)).toBe('double');
+  });
+});
+
+describe('integerLiteralKind', () => {
+  it('types a literal inside the int range as int', () => {
+    expect(integerLiteralKind(0)).toBe('int');
+    expect(integerLiteralKind(2147483647)).toBe('int');
+    expect(integerLiteralKind(-2147483648)).toBe('int');
+  });
+
+  it('types a literal beyond int as long, as Java does', () => {
+    expect(integerLiteralKind(2147483648)).toBe('long');
+    expect(integerLiteralKind(-2147483649)).toBe('long');
+    expect(integerLiteralKind(-2147483904)).toBe('long');
+  });
+
+  it('falls back to double beyond long precision', () => {
+    expect(integerLiteralKind(2 ** 53 + 2)).toBe('double');
+  });
+
+  it('ignores any fractional part', () => {
+    expect(integerLiteralKind(5.9)).toBe('int');
   });
 });
 
