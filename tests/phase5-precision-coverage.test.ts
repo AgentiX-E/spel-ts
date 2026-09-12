@@ -514,7 +514,10 @@ describe('Coverage: MethodResolver and type converter', () => {
   it('string method: charAt', () => {
     const ctx = new StandardEvaluationContext({ s: 'abc' });
     expect(parser.parseExpression('s.charAt(0)').getValueWithContext(ctx)).toBe('a');
-    expect(parser.parseExpression('s.charAt(10)').getValueWithContext(ctx)).toBe('');
+    // Java's String.charAt throws StringIndexOutOfBoundsException rather than
+    // returning an empty string, so an out-of-range index is reported instead
+    // of being silently masked.
+    expect(() => parser.parseExpression('s.charAt(10)').getValueWithContext(ctx)).toThrow();
   });
 
   it('string method: indexOf', () => {

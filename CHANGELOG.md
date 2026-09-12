@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
   operands that cannot take part in arithmetic (`operand-typing`), and for long
   literals beyond float64 precision (`long-precision`).
+- `src/evaluation-context/java-string-methods.ts` — the `java.lang.String`
+  method table, including `matches`, `equalsIgnoreCase`, `replaceFirst`,
+  `compareTo`, `isBlank` and `strip`. A string target is resolved against this
+  table only, so a name the JavaScript `String` happens to provide, such as
+  `includes`, does not resolve; Spring would raise method-not-found.
 - `src/type/numeric.ts` — the Java numeric model: binary numeric promotion,
   truncating integer division, 32-bit and 64-bit wrapping, and IEEE-754
   behaviour for the floating kinds.
@@ -89,6 +94,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The compound selection path advanced one token too many, so `items. .![n]`
   evaluated to `[true, true]` rather than projecting the field, and
   `items. .?[n > 2]` failed to parse.
+- Method calls on a string resolved against JavaScript's `String` before the Java
+  semantics were consulted, and several names are shared with different
+  behaviour. `replaceAll` was the worst case: Java takes a regular expression and
+  JavaScript takes a literal, so `'a1b2'.replaceAll('\d', '-')` returned the
+  input unchanged instead of `a-b-`.
+- `replace` replaced only the first occurrence, because the JavaScript
+  implementation won the lookup. Java replaces every occurrence, so
+  `'aXbXc'.replace('X', '-')` returned `a-bXc`.
+- `split` treated its argument as a literal rather than a regular expression, and
+  kept trailing empty strings where Java discards them.
+- `matches` and `equalsIgnoreCase` were unavailable, so `'abc'.matches('a.*')`
+  and `'abc'.equalsIgnoreCase('ABC')` raised method-not-found.
+- `charAt` returned an empty string for an out-of-range index and the JavaScript
+  `substring` clamped rather than failing. Java reports both, so a bad index is
+  now surfaced instead of being silently masked.
 - Integer division returned a fractional result: `8 / 5` evaluated to `1.6`
   where Java yields `1`. Integral division and remainder now truncate toward
   zero, `int` arithmetic wraps at 32 bits and `long` at 64 bits, and a zero

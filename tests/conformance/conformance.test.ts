@@ -132,6 +132,17 @@ describe('divergence backlog', () => {
     ).toEqual([]);
   });
 
+  it('gives every corpus case a unique identifier', () => {
+    const identifiers = CORPUS.map((testCase) => testCase.id);
+    const duplicates = identifiers.filter(
+      (identifier, index) => identifiers.indexOf(identifier) !== index,
+    );
+    expect(
+      [...new Set(duplicates)],
+      'Duplicate case identifiers make the backlog comparison ambiguous.',
+    ).toEqual([]);
+  });
+
   it('references only corpus cases that exist', () => {
     const corpusIds = new Set(CORPUS.map((testCase) => testCase.id));
     const stale = KNOWN_DIVERGENCES.filter((entry) => !corpusIds.has(entry.caseId)).map(
