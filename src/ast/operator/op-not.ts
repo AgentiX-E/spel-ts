@@ -26,6 +26,6 @@ export class OpNot extends Operator {
    * would produce `(true ! )`, which does not parse.
    */
   public override toStringAST(): string {
-    return `(!${this.children[0]?.toStringAST() ?? ''})`;
+    return `(!${this.children[0]!.toStringAST()})`;
   }
 }

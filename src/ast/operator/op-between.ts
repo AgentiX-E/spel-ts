@@ -27,9 +27,9 @@ export class OpBetween extends Operator {
    * `1 between {1, 5}`.
    */
   public override toStringAST(): string {
-    const value = this.children[0]?.toStringAST() ?? '';
-    const lower = this.children[1]?.toStringAST() ?? '';
-    const upper = this.children[2]?.toStringAST() ?? '';
+    const value = this.children[0]!.toStringAST();
+    const lower = this.children[1]!.toStringAST();
+    const upper = this.children[2]!.toStringAST();
     return `(${value} between {${lower}, ${upper}})`;
   }
 }
