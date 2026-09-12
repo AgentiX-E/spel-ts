@@ -329,9 +329,15 @@ describe('compareNumericValues', () => {
   });
 
   it('does not round a value beyond float64 precision', () => {
-    // As plain numbers these two are indistinguishable.
-    expect(compareNumericValues(9007199254740993n, 9007199254740992)).toBe(1);
-    expect(compareNumericValues(9007199254740993n, 9007199254740993)).toBe(0);
+    // 9007199254740993 is not representable, so a number for it rounds to ...992.
+    // Written as a string because the literal would be rounded by the compiler
+    // before the test could assert on it.
+    const rounded = Number('9007199254740993');
+    expect(rounded).toBe(9007199254740992);
+    // The BigInt is not rounded with it, so the two are distinguished rather than
+    // collapsing to the same value as they would if both were numbers.
+    expect(compareNumericValues(9007199254740993n, rounded)).toBe(1);
+    expect(compareNumericValues(9007199254740993n, 9007199254740993n)).toBe(0);
   });
 
   it('compares two BigInts', () => {

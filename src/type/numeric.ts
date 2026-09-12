@@ -281,14 +281,14 @@ export function compareNumericValues(left: unknown, right: unknown): number | un
     return undefined;
   }
 
-  const leftInteger = asExactInteger(left as number | bigint);
-  const rightInteger = asExactInteger(right as number | bigint);
+  const leftInteger = asExactInteger(left);
+  const rightInteger = asExactInteger(right);
 
   if (leftInteger !== undefined && rightInteger !== undefined) {
     return leftInteger < rightInteger ? -1 : leftInteger > rightInteger ? 1 : 0;
   }
 
-  const leftNumber = asNumber(left as number | bigint);
-  const rightNumber = asNumber(right as number | bigint);
+  const leftNumber = asNumber(left);
+  const rightNumber = asNumber(right);
   return leftNumber < rightNumber ? -1 : leftNumber > rightNumber ? 1 : 0;
 }

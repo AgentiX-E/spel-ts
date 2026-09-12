@@ -18,6 +18,15 @@ describe('Property-based: Arithmetic', () => {
     .float({ noNaN: true, noDefaultInfinity: true })
     .filter((x) => !Object.is(x, -0));
 
+  // A float has to be emitted as a real literal. `${x}` for an integer-valued
+  // float carries no decimal point, so the expression would hold an integer
+  // literal instead: rejected outright beyond the 64-bit range, and parsed as an
+  // integer below it, which is not the value the property means to test.
+  const asReal = (value: number): string => {
+    const text = `${value}`;
+    return text.includes('.') || text.includes('e') ? text : `${text}.0`;
+  };
+
   // ===== Addition Properties =====
   describe('addition properties', () => {
     it('commutativity: a + b = b + a', () => {
@@ -51,7 +60,7 @@ describe('Property-based: Arithmetic', () => {
     it('identity with float: a + 0.0 = a', () => {
       fc.assert(
         fc.property(nonNegZero, (a) => {
-          const result = parser.parseExpression(`${a} + 0.0`).getValue();
+          const result = parser.parseExpression(`${asReal(a)} + 0.0`).getValue();
           expect(result).toBe(a);
         }),
       );

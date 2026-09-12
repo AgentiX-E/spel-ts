@@ -83,6 +83,13 @@ describe('java.lang numeric wrappers', () => {
     expect(descriptor('Double').getStaticField('POSITIVE_INFINITY')).toBe(Number.POSITIVE_INFINITY);
   });
 
+  it('exposes the 64-bit boundaries exactly', () => {
+    // Both are beyond float64. As numbers they would round to ...776000, and
+    // `T(Long).MAX_VALUE - 1` evaluated to 0 — a wrong answer, not an error.
+    expect(descriptor('Long').getStaticField('MAX_VALUE')).toBe(9223372036854775807n);
+    expect(descriptor('Long').getStaticField('MIN_VALUE')).toBe(-9223372036854775808n);
+  });
+
   it('parses text', () => {
     expect(descriptor('Integer').callStaticMethod('parseInt', '42')).toBe(42);
     expect(descriptor('Integer').callStaticMethod('parseInt', 'ff', 16)).toBe(255);
@@ -136,12 +143,34 @@ describe('java.lang.String statics', () => {
     const valueOf = (input: unknown): unknown =>
       descriptor('String').callStaticMethod('valueOf', input);
     expect(valueOf(42)).toBe('42');
+    expect(valueOf('a')).toBe('a');
+    expect(valueOf(10n)).toBe('10');
+    expect(valueOf(true)).toBe('true');
     expect(valueOf(null)).toBe('null');
     expect(valueOf(undefined)).toBe('null');
   });
 
+  it('valueOf renders a non-primitive through its generic description', () => {
+    const valueOf = (input: unknown): unknown =>
+      descriptor('String').callStaticMethod('valueOf', input);
+    // Java's `String.valueOf(Object)` is `Object#toString`, which for anything
+    // that does not override it is equally generic. Deliberately not the host's
+    // own conversion, which produces JavaScript-isms such as `1,2` for an array
+    // — a rendering no Java type produces.
+    expect(valueOf({})).toBe('[object Object]');
+    expect(valueOf([1, 2])).toBe('[object Array]');
+  });
+
   it('join separates every element', () => {
     expect(descriptor('String').callStaticMethod('join', '-', 'a', 'b', 'c')).toBe('a-b-c');
+  });
+
+  it('constructs from a string and refuses anything else', () => {
+    expect(descriptor('String').newInstance()).toBe('');
+    expect(descriptor('String').newInstance('a')).toBe('a');
+    // Java has no String(Object) constructor, so this reports rather than
+    // stringifying the argument into '[object Object]'.
+    expect(() => descriptor('String').newInstance(42)).toThrow(SpelEvaluationException);
   });
 });
 
@@ -167,9 +196,10 @@ describe('createTypeDescriptor', () => {
   });
 
   it('falls back to a prototype method for a registered class', () => {
+    class Point {}
     const descriptorFrom = createTypeDescriptor({
       name: 'com.example.Point',
-      constructor: class Point {} as unknown as new (...args: never[]) => unknown,
+      constructor: Point,
       isInstance: () => false,
       newInstance: () => new Object(),
     });

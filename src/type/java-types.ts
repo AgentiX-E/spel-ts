@@ -17,8 +17,12 @@ import { SpelMessage } from '../error/spel-message.js';
 
 interface JavaTypeDefinition {
   readonly name: string;
-  /** Used only so the descriptor has a constructor reference; see `newInstance`. */
-  readonly constructor: new (...args: never[]) => unknown;
+  /**
+   * Used only so the descriptor has a constructor reference; see `newInstance`.
+   * The parameter type is `unknown` rather than `never` so that the real
+   * constructors (`String`, `Number`, `Date`, …) are assignable to it.
+   */
+  readonly constructor: new (...args: unknown[]) => unknown;
   readonly staticMethods?: Readonly<Record<string, (...args: unknown[]) => unknown>>;
   readonly staticFields?: Readonly<Record<string, unknown>>;
   readonly isInstance: (value: unknown) => boolean;
@@ -53,6 +57,27 @@ function toStringArg(value: unknown, method: string): string {
 }
 
 /**
+ * `String.valueOf` accepts anything, as it does in Java: a null argument renders
+ * as the literal `null`, and everything else renders through its own description.
+ * Java's `Object#toString` is equally generic for a value that does not override
+ * it, so a non-primitive is described by its type rather than converted the way
+ * the host would convert it — `1,2` and a locale-dependent date string are
+ * JavaScript-isms that no Java type produces.
+ */
+function valueOfString(value: unknown): string {
+  if (value === null || value === undefined) {
+    return 'null';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return value.toString();
+  }
+  return Object.prototype.toString.call(value);
+}
+
+/**
  * A documented subset of `String.format`.
  *
  * Supports `%s`, `%d`, `%f`, `%.Nf`, `%x`, `%X`, `%o`, `%b`, `%c`, `%%`, with an
@@ -67,7 +92,16 @@ function javaStringFormat(template: string, args: readonly unknown[]): string {
 
   return template.replace(
     pattern,
-    (_match, flag: string, width: string, precision: string, conversion: string) => {
+    (
+      _match: string,
+      // An optional capture group arrives as `undefined` when it does not
+      // participate in the match, so the groups are typed as optional even though
+      // `String#replace` declares them as `string`.
+      flag: string | undefined,
+      width: string | undefined,
+      precision: string | undefined,
+      conversion: string,
+    ) => {
       if (conversion === '%') {
         return '%';
       }
@@ -198,13 +232,15 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
     name: 'java.lang.String',
     constructor: String,
     staticMethods: {
-      valueOf: (value) => (value === null || value === undefined ? 'null' : String(value)),
+      valueOf: (value: unknown) => valueOfString(value),
       format: (template, ...rest) => javaStringFormat(toStringArg(template, 'format'), rest),
       join: (separator, ...rest) =>
         rest.map((item) => String(item)).join(toStringArg(separator, 'join')),
     },
     isInstance: (value) => typeof value === 'string',
-    newInstance: (value) => (value === undefined ? '' : String(value)),
+    // `new String(x)` has no counterpart for a non-string in Java, so anything
+    // else is reported rather than stringified.
+    newInstance: (value) => (value === undefined ? '' : toStringArg(value, 'new String')),
   },
   {
     name: 'java.lang.Integer',
@@ -219,8 +255,8 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
           toStringArg(text, 'parseInt'),
           radix === undefined ? 10 : toNumber(radix, 'parseInt'),
         ),
-      valueOf: (value) => Math.trunc(toNumber(value, 'valueOf')),
-      toString: (value, radix) =>
+      valueOf: (value: unknown) => Math.trunc(toNumber(value, 'valueOf')),
+      toString: (value: unknown, radix: unknown) =>
         Math.trunc(toNumber(value, 'toString')).toString(
           radix === undefined ? 10 : toNumber(radix, 'toString'),
         ),
@@ -234,8 +270,11 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
     name: 'java.lang.Long',
     constructor: Number,
     staticFields: {
-      MAX_VALUE: 9223372036854775807,
-      MIN_VALUE: -9223372036854775808,
+      // Beyond float64, so they are BigInt to stay exact — the same kind a
+      // literal of this magnitude is parsed into. As numbers they would round to
+      // ...776000 and arithmetic on them would be nonsense.
+      MAX_VALUE: 9223372036854775807n,
+      MIN_VALUE: -9223372036854775808n,
     },
     staticMethods: {
       parseLong: (text, radix) =>
@@ -243,8 +282,8 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
           toStringArg(text, 'parseLong'),
           radix === undefined ? 10 : toNumber(radix, 'parseLong'),
         ),
-      valueOf: (value) => Math.trunc(toNumber(value, 'valueOf')),
-      toString: (value, radix) =>
+      valueOf: (value: unknown) => Math.trunc(toNumber(value, 'valueOf')),
+      toString: (value: unknown, radix: unknown) =>
         Math.trunc(toNumber(value, 'toString')).toString(
           radix === undefined ? 10 : toNumber(radix, 'toString'),
         ),
@@ -263,10 +302,10 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
     },
     staticMethods: {
       parseDouble: (text) => Number(toStringArg(text, 'parseDouble')),
-      valueOf: (value) => toNumber(value, 'valueOf'),
+      valueOf: (value: unknown) => toNumber(value, 'valueOf'),
       isNaN: (value) => Number.isNaN(toNumber(value, 'isNaN')),
       isInfinite: (value) => !Number.isFinite(toNumber(value, 'isInfinite')),
-      toString: (value) => String(toNumber(value, 'toString')),
+      toString: (value: unknown) => String(toNumber(value, 'toString')),
     },
     isInstance: (value) => isFloatingOfKind(value, undefined),
   },
@@ -279,7 +318,7 @@ export const JAVA_TYPE_DEFINITIONS: readonly JavaTypeDefinition[] = [
     },
     staticMethods: {
       parseBoolean: (value) => toStringArg(value, 'parseBoolean').toLowerCase() === 'true',
-      valueOf: (value) => Boolean(value),
+      valueOf: (value: unknown) => Boolean(value),
     },
     isInstance: (value) => typeof value === 'boolean',
     newInstance: (value) => Boolean(value),

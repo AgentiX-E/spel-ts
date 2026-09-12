@@ -161,10 +161,11 @@ describe('Phase8: TypeDescriptorAccessor full coverage', () => {
     expect(a.canRead({} as any, {}, 'x')).toBe(false);
   });
 
-  it('read returns NULL for non-existent', () => {
+  it('read reports a non-existent member rather than returning NULL', () => {
     const a = new TypeDescriptorAccessor();
     const td = { name: 'T', constructor: class {}, staticMethods: {}, staticFields: {} };
-    expect(a.read({} as any, td, 'missing')).toBeDefined();
+    // Returning NULL here masked a misspelled field name as a legitimate null.
+    expect(() => a.read({} as any, td, 'missing')).toThrow();
   });
 
   it('read returns constructor static method', () => {

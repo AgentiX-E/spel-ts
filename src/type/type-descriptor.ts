@@ -39,9 +39,9 @@ export function isTypeDescriptor(value: unknown): value is TypeDescriptor {
   }
   const candidate = value as Record<string, unknown>;
   return (
-    typeof candidate['name'] === 'string' &&
-    typeof candidate['isInstance'] === 'function' &&
-    typeof candidate['callStaticMethod'] === 'function' &&
-    typeof candidate['staticMethods'] === 'object'
+    typeof candidate.name === 'string' &&
+    typeof candidate.isInstance === 'function' &&
+    typeof candidate.callStaticMethod === 'function' &&
+    typeof candidate.staticMethods === 'object'
   );
 }

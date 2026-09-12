@@ -17,7 +17,7 @@ function payloadOf(source: string): unknown {
 }
 
 function kindOf(source: string): TokenKind {
-  return new Tokenizer(source).tokenize()[0]!.kind;
+  return new Tokenizer(source).tokenize()[0].kind;
 }
 
 describe('integer literal payload', () => {
@@ -29,7 +29,14 @@ describe('integer literal payload', () => {
 
   it('keeps a literal within the safe range as a number', () => {
     expect(payloadOf('9007199254740991L')).toBe(9007199254740991);
-    expect(payloadOf('-0')).toBe(0);
+  });
+
+  it('lexes a leading minus as an operator, not as part of the literal', () => {
+    // Spring's Tokenizer emits MINUS and then the digits and leaves unary minus
+    // to the parser, so the first token carries no numeric payload. `-5` is
+    // therefore evaluated, not lexed.
+    expect(kindOf('-5')).toBe(TokenKind.MINUS);
+    expect(payloadOf('-5')).toBeUndefined();
   });
 
   it('keeps a literal beyond the safe range exactly, as a bigint', () => {
@@ -60,9 +67,13 @@ describe('integer literal payload', () => {
     }
   });
 
-  it('accepts the exact bounds of a long', () => {
+  it('accepts the exact upper bound of a long', () => {
     expect(payloadOf('9223372036854775807L')).toBe(9223372036854775807n);
-    expect(payloadOf('-9223372036854775808L')).toBe(-9223372036854775808n);
+    // Long.MIN_VALUE cannot be written negatively here. The magnitude is what is
+    // range-checked, and it is checked before unary minus is applied: Spring
+    // lexes the digits alone and converts "9223372036854775808", so JLS 3.10.1's
+    // special case for a negated literal does not reach SpEL.
+    expect(() => payloadOf('-9223372036854775808L')).toThrow(SpelParseException);
   });
 
   it('still rejects a literal one past the bounds', () => {

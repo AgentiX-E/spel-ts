@@ -928,6 +928,11 @@ function typeSurfaceCases(): DraftCase[] {
     ['T(Integer).MIN_VALUE', -2147483648, 'type surface#static field'],
     ["T(Integer).parseInt('42')", 42, 'type surface#Integer.parseInt'],
     ["T(Long).parseLong('99')", 99, 'type surface#Long.parseLong'],
+    // Long.MAX_VALUE and MIN_VALUE are beyond float64, so they are carried as
+    // BigInt. As numbers they round to ...776000, and `MAX_VALUE - 1` was 0.
+    ['T(Long).MAX_VALUE', 9223372036854775807n, 'type surface#64-bit static field is exact'],
+    ['T(Long).MIN_VALUE', -9223372036854775808n, 'type surface#64-bit static field is exact'],
+    ['T(Long).MAX_VALUE - 1', 9223372036854775806n, 'type surface#64-bit arithmetic is exact'],
     ["T(Double).parseDouble('1.5')", 1.5, 'type surface#Double.parseDouble'],
     ["T(Boolean).parseBoolean('true')", true, 'type surface#Boolean.parseBoolean'],
     ['T(String).valueOf(42)', '42', 'type surface#String.valueOf'],
