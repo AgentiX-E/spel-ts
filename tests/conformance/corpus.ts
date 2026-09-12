@@ -744,6 +744,78 @@ function javaStringErrorCases(): DraftCase[] {
   ];
 }
 
+/**
+ * The type surface `README.md` advertises.
+ *
+ * Before this was fixed every case below raised, because the default evaluation
+ * context held a stub type locator whose `findType` always threw, so `T(...)`,
+ * `instanceof` and `new ...` were documented but unusable.
+ */
+function typeSurfaceCases(): DraftCase[] {
+  const values: readonly ValueRow[] = [
+    ['T(java.lang.Math).abs(-5)', 5, 'type surface#static method via fully qualified name'],
+    ['T(Math).abs(-5)', 5, 'type surface#java.lang is imported implicitly'],
+    ['T(Math).max(3, 7)', 7, 'type surface#Math.max'],
+    ['T(Math).pow(2, 10)', 1024, 'type surface#Math.pow'],
+    ['T(Math).round(3.6)', 4, 'type surface#Math.round'],
+    ['T(Math).sqrt(16)', 4, 'type surface#Math.sqrt'],
+    ['T(Math).PI', Math.PI, 'type surface#static field'],
+    ['T(Integer).MAX_VALUE', 2147483647, 'type surface#static field'],
+    ['T(Integer).MIN_VALUE', -2147483648, 'type surface#static field'],
+    ["T(Integer).parseInt('42')", 42, 'type surface#Integer.parseInt'],
+    ["T(Long).parseLong('99')", 99, 'type surface#Long.parseLong'],
+    ["T(Double).parseDouble('1.5')", 1.5, 'type surface#Double.parseDouble'],
+    ["T(Boolean).parseBoolean('true')", true, 'type surface#Boolean.parseBoolean'],
+    ['T(String).valueOf(42)', '42', 'type surface#String.valueOf'],
+    ["T(String).format('%.2f', 3.14159)", '3.14', 'type surface#String.format'],
+    ["T(String).format('%d items', 3)", '3 items', 'type surface#String.format'],
+    ["T(String).join('-', 'a', 'b')", 'a-b', 'type surface#String.join'],
+    ['123 instanceof T(Integer)', true, 'docs#instanceof'],
+    ["'xyz' instanceof T(Integer)", false, 'docs#instanceof'],
+    ["'abc' instanceof T(String)", true, 'docs#instanceof'],
+    ['true instanceof T(Boolean)', true, 'docs#instanceof'],
+    ['1.5 instanceof T(Double)', true, 'docs#instanceof'],
+    ['123 instanceof T(Object)', true, 'docs#instanceof'],
+    ['new java.util.Date(0) instanceof T(java.util.Date)', true, 'docs#constructor reference'],
+  ];
+  return values.map(([expr, val, ref]) => ({
+    group: 'type-surface',
+    label: expr,
+    expr,
+    expect: value(val),
+    ref,
+  }));
+}
+
+/**
+ * Type names and members that do not exist must report, not resolve to null.
+ */
+function typeSurfaceErrorCases(): DraftCase[] {
+  return [
+    {
+      group: 'type-surface',
+      label: 'unknown-type-name',
+      expr: 'T(NoSuchType)',
+      expect: throwsEval(),
+      ref: 'TypeLocator#findType raises TYPE_NOT_FOUND',
+    },
+    {
+      group: 'type-surface',
+      label: 'unknown-static-method',
+      expr: 'T(Math).noSuchMethod(1)',
+      expect: throwsEval(),
+      ref: 'a type resolves only against its own static members',
+    },
+    {
+      group: 'type-surface',
+      label: 'unknown-static-field',
+      expr: 'T(Math).noSuchField',
+      expect: throwsEval(),
+      ref: 'TypeDescriptorAccessor reports an unreadable member',
+    },
+  ];
+}
+
 export const CORPUS: readonly ConformanceCase[] = build([
   ...keywordCases(),
   ...literalKeywordCases(),
@@ -760,5 +832,7 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...baselineCases(),
   ...javaStringMethodCases(),
   ...javaStringErrorCases(),
+  ...typeSurfaceCases(),
+  ...typeSurfaceErrorCases(),
   ...propertyAndCollectionCases(),
 ]);

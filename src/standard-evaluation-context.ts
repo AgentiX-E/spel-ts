@@ -10,6 +10,7 @@ import { ArrayAccessor } from './evaluation-context/array-accessor.js';
 import { ReflectivePropertyAccessor } from './evaluation-context/reflective-property-accessor.js';
 import { TypeDescriptorAccessor } from './evaluation-context/type-descriptor-accessor.js';
 import { ReflectiveMethodResolver } from './evaluation-context/reflective-method-resolver.js';
+import { StandardTypeLocator } from './type/standard-type-locator.js';
 
 export class StandardEvaluationContext implements EvaluationContext {
   private rootObject: TypedValue;
@@ -32,17 +33,14 @@ export class StandardEvaluationContext implements EvaluationContext {
 
     this.methodResolvers.push(new ReflectiveMethodResolver());
 
-    // These will be set to actual implementations later; for now use placeholder stubs
-    this.typeLocator = {
-      findType: (name: string) => {
-        throw new Error(`Type "${name}" not found. TypeLocator not configured.`);
-      },
-      // Stub: no-op until a real TypeLocator is installed via setTypeLocator()
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      registerType: () => {},
-      hasType: () => false,
-    };
+    // A working type locator is installed by default, matching Spring's
+    // StandardEvaluationContext, so `T(String)` and `instanceof` work out of the
+    // box. This previously held a stub that always threw, which meant the
+    // `T(...)` and `instanceof` syntax documented in the README could not be used.
+    this.typeLocator = new StandardTypeLocator();
 
+    // Left unset on purpose: Spring's StandardEvaluationContext also has no bean
+    // resolver, so `@bean` fails until one is installed via setBeanResolver().
     this.beanResolver = {
       resolve: (name: string) => {
         throw new Error(`Bean "${name}" not found. BeanResolver not configured.`);

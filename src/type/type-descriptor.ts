@@ -26,3 +26,22 @@ export interface TypeDescriptor {
   /** Get static field */
   getStaticField(name: string): unknown;
 }
+
+/**
+ * Duck-type guard for a resolved type handle.
+ *
+ * Exported so the places that must treat a `T(...)` result specially share one
+ * definition rather than each testing for a different subset of members.
+ */
+export function isTypeDescriptor(value: unknown): value is TypeDescriptor {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate['name'] === 'string' &&
+    typeof candidate['isInstance'] === 'function' &&
+    typeof candidate['callStaticMethod'] === 'function' &&
+    typeof candidate['staticMethods'] === 'object'
+  );
+}

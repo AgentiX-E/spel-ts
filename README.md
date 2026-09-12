@@ -77,8 +77,8 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 | Property chain | `a.b.c` |
 | Safe navigation | `a?.b` |
 | Selection | `list.?[#this > 5]` |
-| Selection (first) | `list.^[#this > 5]` or `list.$[#this > 5]` |
-| Selection (last) | `list.*[#this > 5]` |
+| Selection (first) | `list.^[#this > 5]` |
+| Selection (last) | `list.$[#this > 5]` |
 | Projection | `list.![#this.name]` |
 | Indexer | `a[0]`, `map['key']` |
 | Variable | `#varName`, `#this` |

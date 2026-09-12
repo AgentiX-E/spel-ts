@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
   operands that cannot take part in arithmetic (`operand-typing`), and for long
   literals beyond float64 precision (`long-precision`).
+- `src/type/java-types.ts` — the `java.lang` type catalogue: `Math`, `String`,
+  `Integer`, `Long`, `Double`, `Boolean`, `Character`, `Object`, `Number` and
+  `java.util.Date`, with their static fields and a documented subset of
+  `String.format`.
 - `src/evaluation-context/java-string-methods.ts` — the `java.lang.String`
   method table, including `matches`, `equalsIgnoreCase`, `replaceFirst`,
   `compareTo`, `isBlank` and `strip`. A string target is resolved against this
@@ -109,6 +113,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `charAt` returned an empty string for an out-of-range index and the JavaScript
   `substring` clamped rather than failing. Java reports both, so a bad index is
   now surfaced instead of being silently masked.
+- `T(...)`, `instanceof` and `new ...` did not work at all, although the README
+  documents all three. `StandardEvaluationContext` installed a stub type locator
+  whose `findType` always threw, and `StandardTypeLocator` shipped with an empty
+  registry and no `java.lang` defaults, so installing it by hand did not help
+  either. A working locator is now installed by default and `java.lang` is
+  imported implicitly, so `T(String)` and `T(java.lang.String)` resolve to the
+  same type.
+- An unknown member of a type returned null instead of reporting, so
+  `T(Math).noSuchField` produced a value rather than an error and a misspelled
+  field name was presented as a legitimate null.
+- `T(String).valueOf(42)` returned the type handle itself. `valueOf` exists on
+  `Object.prototype`, so the JavaScript method won the lookup before the handle's
+  own static members were consulted — the same shadowing that affected string and
+  number receivers.
 - Integer division returned a fractional result: `8 / 5` evaluated to `1.6`
   where Java yields `1`. Integral division and remainder now truncate toward
   zero, `int` arithmetic wraps at 32 bits and `long` at 64 bits, and a zero

@@ -4,6 +4,7 @@ import type { MethodResolver } from './method-resolver.js';
 import { SpelEvaluationException } from '../error/spel-evaluation-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 import { invokeStringMethod } from './java-string-methods.js';
+import { isTypeDescriptor } from '../type/type-descriptor.js';
 
 export class ReflectiveMethodResolver implements MethodResolver {
   public resolve(
@@ -23,6 +24,15 @@ export class ReflectiveMethodResolver implements MethodResolver {
     // implementation silently returned the input unchanged.
     if (typeof target === 'string') {
       return invokeStringMethod(target, name, args);
+    }
+
+    // A resolved type handle resolves only against its own static members. Its
+    // JavaScript prototype members must not win the lookup: `valueOf` exists on
+    // Object.prototype, so `T(String).valueOf(42)` would otherwise return the
+    // handle itself instead of calling String.valueOf. This is the same shadowing
+    // problem the string branch above addresses, in a third place.
+    if (isTypeDescriptor(target)) {
+      return new TypedValue(target.callStaticMethod(name, ...args));
     }
 
     // Objects, arrays, maps and numbers fall back to their own methods. For a
