@@ -325,9 +325,9 @@ function numericTowerCases(): DraftCase[] {
     ['2147483647 + 1', -2147483648, 'jls 15.18.2 32-bit wrap'],
     ['-2 * -3', 6, 'jls 15.17.1'],
   ];
-  return numeric.map(([expr, val, ref], i) => ({
+  return numeric.map(([expr, val, ref]) => ({
     group: 'numeric-tower',
-    label: `${i}-${expr}`,
+    label: expr,
     expr,
     expect: value(val),
     ref,
@@ -409,9 +409,9 @@ function equalityCases(): DraftCase[] {
     ['true != false', true, 'op#equalityCheck'],
     ['false == 0', false, 'op#equalityCheck Boolean vs Number'],
   ];
-  return eq.map(([expr, val, ref], i) => ({
+  return eq.map(([expr, val, ref]) => ({
     group: 'equality',
-    label: `${i}-${expr}`,
+    label: expr,
     expr,
     expect: value(val),
     ref,
@@ -507,9 +507,9 @@ function baselineCases(): DraftCase[] {
     ["'elephant' between {'aardvark', 'cobra'}", false, 'docs#operators'],
     ['1 between {10, 15}', false, 'docs#operators'],
   ];
-  return baseline.map(([expr, val, ref], i) => ({
+  return baseline.map(([expr, val, ref]) => ({
     group: 'baseline',
-    label: `${i}-${expr}`,
+    label: expr,
     expr,
     expect: value(val),
     ref,
@@ -534,6 +534,21 @@ function javaStringMethodCases(): DraftCase[] {
     ["'abc'.endsWith('c')", true, 'java.lang.String#endsWith'],
     ["'abc'.startsWith('ab')", true, 'java.lang.String#startsWith'],
     ["'abc'.equalsIgnoreCase('ABC')", true, 'java.lang.String#equalsIgnoreCase'],
+    // replace replaces every occurrence in Java; JavaScript replaces only the
+    // first, so the JavaScript implementation used to win and diverge here.
+    ["'aXbXc'.replace('X', '-')", 'a-b-c', 'java.lang.String#replace replaces all occurrences'],
+    // split takes a regular expression in Java and drops trailing empty strings.
+    ["'a1b2'.split('\\d')", ['a', 'b'], 'java.lang.String#split takes a regex'],
+    ["'a,b,'.split(',')", ['a', 'b'], 'java.lang.String#split drops trailing empty strings'],
+    [
+      "'a,b,'.split(',', -1)",
+      ['a', 'b', ''],
+      'java.lang.String#split keeps all for a negative limit',
+    ],
+    ["'a,b,c'.split(',', 2)", ['a', 'b,c'], 'java.lang.String#split limit holds the remainder'],
+    ["'abc'.replaceFirst('b', 'z')", 'azc', 'java.lang.String#replaceFirst'],
+    ["'abc'.compareTo('abd')", -1, 'java.lang.String#compareTo'],
+    ["'  '.isBlank()", true, 'java.lang.String#isBlank'],
     ["'abc'.indexOf('c')", 2, 'java.lang.String#indexOf'],
     ["'abcabc'.lastIndexOf('c')", 5, 'java.lang.String#lastIndexOf'],
     ["'abc'.concat('de')", 'abcde', 'java.lang.String#concat'],
@@ -542,9 +557,9 @@ function javaStringMethodCases(): DraftCase[] {
     ["'abc'.toLowerCase()", 'abc', 'java.lang.String#toLowerCase'],
     ["'ABC'.toLowerCase()", 'abc', 'java.lang.String#toLowerCase'],
   ];
-  return cases.map(([expr, val, ref], i) => ({
+  return cases.map(([expr, val, ref]) => ({
     group: 'java-string-methods',
-    label: `${i}-${expr}`,
+    label: expr,
     expr,
     expect: value(val),
     ref,
@@ -639,9 +654,9 @@ function numericKindCases(): DraftCase[] {
     ['2 + 3.0', 5, 'jls 5.6.2 widening to double'],
     ['-3L', -3, 'unary minus preserves the numeric kind'],
   ];
-  return cases.map(([expr, val, ref], i) => ({
+  return cases.map(([expr, val, ref]) => ({
     group: 'numeric-kinds',
-    label: `${i}-${expr}`,
+    label: expr,
     expr,
     expect: value(val),
     ref,
@@ -684,13 +699,49 @@ function longPrecisionCases(): DraftCase[] {
     // JavaScript number and would otherwise round in this very file.
     ['9007199254740993L', 9007199254740993n, 'jls 3.10.1 long literals are exact'],
   ];
-  return cases.map(([expr, val, ref], i) => ({
+  return cases.map(([expr, val, ref]) => ({
     group: 'long-precision',
-    label: `${i}-${expr}`,
+    label: expr,
     expr,
     expect: value(val),
     ref,
   }));
+}
+
+/**
+ * String method calls that must report an error rather than return a
+ * plausible-looking value.
+ *
+ * Java's String rejects an out-of-range index, and it has no `includes` or
+ * `padStart`, so a name the JavaScript implementation happens to provide must
+ * not resolve.
+ */
+function javaStringErrorCases(): DraftCase[] {
+  return [
+    {
+      group: 'java-string-methods',
+      label: 'charAt-out-of-range',
+      expr: 's.charAt(10)',
+      root: { s: 'abc' },
+      expect: throwsEval(),
+      ref: 'java.lang.String#charAt throws StringIndexOutOfBoundsException',
+    },
+    {
+      group: 'java-string-methods',
+      label: 'substring-beyond-end',
+      expr: 's.substring(0, 10)',
+      root: { s: 'abc' },
+      expect: throwsEval(),
+      ref: 'java.lang.String#substring throws StringIndexOutOfBoundsException',
+    },
+    {
+      group: 'java-string-methods',
+      label: 'no-javascript-only-method',
+      expr: "'ab'.includes('a')",
+      expect: throwsEval(),
+      ref: 'java.lang.String has no includes; Spring raises method-not-found',
+    },
+  ];
 }
 
 export const CORPUS: readonly ConformanceCase[] = build([
@@ -708,5 +759,6 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...divisionByZeroCases(),
   ...baselineCases(),
   ...javaStringMethodCases(),
+  ...javaStringErrorCases(),
   ...propertyAndCollectionCases(),
 ]);

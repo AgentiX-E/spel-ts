@@ -16,7 +16,7 @@
  * because the backlog is enumerated explicitly, not because failures are
  * suppressed. A regression in an unlisted case fails the build immediately.
  *
- * Snapshot: 5 divergences of 171 corpus cases (Phase 3: 1, Phase 6: 4).
+ * Snapshot: 1 divergences of 182 corpus cases (Phase 3: 1).
  */
 export interface KnownDivergence {
   readonly caseId: string;
@@ -33,47 +33,7 @@ export interface KnownDivergence {
 
 export const KNOWN_DIVERGENCES: readonly KnownDivergence[] = [
   {
-    caseId: "java-string-methods:0-'abc'.matches('a.*')",
-    group: 'java-string-methods',
-    expr: "'abc'.matches('a.*')",
-    defect: 'D37',
-    phase: 'Phase 6',
-    spring: 'value true',
-    engine: 'throws SpelEvaluationException',
-    verdict: 'rejects-valid',
-  },
-  {
-    caseId: "java-string-methods:1-'abc'.matches('b')",
-    group: 'java-string-methods',
-    expr: "'abc'.matches('b')",
-    defect: 'D37',
-    phase: 'Phase 6',
-    spring: 'value false',
-    engine: 'throws SpelEvaluationException',
-    verdict: 'rejects-valid',
-  },
-  {
-    caseId: "java-string-methods:12-'a1b2'.replaceAll('\\d', '-')",
-    group: 'java-string-methods',
-    expr: "'a1b2'.replaceAll('\\d', '-')",
-    defect: 'D37',
-    phase: 'Phase 6',
-    spring: 'value "a-b-"',
-    engine: 'value "a1b2"',
-    verdict: 'wrong-value',
-  },
-  {
-    caseId: "java-string-methods:7-'abc'.equalsIgnoreCase('ABC')",
-    group: 'java-string-methods',
-    expr: "'abc'.equalsIgnoreCase('ABC')",
-    defect: 'D37',
-    phase: 'Phase 6',
-    spring: 'value true',
-    engine: 'throws SpelEvaluationException',
-    verdict: 'rejects-valid',
-  },
-  {
-    caseId: 'long-precision:0-9007199254740993L',
+    caseId: 'long-precision:9007199254740993L',
     group: 'long-precision',
     expr: '9007199254740993L',
     defect: 'D38',
