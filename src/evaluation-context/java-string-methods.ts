@@ -200,7 +200,13 @@ function matchesWhole(source: string, pattern: string, position: number): boolea
 function replaceLiteral(source: string, target: string, replacement: string): string {
   if (target === '') {
     // Java inserts the replacement at both ends and between every character.
-    return replacement + [...source].join(replacement) + replacement;
+    // Iterating by code unit matches Java's `char`-based view of a String and
+    // avoids the spread operator, which would decompose by code point.
+    let widened = replacement;
+    for (let index = 0; index < source.length; index += 1) {
+      widened += source.charAt(index) + replacement;
+    }
+    return widened;
   }
   return source.split(target).join(replacement);
 }
