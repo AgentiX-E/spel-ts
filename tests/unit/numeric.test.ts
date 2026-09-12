@@ -14,7 +14,6 @@ import {
   divide,
   inferKind,
   compareNumericValues,
-  integerLiteralKind,
   isIntegral,
   longLiteralKind,
   multiply,
@@ -81,28 +80,6 @@ describe('longLiteralKind', () => {
 
   it('types a suffixed literal a JavaScript number cannot hold as bigint', () => {
     expect(longLiteralKind(9007199254740993n)).toBe('bigint');
-  });
-});
-
-describe('integerLiteralKind', () => {
-  it('types a literal inside the int range as int', () => {
-    expect(integerLiteralKind(0)).toBe('int');
-    expect(integerLiteralKind(2147483647)).toBe('int');
-    expect(integerLiteralKind(-2147483648)).toBe('int');
-  });
-
-  it('types a literal beyond int as long, as Java does', () => {
-    expect(integerLiteralKind(2147483648)).toBe('long');
-    expect(integerLiteralKind(-2147483649)).toBe('long');
-    expect(integerLiteralKind(-2147483904)).toBe('long');
-  });
-
-  it('falls back to double beyond long precision', () => {
-    expect(integerLiteralKind(2 ** 53 + 2)).toBe('double');
-  });
-
-  it('ignores any fractional part', () => {
-    expect(integerLiteralKind(5.9)).toBe('int');
   });
 });
 
@@ -288,9 +265,8 @@ describe('bigint kind', () => {
     expect(isIntegral('bigint')).toBe(true);
   });
 
-  it('is inferred for a BigInt and kept by integerLiteralKind', () => {
+  it('is inferred for a BigInt', () => {
     expect(inferKind(10n)).toBe('bigint');
-    expect(integerLiteralKind(10n)).toBe('bigint');
     expect(numericOf(10n)).toEqual({ value: 10n, kind: 'bigint' });
   });
 

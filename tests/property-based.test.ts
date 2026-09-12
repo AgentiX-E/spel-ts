@@ -221,10 +221,19 @@ describe('Property-based: Arithmetic', () => {
 describe('Property-based: Comparison', () => {
   const parser = new SpelExpressionParser();
 
+  // An unsuffixed literal is an `int` in SpEL and is rejected outside that range,
+  // and the digits are checked before unary minus applies — so `-2147483648` is
+  // not expressible either, exactly as it is not in Spring. Every value that goes
+  // into an expression stays inside what the language accepts.
+  const intLiteral = fc.integer({ min: -2147483647, max: 2147483647 });
+  // The transitivity case derives two further values by adding to the generated
+  // one, so its generator is bounded well inside the range.
+  const derivedIntLiteral = fc.integer({ min: -1000000, max: 1000000 });
+
   describe('equality properties', () => {
     it('reflexivity: a == a always true', () => {
       fc.assert(
-        fc.property(fc.integer(), (a) => {
+        fc.property(intLiteral, (a) => {
           expect(parser.parseExpression(`${a} == ${a}`).getValue()).toBe(true);
         }),
       );
@@ -232,7 +241,7 @@ describe('Property-based: Comparison', () => {
 
     it('symmetry: a == b ⇔ b == a', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (a, b) => {
+        fc.property(intLiteral, intLiteral, (a, b) => {
           const l = parser.parseExpression(`${a} == ${b}`).getValue();
           const r = parser.parseExpression(`${b} == ${a}`).getValue();
           expect(l).toBe(r);
@@ -242,7 +251,7 @@ describe('Property-based: Comparison', () => {
 
     it('< and > are opposites for distinct integers', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (a, b) => {
+        fc.property(intLiteral, intLiteral, (a, b) => {
           if (a === b) {
             expect(parser.parseExpression(`${a} < ${b}`).getValue()).toBe(false);
             expect(parser.parseExpression(`${a} > ${b}`).getValue()).toBe(false);
@@ -258,7 +267,7 @@ describe('Property-based: Comparison', () => {
 
     it('transitivity: a < b ∧ b < c ⇒ a < c', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (base, offset) => {
+        fc.property(derivedIntLiteral, derivedIntLiteral, (base, offset) => {
           const a = base;
           const b = base + Math.abs(offset) + 1;
           const c = b + Math.abs(offset % 100) + 1;
@@ -271,7 +280,7 @@ describe('Property-based: Comparison', () => {
 
     it('total order: for any a,b, either a<=b or b<=a', () => {
       fc.assert(
-        fc.property(fc.integer(), fc.integer(), (a, b) => {
+        fc.property(intLiteral, intLiteral, (a, b) => {
           const ale = parser.parseExpression(`${a} <= ${b}`).getValue() as boolean;
           const ble = parser.parseExpression(`${b} <= ${a}`).getValue() as boolean;
           expect(ale || ble).toBe(true);

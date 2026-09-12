@@ -1013,6 +1013,42 @@ function typeSurfaceErrorCases(): DraftCase[] {
 }
 
 /**
+ * An unsuffixed integer literal is an `int` in SpEL whatever its magnitude.
+ *
+ * Spring types it that way and converts the digits with `Integer.parseInt`, so a
+ * value that does not fit raises `NOT_AN_INTEGER` and the `L` suffix is the only
+ * spelling. This port classified such a literal by its size, which accepted
+ * `3000000000` — the `accepts-invalid` class the programme exists to remove.
+ *
+ * Labels are the expression, so an identifier stays `int-literal:2147483648`
+ * rather than shifting when a case is inserted.
+ */
+function intLiteralCases(): DraftCase[] {
+  const rows: readonly [string, Expectation, string][] = [
+    ['2147483647', value(2147483647), 'Integer.MAX_VALUE is still an int literal'],
+    ['2147483648', throwsParse(), 'Literal.getIntLiteral raises NOT_AN_INTEGER'],
+    ['3000000000', throwsParse(), 'the L suffix is what widens a literal to long'],
+    [
+      '9223372036854775807',
+      throwsParse(),
+      'an unsuffixed literal is an int whatever its magnitude',
+    ],
+    ['-2147483648', throwsParse(), 'the digits are checked before unary minus applies'],
+    ['2147483648L', value(2147483648), 'the L suffix selects the long path'],
+    ['2147483647L + 1L', value(2147483648), 'long arithmetic does not wrap at 32 bits'],
+    ['0x7FFFFFFF', value(2147483647), 'Integer.parseInt(digits, 16)'],
+    ['0xFFFFFFFF', throwsParse(), 'unsuffixed hexadecimal is an int too'],
+  ];
+  return rows.map(([expr, expect, ref]) => ({
+    group: 'int-literal',
+    label: expr,
+    expr,
+    expect,
+    ref,
+  }));
+}
+
+/**
  * Method calls on a number, resolved against the Java wrapper classes.
  *
  * `toFixed` and `toExponential` are absent from the Java types, so they are
@@ -1199,6 +1235,7 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...numericKindCases(),
   ...operandTypingCases(),
   ...bigintCases(),
+  ...intLiteralCases(),
   ...numberMethodCases(),
   ...argumentScopeCases(),
   ...equalityCases(),

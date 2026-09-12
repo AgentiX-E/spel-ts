@@ -4,11 +4,18 @@ import { Token } from './token.js';
 import { isLetter, isDigit, isHexDigit, isWhitespace } from './char-flags.js';
 import { foldAsciiUpper } from '../util/ascii.js';
 
-/** Bounds of a Java `long`, and of the range a JavaScript number holds exactly. */
+/**
+ * The bounds an integer literal may hold.
+ *
+ * An unsuffixed literal is an `int` in SpEL whatever its magnitude, and the `L`
+ * suffix widens it to a `long`; `SAFE_INTEGER_MAX` is the largest value a
+ * JavaScript number holds exactly. Literal digits are unsigned — a leading `-` is
+ * a separate token — so no lower bound is needed here.
+ */
+const INT_LITERAL_MAX = BigInt('2147483647');
 const LONG_MAX = BigInt('9223372036854775807');
 const LONG_MIN = BigInt('-9223372036854775808');
 const SAFE_INTEGER_MAX = BigInt('9007199254740991');
-const SAFE_INTEGER_MIN = BigInt('-9007199254740991');
 import { SpelParseException } from '../error/spel-parse-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 
@@ -115,7 +122,13 @@ export class Tokenizer {
           this.pos++;
         }
         const text = this.expression.slice(start, this.pos);
-        return new Token(TokenKind.LITERAL_HEX, start, this.pos, text, parseInt(text, 16));
+        return new Token(
+          TokenKind.LITERAL_HEX,
+          start,
+          this.pos,
+          text,
+          this.intPayload(this.exactInteger(text, start, SpelMessage.NOT_AN_INTEGER), text, start),
+        );
       }
       // Octal: 0[0-7]+
       if (next >= 48 /* '0' */ && next <= 55 /* '7' */) {
@@ -129,7 +142,13 @@ export class Tokenizer {
           }
         }
         const text = this.expression.slice(start, this.pos);
-        return new Token(TokenKind.LITERAL_INT, start, this.pos, text, parseInt(text, 8));
+        return new Token(
+          TokenKind.LITERAL_INT,
+          start,
+          this.pos,
+          text,
+          this.intPayload(BigInt(Number.parseInt(text, 8)), text, start),
+        );
       }
     }
 
@@ -203,39 +222,70 @@ export class Tokenizer {
     }
 
     const text = this.expression.slice(start, this.pos);
-    const value =
-      kind === TokenKind.LITERAL_INT || kind === TokenKind.LITERAL_LONG
-        ? this.integerPayload(text, start)
-        : parseFloat(text);
+    let value: number | bigint;
+    if (kind === TokenKind.LITERAL_INT) {
+      value = this.intPayload(
+        this.exactInteger(text, start, SpelMessage.NOT_AN_INTEGER),
+        text,
+        start,
+      );
+    } else if (kind === TokenKind.LITERAL_LONG) {
+      value = this.longPayload(text, start);
+    } else {
+      value = parseFloat(text);
+    }
 
     return new Token(kind, start, this.pos, text, value);
   }
 
   /**
-   * Parse an integer literal exactly.
+   * Parse an integer literal's digits exactly.
    *
-   * A literal within the safe integer range becomes a `number`. Beyond it the
-   * exact value is kept as a `bigint`, because a JavaScript number cannot hold
-   * it: `9007199254740993L` previously became `9007199254740992`, so a
-   * difference of one evaluated to zero. A value outside the 64-bit `long` range
-   * has no Java counterpart and is rejected with INVALID_NUMBER, as Java rejects
-   * such a literal.
+   * `BigInt` is used rather than `parseInt` because a literal near the 64-bit
+   * boundary is not representable as a JavaScript number, and rounding it is how
+   * `9007199254740993L` previously became `9007199254740992`.
    */
-  private integerPayload(text: string, start: number): number | bigint {
+  private exactInteger(text: string, start: number, message: SpelMessage): bigint {
+    try {
+      return BigInt(text);
+    } catch {
+      throw new SpelParseException(start, message, text);
+    }
+  }
+
+  /**
+   * The payload of an unsuffixed literal, which SpEL types as an `int` whatever
+   * its magnitude.
+   *
+   * Spring converts the digits with `Integer.parseInt` and raises
+   * `NOT_AN_INTEGER` when they do not fit, so `3000000000` is a parse error and
+   * `3000000000L` the only spelling. This port classified an unsuffixed literal
+   * by its size instead, which accepted the first form.
+   */
+  private intPayload(exact: bigint, text: string, start: number): number {
+    if (exact > INT_LITERAL_MAX) {
+      throw new SpelParseException(start, SpelMessage.NOT_AN_INTEGER, text);
+    }
+    return Number(exact);
+  }
+
+  /**
+   * The payload of an `L`-suffixed literal, which is a `long` in Java.
+   *
+   * Within the range a JavaScript number holds exactly it stays a `number`, so
+   * `42L` is unchanged; beyond that the exact value is kept as a `bigint`. A value
+   * outside the 64-bit range has no Java counterpart and is rejected, as Java
+   * rejects such a literal.
+   */
+  private longPayload(text: string, start: number): number | bigint {
     const digits = text.endsWith('L') || text.endsWith('l') ? text.slice(0, -1) : text;
 
-    let exact: bigint;
-    try {
-      exact = BigInt(digits);
-    } catch {
-      throw new SpelParseException(start, SpelMessage.INVALID_NUMBER, text);
-    }
-
+    const exact = this.exactInteger(digits, start, SpelMessage.INVALID_NUMBER);
     if (exact > LONG_MAX || exact < LONG_MIN) {
       throw new SpelParseException(start, SpelMessage.INVALID_NUMBER, text);
     }
 
-    return exact <= SAFE_INTEGER_MAX && exact >= SAFE_INTEGER_MIN ? Number(exact) : exact;
+    return exact <= SAFE_INTEGER_MAX ? Number(exact) : exact;
   }
 
   /**

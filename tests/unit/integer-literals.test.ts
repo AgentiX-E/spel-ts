@@ -1,9 +1,12 @@
 /**
- * Contract tests for exact integer literals.
+ * Contract tests for integer literals.
  *
- * A literal within the safe integer range stays a `number`; beyond it the exact
- * value is carried as a `bigint`, because a JavaScript number cannot hold it.
- * Without that, `9007199254740993L` became `9007199254740992` and
+ * An unsuffixed literal is an `int` in SpEL whatever its magnitude, and the `L`
+ * suffix is what widens it to a `long` — so a value that does not fit its kind is
+ * a parse error rather than a value of some larger kind. Within the range a
+ * JavaScript number holds exactly a literal stays a `number`; beyond it the exact
+ * value is carried as a `bigint`, because a number cannot hold it. Without that,
+ * `9007199254740993L` became `9007199254740992` and
  * `9007199254740993L - 9007199254740992L` evaluated to zero.
  */
 import { describe, expect, it } from 'vitest';
@@ -42,7 +45,43 @@ describe('integer literal payload', () => {
   it('keeps a literal beyond the safe range exactly, as a bigint', () => {
     expect(payloadOf('9007199254740993L')).toBe(9007199254740993n);
     expect(payloadOf('9223372036854775807L')).toBe(9223372036854775807n);
-    expect(payloadOf('9223372036854775807')).toBe(9223372036854775807n);
+  });
+
+  it('types an unsuffixed literal as an int whatever its magnitude', () => {
+    // Spring reaches the same conclusion from the other direction:
+    // `Literal.getIntLiteral` calls `Integer.parseInt`, so `2147483648` raises
+    // NOT_AN_INTEGER and the `L` suffix is the only way to write it. This port
+    // typed such a literal by its size instead, which accepted all of these.
+    expect(payloadOf('2147483647')).toBe(2147483647);
+    expect(() => payloadOf('2147483648')).toThrow(SpelParseException);
+    expect(() => payloadOf('3000000000')).toThrow(SpelParseException);
+    expect(() => payloadOf('9223372036854775807')).toThrow(SpelParseException);
+    // The digits are unsigned and checked before unary minus is applied, so the
+    // lowest int cannot be written negatively either — the same rule that stops
+    // `-9223372036854775808L`. The expression is lexed as a whole, so not even the
+    // `MINUS` token survives; Spring reaches the same conclusion one stage later,
+    // when the parser converts the digits.
+    expect(() => payloadOf('-2147483648')).toThrow(SpelParseException);
+    expect(() => kindOf('-2147483648')).toThrow(SpelParseException);
+    // One less is fine, and lexes as MINUS over the digits.
+    expect(kindOf('-2147483647')).toBe(TokenKind.MINUS);
+  });
+
+  it('reports NOT_AN_INTEGER for an unsuffixed literal that does not fit', () => {
+    try {
+      payloadOf('3000000000');
+      expect.unreachable('the literal should not parse');
+    } catch (error) {
+      expect((error as SpelParseException).messageCode).toBe(SpelMessage.NOT_AN_INTEGER);
+    }
+  });
+
+  it('accepts the same value once it is suffixed', () => {
+    expect(kindOf('2147483648L')).toBe(TokenKind.LITERAL_LONG);
+    expect(payloadOf('2147483648L')).toBe(2147483648);
+    // `payloadOf` peeks the first token, so it cannot express arithmetic; the
+    // expression-level case — `2147483647L + 1L` yielding 2147483648 rather than
+    // wrapping — lives in the conformance corpus, where it is evaluated.
   });
 
   it('classifies the token kind independently of the payload type', () => {
@@ -81,9 +120,15 @@ describe('integer literal payload', () => {
     expect(() => payloadOf('-9223372036854775809L')).toThrow(SpelParseException);
   });
 
-  it('leaves hexadecimal and octal literals as numbers', () => {
+  it('lexes hexadecimal literals as numbers and range-checks them', () => {
+    // Unsuffixed hexadecimal is an `int` in SpEL too, and Spring converts it with
+    // `Integer.parseInt(digits, 16)`, so the int bound applies to it as well.
     expect(payloadOf('0xFF')).toBe(255);
     expect(payloadOf('0X1F')).toBe(31);
+    expect(payloadOf('0x7FFFFFFF')).toBe(2147483647);
+    expect(() => payloadOf('0xFFFFFFFF')).toThrow(SpelParseException);
+    // `0x` carries no digits, which Spring reports the same way.
+    expect(() => payloadOf('0x')).toThrow(SpelParseException);
   });
 
   it('leaves floating literals as numbers', () => {

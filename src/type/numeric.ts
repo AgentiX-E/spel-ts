@@ -44,10 +44,6 @@ const PROMOTION_RANK: Readonly<Record<NumericKind, number>> = {
   double: 4,
 };
 
-/** Highest and lowest `int`, the boundary at which a literal becomes a long. */
-const INT_MAX = 2147483647;
-const INT_MIN = -2147483648;
-
 /** Binary numeric promotion: the wider of two kinds wins. */
 export function promote(left: NumericKind, right: NumericKind): NumericKind {
   return PROMOTION_RANK[left] >= PROMOTION_RANK[right] ? left : right;
@@ -78,29 +74,9 @@ export function numericOf(value: number | bigint, kind?: NumericKind): Numeric {
 }
 
 /**
- * Choose the numeric kind for an integer literal, following Java's rule that a
- * literal too large for `int` is typed `long`.
- *
- * Without this, `2147483904` would be treated as an `int`, and the 32-bit wrap
- * would turn it into a negative number before any arithmetic ran.
- */
-export function integerLiteralKind(value: number | bigint): NumericKind {
-  if (typeof value === 'bigint') {
-    // Already exact, and wider than a JavaScript number can hold.
-    return 'bigint';
-  }
-  const truncated = Math.trunc(value);
-  if (truncated >= INT_MIN && truncated <= INT_MAX) {
-    return 'int';
-  }
-  // Beyond `long` precision a JavaScript number cannot hold the literal
-  // exactly, so the closest faithful kind is `double`.
-  return Number.isSafeInteger(truncated) ? 'long' : 'double';
-}
-
-/**
  * Choose the kind of an `L`-suffixed literal, which is a `long` in Java whatever
- * its magnitude — unlike an unsuffixed literal, whose kind follows its size.
+ * its magnitude — unlike an unsuffixed literal, which is always an `int` and is
+ * rejected by the tokenizer when the value does not fit.
  *
  * Without this, `1L` is typed `int` by magnitude, and `2147483647L + 1L` wraps at
  * 32 bits to `-2147483648` instead of yielding `2147483648`. A value a JavaScript

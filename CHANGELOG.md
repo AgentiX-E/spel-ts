@@ -62,6 +62,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Identifiers may contain any Unicode letter, matching Spring's use of
   `Character.isLetter`. Identifiers such as `年龄`, `café` and `αβγ` are now
   accepted, which the natural-language pipeline relies on.
+- An unsuffixed integer literal is an `int`, so one that does not fit is now a
+  parse error rather than being retyped as a `long` or a bigint by its magnitude:
+  `3000000000` and `9223372036854775807` must be written `3000000000L` and
+  `9223372036854775807L`. This narrows accepted input — an expression that
+  evaluated before may now throw — and it is deliberate, because SpEL rejects
+  both spellings: `Integer.parseInt` is what converts an unsuffixed literal, and
+  only the `L` suffix selects the long path. Unsuffixed hexadecimal is bounded the
+  same way, so `0xFFFFFFFF` is rejected too. The lowest `int` cannot be written
+  negatively either (`-2147483648` is a parse error, `-2147483648L` is not), which
+  is the same rule that already applied to the lowest `long`.
 
 ### Fixed
 - Textual operators were only recognised in lower case, so valid expressions
