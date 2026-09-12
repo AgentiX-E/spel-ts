@@ -3,6 +3,12 @@ import { OPERATOR_KEYWORDS } from './keyword-table.js';
 import { Token } from './token.js';
 import { isLetter, isDigit, isHexDigit, isWhitespace } from './char-flags.js';
 import { foldAsciiUpper } from '../util/ascii.js';
+
+/** Bounds of a Java `long`, and of the range a JavaScript number holds exactly. */
+const LONG_MAX = BigInt('9223372036854775807');
+const LONG_MIN = BigInt('-9223372036854775808');
+const SAFE_INTEGER_MAX = BigInt('9007199254740991');
+const SAFE_INTEGER_MIN = BigInt('-9007199254740991');
 import { SpelParseException } from '../error/spel-parse-exception.js';
 import { SpelMessage } from '../error/spel-message.js';
 
@@ -199,10 +205,37 @@ export class Tokenizer {
     const text = this.expression.slice(start, this.pos);
     const value =
       kind === TokenKind.LITERAL_INT || kind === TokenKind.LITERAL_LONG
-        ? parseInt(text, 10)
+        ? this.integerPayload(text, start)
         : parseFloat(text);
 
     return new Token(kind, start, this.pos, text, value);
+  }
+
+  /**
+   * Parse an integer literal exactly.
+   *
+   * A literal within the safe integer range becomes a `number`. Beyond it the
+   * exact value is kept as a `bigint`, because a JavaScript number cannot hold
+   * it: `9007199254740993L` previously became `9007199254740992`, so a
+   * difference of one evaluated to zero. A value outside the 64-bit `long` range
+   * has no Java counterpart and is rejected with INVALID_NUMBER, as Java rejects
+   * such a literal.
+   */
+  private integerPayload(text: string, start: number): number | bigint {
+    const digits = text.endsWith('L') || text.endsWith('l') ? text.slice(0, -1) : text;
+
+    let exact: bigint;
+    try {
+      exact = BigInt(digits);
+    } catch {
+      throw new SpelParseException(start, SpelMessage.INVALID_NUMBER, text);
+    }
+
+    if (exact > LONG_MAX || exact < LONG_MIN) {
+      throw new SpelParseException(start, SpelMessage.INVALID_NUMBER, text);
+    }
+
+    return exact <= SAFE_INTEGER_MAX && exact >= SAFE_INTEGER_MIN ? Number(exact) : exact;
   }
 
   /**

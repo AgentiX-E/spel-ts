@@ -58,6 +58,11 @@ parser.parseExpression('user.age > 18').getValueWithContext(dataCtx); // true
 | float/double | `3.14`, `2.5F`, `1.5E+2` |
 | string | `'hello'`, `"world"`, `'it''s'` |
 
+> Integers outside the range a JavaScript number represents exactly (beyond
+> 2^53) are carried as `BigInt`, so `9007199254740993L` keeps its exact value and
+> `getValue()` returns a `bigint` for it. Smaller integers are returned as
+> `number`, as before.
+
 ### Operators
 | Category | Operators |
 |----------|-----------|

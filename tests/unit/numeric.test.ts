@@ -13,6 +13,7 @@ import {
   add,
   divide,
   inferKind,
+  compareNumericValues,
   integerLiteralKind,
   isIntegral,
   multiply,
@@ -253,5 +254,100 @@ describe('numericOperand', () => {
   it('throws when the value is not a number', () => {
     expect(() => numericOperand('a', undefined, 0)).toThrow(SpelEvaluationException);
     expect(() => numericOperand(null, undefined, 0)).toThrow(SpelEvaluationException);
+  });
+});
+
+describe('bigint kind', () => {
+  const big = (value: bigint): Numeric => ({ value, kind: 'bigint' });
+
+  it('promotes between long and float', () => {
+    expect(promote('bigint', 'long')).toBe('bigint');
+    expect(promote('long', 'bigint')).toBe('bigint');
+    expect(promote('bigint', 'int')).toBe('bigint');
+    // BigInteger combined with a double becomes a double, as in Java.
+    expect(promote('bigint', 'double')).toBe('double');
+    expect(promote('bigint', 'float')).toBe('float');
+  });
+
+  it('counts as an integral kind', () => {
+    expect(isIntegral('bigint')).toBe(true);
+  });
+
+  it('is inferred for a BigInt and kept by integerLiteralKind', () => {
+    expect(inferKind(10n)).toBe('bigint');
+    expect(integerLiteralKind(10n)).toBe('bigint');
+    expect(numericOf(10n)).toEqual({ value: 10n, kind: 'bigint' });
+  });
+
+  it('arithmetic is exact', () => {
+    const huge = 9007199254740993n;
+    expect(add(big(huge), big(1n))).toEqual({ value: 9007199254740994n, kind: 'bigint' });
+    expect(subtract(big(huge), big(1n))).toEqual({ value: 9007199254740992n, kind: 'bigint' });
+    expect(multiply(big(huge), big(2n))).toEqual({ value: 18014398509481986n, kind: 'bigint' });
+    expect(divide(big(7n), big(2n), 0)).toEqual({ value: 3n, kind: 'bigint' });
+    expect(remainder(big(7n), big(2n), 0)).toEqual({ value: 1n, kind: 'bigint' });
+    expect(negate(big(7n))).toEqual({ value: -7n, kind: 'bigint' });
+  });
+
+  it('promotes an int or long operand to bigint rather than losing precision', () => {
+    expect(add(big(10n), { value: 1, kind: 'int' })).toEqual({ value: 11n, kind: 'bigint' });
+    expect(add(big(10n), { value: 1, kind: 'long' })).toEqual({ value: 11n, kind: 'bigint' });
+  });
+
+  it('widens to double when a floating operand is present', () => {
+    const result = add(big(10n), { value: 0.5, kind: 'double' });
+    expect(result.kind).toBe('double');
+    expect(result.value).toBe(10.5);
+  });
+
+  it('rejects an integral zero divisor', () => {
+    expect(() => divide(big(1n), big(0n), 0)).toThrow(SpelEvaluationException);
+    expect(() => remainder(big(1n), big(0n), 0)).toThrow(SpelEvaluationException);
+  });
+
+  it('is accepted as an operand', () => {
+    expect(numericOperand(10n, undefined, 0)).toEqual({ value: 10n, kind: 'bigint' });
+    expect(() => numericOperand('x', undefined, 0)).toThrow(SpelEvaluationException);
+  });
+
+  it('power widens to double', () => {
+    expect(power(big(2n), big(10n))).toEqual({ value: 1024, kind: 'double' });
+  });
+});
+
+describe('compareNumericValues', () => {
+  it('compares two numbers', () => {
+    expect(compareNumericValues(1, 2)).toBe(-1);
+    expect(compareNumericValues(2, 2)).toBe(0);
+    expect(compareNumericValues(3, 2)).toBe(1);
+  });
+
+  it('compares a BigInt with a number exactly', () => {
+    expect(compareNumericValues(10n, 10)).toBe(0);
+    expect(compareNumericValues(10n, 11)).toBe(-1);
+    expect(compareNumericValues(11, 10n)).toBe(1);
+  });
+
+  it('does not round a value beyond float64 precision', () => {
+    // As plain numbers these two are indistinguishable.
+    expect(compareNumericValues(9007199254740993n, 9007199254740992)).toBe(1);
+    expect(compareNumericValues(9007199254740993n, 9007199254740993)).toBe(0);
+  });
+
+  it('compares two BigInts', () => {
+    expect(compareNumericValues(2n, 3n)).toBe(-1);
+    expect(compareNumericValues(3n, 3n)).toBe(0);
+  });
+
+  it('falls back to a double comparison when a side is fractional', () => {
+    expect(compareNumericValues(10n, 10.5)).toBe(-1);
+    expect(compareNumericValues(10n, 9.5)).toBe(1);
+  });
+
+  it('returns undefined for a non-numeric or NaN operand', () => {
+    expect(compareNumericValues('1', 1)).toBeUndefined();
+    expect(compareNumericValues(1, null)).toBeUndefined();
+    expect(compareNumericValues(Number.NaN, 1)).toBeUndefined();
+    expect(compareNumericValues(1, Number.NaN)).toBeUndefined();
   });
 });

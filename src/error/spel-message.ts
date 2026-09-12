@@ -26,6 +26,8 @@ export enum SpelMessage {
   UNEXPECTED_DATA_AFTER_DOTDOT = 1009,
   /** Expected variable reference */
   VARIABLE_REFERENCE_EXPECTED = 1010,
+  /** Invalid number literal: {0} */
+  INVALID_NUMBER = 1011,
 
   // ===== Evaluation Errors (2xxx) =====
   /** Error reading property: {0} */

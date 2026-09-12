@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corpus coverage for the explicit literal suffixes (`numeric-kinds`), for
   operands that cannot take part in arithmetic (`operand-typing`), and for long
   literals beyond float64 precision (`long-precision`).
+- `bigint` as a numeric kind, standing in for `java.math.BigInteger`. It ranks
+  between `long` and `float`, so a BigInt combined with an `int` or a `long` stays
+  exact while a BigInt combined with a `double` widens to a double.
 - `src/type/java-types.ts` — the `java.lang` type catalogue: `Math`, `String`,
   `Integer`, `Long`, `Double`, `Boolean`, `Character`, `Object`, `Number` and
   `java.util.Date`, with their static fields and a documented subset of
@@ -42,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   literals beyond float64 precision (`long-precision`).
 
 ### Changed
+- `getValue()` returns a `bigint` for an integer outside the range a JavaScript
+  number holds exactly, where it previously returned a rounded `number`. Only
+  values that were already wrong change type: within the safe range the result is
+  still a `number`.
 - Textual operators are now matched case-insensitively, as Spring documents:
   `AND`, `Or`, `Div`, `MOD` and every other casing are accepted.
 - `and`, `or`, `matches`, `between`, `instanceof`, `new`, `true`, `false` and
@@ -123,6 +130,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An unknown member of a type returned null instead of reporting, so
   `T(Math).noSuchField` produced a value rather than an error and a misspelled
   field name was presented as a legitimate null.
+- An integer outside the range a JavaScript number holds exactly was either
+  rejected or silently mis-compared. Arithmetic on a BigInt supplied by the
+  environment threw, `10n == 10` and `10n > 5` were both false, and a long literal
+  beyond 2^53 rounded: `9007199254740993L - 9007199254740992L` evaluated to `0`.
+  The numeric model now carries a `bigint` kind, accepts a BigInt operand,
+  compares BigInt against Number exactly, and parses an integer literal exactly —
+  keeping a `number` within the safe range and a `bigint` beyond it. A literal
+  outside the 64-bit `long` range is rejected, because Java has no counterpart
+  for it.
 - `T(String).valueOf(42)` returned the type handle itself. `valueOf` exists on
   `Object.prototype`, so the JavaScript method won the lookup before the handle's
   own static members were consulted — the same shadowing that affected string and

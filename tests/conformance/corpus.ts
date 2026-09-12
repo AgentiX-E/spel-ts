@@ -689,23 +689,187 @@ function operandTypingCases(): DraftCase[] {
 }
 
 /**
- * Long literals are parsed with parseInt, so magnitudes above 2^53 lose
- * precision at the lexer, before evaluation ever runs. Spring keeps a 64-bit
- * value exactly. Recorded as a known divergence rather than silently accepted.
+ * Integers outside the range a JavaScript number holds exactly (D38).
+ *
+ * A literal beyond 2^53 keeps its exact value as a BigInt, and a BigInt supplied
+ * by the environment participates in arithmetic and comparison. Before this,
+ * arithmetic on a BigInt threw, `10n == 10` was false, and a difference of one
+ * between two large literals evaluated to zero.
+ *
+ * The expectation for a large literal is written as a BigInt on purpose: as a
+ * plain number it would round inside this file, to the same wrong value the
+ * engine produced, and the case would pass while the defect stayed hidden.
  */
-function longPrecisionCases(): DraftCase[] {
-  const cases: readonly ValueRow[] = [
-    // A BigInt literal, because 9007199254740993 is not representable as a
-    // JavaScript number and would otherwise round in this very file.
-    ['9007199254740993L', 9007199254740993n, 'jls 3.10.1 long literals are exact'],
+function bigintCases(): DraftCase[] {
+  const bigRoot = { big: 10n, huge: 9007199254740993n };
+
+  return [
+    // Literal exactness
+    {
+      group: 'bigint',
+      label: 'la',
+      expr: '9007199254740993L',
+      expect: value(9007199254740993n),
+      root: undefined,
+      ref: 'jls 3.10.1 long literals are exact',
+    },
+    {
+      group: 'bigint',
+      label: 'lb',
+      expr: '9223372036854775807L',
+      expect: value(9223372036854775807n),
+      ref: 'jls 3.10.1 Long.MAX_VALUE is exact',
+    },
+    {
+      group: 'bigint',
+      label: 'lc',
+      expr: '9007199254740993L - 9007199254740992L',
+      expect: value(1n),
+      ref: 'exact subtraction of large literals',
+    },
+    {
+      group: 'bigint',
+      label: 'ld',
+      expr: '9007199254740993L + 1L',
+      expect: value(9007199254740994n),
+      ref: 'exact addition of large literals',
+    },
+    {
+      group: 'bigint',
+      label: 'le',
+      expr: '9007199254740991L',
+      expect: value(9007199254740991),
+      ref: 'a literal within the safe range stays a number',
+    },
+    {
+      group: 'bigint',
+      label: 'lf',
+      expr: '42L',
+      expect: value(42),
+      ref: 'a small long literal stays a number',
+    },
+    {
+      group: 'bigint',
+      label: 'lg',
+      expr: '99999999999999999999L',
+      expect: throwsParse(),
+      ref: 'beyond the 64-bit range there is no Java counterpart',
+    },
+    // Arithmetic on a BigInt from the environment
+    {
+      group: 'bigint',
+      label: 'a1',
+      expr: 'big + 1',
+      root: bigRoot,
+      expect: value(11n),
+      ref: 'BigInt arithmetic is exact',
+    },
+    {
+      group: 'bigint',
+      label: 'a2',
+      expr: 'big * 2',
+      root: bigRoot,
+      expect: value(20n),
+      ref: 'BigInt arithmetic is exact',
+    },
+    {
+      group: 'bigint',
+      label: 'a3',
+      expr: 'big / 3',
+      root: bigRoot,
+      expect: value(3n),
+      ref: 'BigInt division truncates toward zero',
+    },
+    {
+      group: 'bigint',
+      label: 'a4',
+      expr: 'big % 3',
+      root: bigRoot,
+      expect: value(1n),
+      ref: 'BigInt remainder follows the dividend',
+    },
+    {
+      group: 'bigint',
+      label: 'a5',
+      expr: '-big',
+      root: bigRoot,
+      expect: value(-10n),
+      ref: 'negation preserves the kind',
+    },
+    {
+      group: 'bigint',
+      label: 'a6',
+      expr: 'big + 0.5',
+      root: bigRoot,
+      expect: value(10.5),
+      ref: 'a BigInt with a double widens to double',
+    },
+    {
+      group: 'bigint',
+      label: 'a7',
+      expr: "'n=' + big",
+      root: bigRoot,
+      expect: value('n=10'),
+      ref: 'string concatenation still wins',
+    },
+    {
+      group: 'bigint',
+      label: 'a8',
+      expr: 'big / 0',
+      root: bigRoot,
+      expect: throwsEval(),
+      ref: 'an integral zero divisor throws',
+    },
+    // Comparison is exact rather than "different families, never equal"
+    {
+      group: 'bigint',
+      label: 'c1',
+      expr: 'big == 10',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'a BigInt compares numerically with an int',
+    },
+    {
+      group: 'bigint',
+      label: 'c2',
+      expr: 'big != 11',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'a BigInt compares numerically with an int',
+    },
+    {
+      group: 'bigint',
+      label: 'c3',
+      expr: 'big > 5',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'relational comparison supports a BigInt',
+    },
+    {
+      group: 'bigint',
+      label: 'c4',
+      expr: 'big <= 9',
+      root: bigRoot,
+      expect: value(false),
+      ref: 'relational comparison supports a BigInt',
+    },
+    {
+      group: 'bigint',
+      label: 'c5',
+      expr: 'huge == 9007199254740993L',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'two large integers compare exactly',
+    },
+    {
+      group: 'bigint',
+      label: 'c6',
+      expr: 'huge > 9007199254740992L',
+      root: bigRoot,
+      expect: value(true),
+      ref: 'two large integers compare exactly',
+    },
   ];
-  return cases.map(([expr, val, ref]) => ({
-    group: 'long-precision',
-    label: expr,
-    expr,
-    expect: value(val),
-    ref,
-  }));
 }
 
 /**
@@ -825,7 +989,7 @@ export const CORPUS: readonly ConformanceCase[] = build([
   ...logicalOperandCases(),
   ...numericKindCases(),
   ...operandTypingCases(),
-  ...longPrecisionCases(),
+  ...bigintCases(),
   ...equalityCases(),
   ...strictnessCases(),
   ...divisionByZeroCases(),

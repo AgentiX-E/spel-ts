@@ -2,6 +2,7 @@ import type { ExpressionState } from '../../expression-state.js';
 import { TypedValue } from '../../typed-value.js';
 import { Operator } from '../spel-node.js';
 import { NodeType } from '../../language/node-type.js';
+import { compareNumericValues } from '../../type/numeric.js';
 
 export class OpLE extends Operator {
   constructor(
@@ -25,6 +26,13 @@ export class OpLE extends Operator {
     // Both numbers: numeric comparison
     if (typeof left === 'number' && typeof right === 'number') {
       return new TypedValue(left <= right);
+    }
+
+    // A BigInt compares numerically and exactly; without this `10n > 5` was
+    // false, because the comparison fell through to the string branch below.
+    const numeric = compareNumericValues(left, right);
+    if (numeric !== undefined) {
+      return new TypedValue(numeric <= 0);
     }
 
     // Default: convert both to strings and compare
