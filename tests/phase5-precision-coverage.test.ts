@@ -320,11 +320,11 @@ describe('Coverage: Projection and Selection', () => {
     expect(result).toBe(3);
   });
 
-  it('Selection toStringAST with LAST mode via .*[', () => {
+  it('Selection LAST mode via .$[', () => {
     const ctx = new StandardEvaluationContext();
     ctx.setVariable('nums', [1, 2, 3, 4]);
-    // .*[ matches last > 2 → 4
-    const result = parser.parseExpression('#nums.*[#this > 2]').getValueWithContext(ctx);
+    // .$[ matches the last element above 2
+    const result = parser.parseExpression('#nums.$[#this > 2]').getValueWithContext(ctx);
     expect(result).toBe(4);
   });
 });

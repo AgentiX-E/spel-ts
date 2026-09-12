@@ -18,12 +18,11 @@ describe('Phase10: InternalSpelExpressionParser direct tests', () => {
     expect(node.toStringAST()).toContain('=');
   });
 
-  it('eatRelationalExpression with between backtrack', () => {
-    // between {someExpr, extra, stuff} where it's not exactly 2 elements
-    // between {x} — single element, not a valid 2-element pair
-    // This triggers the backtrack path
-    const node = parse('10 between 1 and 20');
-    expect(node.toStringAST()).toBeDefined();
+  it('eatRelationalExpression with between', () => {
+    // Spring's between takes a two-element list, and rendering it keeps both
+    // bounds so the output re-parses.
+    const node = parse('10 between {1, 20}');
+    expect(node.toStringAST()).toBe('(10 between {1, 20})');
   });
 
   it('eatRelationalExpression without between', () => {
