@@ -256,12 +256,9 @@ export class Tokenizer {
 
     switch (ch) {
       // Single character
+      // Spring has no '**' operator. Its tokenizer emits two STAR tokens and
+      // the parser then rejects the expression; '^' is the power operator.
       case 42: // *
-        if (this.matchNext(42)) {
-          // **
-          this.pos++;
-          return new Token(TokenKind.POWER, start, this.pos, '**');
-        }
         return new Token(TokenKind.STAR, start, this.pos, '*');
 
       case 43: // +
@@ -415,27 +412,22 @@ export class Tokenizer {
               return new Token(TokenKind.SELECTION, start, this.pos, '.?[');
             }
           }
-          if (next === 36 /* '$' */ || next === 94 /* '^' */) {
+          // Spring defines '^[' as select-first and '$[' as select-last. The
+          // previous mapping sent both to SELECT_FIRST and also accepted '.*[',
+          // which is not SpEL at all, so `items.$[x]` returned the first match.
+          if (next === 94 /* '^' */ || next === 36 /* '$' */) {
             if (
               this.pos + 1 < this.maxPos &&
               this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */
             ) {
+              const selectFirst = next === 94;
               this.pos += 2;
               return new Token(
-                TokenKind.SELECT_FIRST,
+                selectFirst ? TokenKind.SELECT_FIRST : TokenKind.SELECT_LAST,
                 start,
                 this.pos,
                 this.expression.slice(start, this.pos),
               );
-            }
-          }
-          if (next === 42 /* '*' */) {
-            if (
-              this.pos + 1 < this.maxPos &&
-              this.expression.charCodeAt(this.pos + 1) === 91 /* '[' */
-            ) {
-              this.pos += 2;
-              return new Token(TokenKind.SELECT_LAST, start, this.pos, '.*[');
             }
           }
         }

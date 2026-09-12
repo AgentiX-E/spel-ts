@@ -16,7 +16,7 @@
  * because the backlog is enumerated explicitly, not because failures are
  * suppressed. A regression in an unlisted case fails the build immediately.
  *
- * Snapshot: 9 divergences of 165 corpus cases (Phase 3: 1, Phase 4: 4, Phase 6: 4).
+ * Snapshot: 5 divergences of 171 corpus cases (Phase 3: 1, Phase 6: 4).
  */
 export interface KnownDivergence {
   readonly caseId: string;
@@ -32,46 +32,6 @@ export interface KnownDivergence {
 }
 
 export const KNOWN_DIVERGENCES: readonly KnownDivergence[] = [
-  {
-    caseId: 'collections:select-last',
-    group: 'collections',
-    expr: 'items.$[price > 20]',
-    defect: 'D35',
-    phase: 'Phase 4',
-    spring: 'value {"name":"c","price":30}',
-    engine: 'value {"name":"b","price":200}',
-    verdict: 'wrong-value',
-  },
-  {
-    caseId: 'grammar-strictness:assignment-not-chainable',
-    group: 'grammar-strictness',
-    expr: '#a = #b = 1',
-    defect: 'D12',
-    phase: 'Phase 4',
-    spring: 'throws SpelParseException',
-    engine: 'throws SpelEvaluationException',
-    verdict: 'wrong-value',
-  },
-  {
-    caseId: 'grammar-strictness:between-requires-list',
-    group: 'grammar-strictness',
-    expr: '1 between 1 and 5',
-    defect: 'D12',
-    phase: 'Phase 4',
-    spring: 'throws SpelParseException',
-    engine: 'value true',
-    verdict: 'accepts-invalid',
-  },
-  {
-    caseId: 'grammar-strictness:double-star-is-not-power',
-    group: 'grammar-strictness',
-    expr: '2 ** 3',
-    defect: 'D12',
-    phase: 'Phase 4',
-    spring: 'throws SpelParseException',
-    engine: 'value 8',
-    verdict: 'accepts-invalid',
-  },
   {
     caseId: "java-string-methods:0-'abc'.matches('a.*')",
     group: 'java-string-methods',

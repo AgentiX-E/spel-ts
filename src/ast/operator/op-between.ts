@@ -20,4 +20,16 @@ export class OpBetween extends Operator {
 
     return new TypedValue(lowerBound <= value && value <= upperBound);
   }
+
+  /**
+   * Ternary rendering. The inherited implementation assumes two operands and
+   * dropped the upper bound entirely, rendering `(1 between 5)` for
+   * `1 between {1, 5}`.
+   */
+  public override toStringAST(): string {
+    const value = this.children[0]?.toStringAST() ?? '';
+    const lower = this.children[1]?.toStringAST() ?? '';
+    const upper = this.children[2]?.toStringAST() ?? '';
+    return `(${value} between {${lower}, ${upper}})`;
+  }
 }

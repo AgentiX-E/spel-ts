@@ -20,4 +20,12 @@ export class OpNot extends Operator {
   public override getValueInternal(state: ExpressionState): TypedValue {
     return new TypedValue(!requireBoolean(this.children[0]!, state));
   }
+
+  /**
+   * Unary rendering. The inherited implementation assumes a binary shape and
+   * would produce `(true ! )`, which does not parse.
+   */
+  public override toStringAST(): string {
+    return `(!${this.children[0]?.toStringAST() ?? ''})`;
+  }
 }
