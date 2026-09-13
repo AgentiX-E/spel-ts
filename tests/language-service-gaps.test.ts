@@ -1528,8 +1528,9 @@ describe('DiagnosticEngine — BRDA branch coverage', () => {
     // Return a mock that has getAST as undefined (not a function)
     // undefined?.() returns undefined → ?? null returns null
     SpelExpressionParser.prototype.parseExpression = function () {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return { getAST: undefined } as unknown as ReturnType<typeof origParseExpression>;
+      return { getAST: undefined } as unknown as ReturnType<
+        SpelExpressionParser['parseExpression']
+      >;
     };
     const result = SpelDiagnosticEngine.parseWithDiagnostics('1');
     expect(result.ast).toBeNull();
@@ -1540,7 +1541,7 @@ describe('DiagnosticEngine — BRDA branch coverage', () => {
     origParseExpression = SpelExpressionParser.prototype.parseExpression;
     // Create a real SpelParseException, then override messageCode to empty string
     const ex = new SpelParseException(3, SpelMessage.OODES);
-    (ex as Record<string, unknown>).messageCode = '';
+    (ex as unknown as Record<string, unknown>).messageCode = '';
     SpelExpressionParser.prototype.parseExpression = function () {
       throw ex;
     };
@@ -1552,7 +1553,7 @@ describe('DiagnosticEngine — BRDA branch coverage', () => {
   it('parseWithDiagnostics — falls back to UNKNOWN code when messageCode is empty', () => {
     origParseExpression = SpelExpressionParser.prototype.parseExpression;
     const ex = new SpelParseException(5, SpelMessage.OODES);
-    (ex as Record<string, unknown>).messageCode = '';
+    (ex as unknown as Record<string, unknown>).messageCode = '';
     SpelExpressionParser.prototype.parseExpression = function () {
       throw ex;
     };
