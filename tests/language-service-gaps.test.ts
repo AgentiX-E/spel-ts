@@ -1528,7 +1528,6 @@ describe('DiagnosticEngine — BRDA branch coverage', () => {
     // Return a mock that has getAST as undefined (not a function)
     // undefined?.() returns undefined → ?? null returns null
     SpelExpressionParser.prototype.parseExpression = function () {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return { getAST: undefined } as unknown as ReturnType<
         SpelExpressionParser['parseExpression']
       >;

@@ -23,7 +23,7 @@ import { describe, expect, it } from 'vitest';
 import { TokenKind } from '../../src/tokenizer/token-kind.js';
 
 /** Every member of `TokenKind` with the ordinal it is published under. */
-const PINNED: Array<[string, number]> = [
+const PINNED: [string, number][] = [
   ['LITERAL_INT', 0],
   ['LITERAL_LONG', 1],
   ['LITERAL_FLOAT', 2],
