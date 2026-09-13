@@ -28,7 +28,7 @@
     "lint:fix": "eslint --fix src/ tests/",
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "docs": "CI=true npx typedoc",
     "prepublishOnly": "pnpm typecheck && pnpm lint && pnpm build && pnpm test"
   },
