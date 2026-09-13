@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-09-13
+
+### Breaking changes
+
+The public surface narrowed or renumbered in three places. All three move the port
+closer to Spring, and all three are observable by an existing caller:
+
+- **`TokenKind` ordinals shifted.** `MOD` moved from 14 to 15 and `EOF` from 53 to 54,
+  and every member between them moved with it. Code that compares or stores an ordinal
+  must be updated; code that uses the member names is unaffected.
+- **An unsuffixed integer literal above `int` range is now rejected.** `3000000000` is
+  a parse error where it previously parsed; `3000000000L` is the only spelling that
+  SpEL accepts.
+- **`getValue()` returns a `bigint`** for an integer outside the range a JavaScript
+  number holds exactly, where it previously returned a rounded `number`. Within the
+  safe range the result is unchanged.
+
+An upgrade that refers to `TokenKind` members by name and stays inside `int` range
+needs no change. The rationale for each item is in *Changed* below.
+
 ### Added
 - Spring conformance suite (`tests/conformance/`) with an executable corpus of
   154 expressions, each citing the Spring source that justifies its expected
@@ -49,6 +68,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   literals beyond float64 precision (`long-precision`).
 
 ### Changed
+- `TokenKind` member ordinals are pinned. `DIV` had been inserted among the operators
+  of an automatically numbered enum, which shifted every member declared after it —
+  `MOD` from 14 to 15, `EOF` from 53 to 54. Each member now carries an explicit ordinal
+  and `tests/unit/token-kind-stability.test.ts` pins the whole table, so a future
+  insertion fails that suite instead of silently renumbering the enum.
 - `getValue()` returns a `bigint` for an integer outside the range a JavaScript
   number holds exactly, where it previously returned a rounded `number`. Only
   values that were already wrong change type: within the safe range the result is
@@ -245,6 +269,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release with full SpEL parser/evaluator
 
+[2.0.0]: https://github.com/AgentiX-E/spel-ts/compare/v1.2.2...v2.0.0
+[1.2.2]: https://github.com/AgentiX-E/spel-ts/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/AgentiX-E/spel-ts/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/AgentiX-E/spel-ts/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/AgentiX-E/spel-ts/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/AgentiX-E/spel-ts/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/AgentiX-E/spel-ts/compare/v1.0.0...v1.0.1
