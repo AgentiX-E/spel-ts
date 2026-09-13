@@ -5,12 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-09-13
+
+### Fixed
+- The `[2.0.0]` entry omitted a breaking change: the tokenizer no longer classifies nine
+  words, and `LITERAL_BOOLEAN` and `LITERAL_NULL` are never emitted. It is listed there
+  now. It had been recorded only under *Changed*, which said the words are resolved by
+  the parser without saying what that means for the token stream — and it is the one
+  change here that reached a downstream consumer: `spel-editor` lost the highlighting for
+  all nine until it was adapted, which is how the gap was found.
+
+  No code changed in this release. It exists so the published record of 2.0.0 is
+  complete, since a released version's own tarball cannot be edited.
+
 ## [2.0.0] - 2026-09-13
 
 ### Breaking changes
 
-The public surface narrowed or renumbered in three places. All three move the port
-closer to Spring, and all three are observable by an existing caller:
+The public surface narrowed or renumbered in four places. All four move the port
+closer to Spring, and all four are observable by an existing caller:
 
 - **`TokenKind` ordinals shifted.** `MOD` moved from 14 to 15 and `EOF` from 53 to 54,
   and every member between them moved with it. Code that compares or stores an ordinal
@@ -21,9 +34,18 @@ closer to Spring, and all three are observable by an existing caller:
 - **`getValue()` returns a `bigint`** for an integer outside the range a JavaScript
   number holds exactly, where it previously returned a rounded `number`. Within the
   safe range the result is unchanged.
+- **The tokenizer no longer classifies nine words.** `true`, `false` and `null` used to
+  be reported as `LITERAL_BOOLEAN` and `LITERAL_NULL`, and `and`, `or`, `matches`,
+  `between`, `instanceof` and `new` as token kinds of their own. All nine are now
+  `IDENTIFIER`, because SpEL resolves them in the parser with `equalsIgnoreCase` — which
+  is also what lets a field be named `and`. `LITERAL_BOOLEAN` and `LITERAL_NULL` are
+  consequently never emitted. Code that reads the token stream must decide these from
+  the text; code that parses or evaluates is unaffected, because the parser still
+  resolves them.
 
-An upgrade that refers to `TokenKind` members by name and stays inside `int` range
-needs no change. The rationale for each item is in *Changed* below.
+An upgrade that refers to `TokenKind` members by name, stays inside the `int` range and
+does not read the token stream needs no change. The rationale for each item is in
+*Changed* below.
 
 ### Added
 - Spring conformance suite (`tests/conformance/`) with an executable corpus of
@@ -269,6 +291,7 @@ needs no change. The rationale for each item is in *Changed* below.
 ### Added
 - Initial release with full SpEL parser/evaluator
 
+[2.0.1]: https://github.com/AgentiX-E/spel-ts/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/AgentiX-E/spel-ts/compare/v1.2.2...v2.0.0
 [1.2.2]: https://github.com/AgentiX-E/spel-ts/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/AgentiX-E/spel-ts/compare/v1.2.0...v1.2.1
