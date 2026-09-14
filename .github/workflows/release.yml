@@ -42,3 +42,60 @@ jobs:
             exit 0
           fi
           npm publish --access public --provenance
+
+  # The tag is what published the release, so its notes belong with it. Without this
+  # job a tag produces an npm version and no GitHub Release, and the repository's
+  # Releases page keeps showing the previous one — which is what happened to v2.0.0
+  # and to every release before it apart from v1.2.1, which was created by hand.
+  github-release:
+    name: GitHub Release
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VER_NUM="${VERSION#v}"
+          # This version's section, up to the next one, with the `---` rules and the
+          # blank lines at either end dropped so the rendered release starts on content.
+          #
+          # The start match is consumed, which is what makes the range correct: with
+          # the usual `awk '/start/,/end/'` form the section's own heading satisfies
+          # both patterns, the range collapses to that single line, and the file comes
+          # out empty. That is why the notes for every release before this one silently
+          # fell back to the generated ones.
+          awk -v ver="${VER_NUM}" '
+            index($0, "## [" ver "]") == 1 { inside = 1; next }
+            inside && index($0, "## [") == 1 { exit }
+            inside && $0 !~ /^---$/ { lines[++n] = $0 }
+            END {
+              first = 1
+              while (first <= n && lines[first] ~ /^[[:space:]]*$/) first++
+              last = n
+              while (last >= first && lines[last] ~ /^[[:space:]]*$/) last--
+              for (i = first; i <= last; i++) print lines[i]
+            }
+          ' CHANGELOG.md > release-notes.md
+          if [ -s release-notes.md ]; then
+            echo "has_notes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${VER_NUM}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ steps.changelog.outputs.version }}
+          body_path: ${{ steps.changelog.outputs.has_notes == 'true' && 'release-notes.md' || '' }}
+          generate_release_notes: true
