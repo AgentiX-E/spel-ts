@@ -355,13 +355,32 @@ export namespace SpelCompletionEngine {
 
   // ===== Private helpers =====
 
+  /** The characters a completable prefix is made of: `\w` plus the `.` of a property path. */
+  const NAME_CHARACTER = /[\w.]/;
+
   /**
    * Extract the word at the cursor position as the completion prefix.
+   *
+   * Scanned backwards rather than matched with `/(#|@|T\()?[\w.]*$/`. That pattern is quadratic
+   * when the text before the cursor ends in a long run of name characters that the end anchor
+   * then rejects: the engine retries the quantified class from every offset, which measured
+   * 615 ms for 32 000 characters, and this receives everything the caller passes as the
+   * expression. Boundary is equivalent — the anchor makes the leftmost match the longest run
+   * ending at the cursor — and the loop visits each character once.
    */
   function getPrefixAt(expression: string, position: number): string {
-    const before = expression.substring(0, position);
-    const match = /(#|@|T\()?[\w.]*$/.exec(before);
-    return match ? match[0] : '';
+    let start = position;
+    while (start > 0 && NAME_CHARACTER.test(expression.charAt(start - 1))) {
+      start--;
+    }
+    // `#name`, `@bean` and `T(Type` all carry their introducer inside the prefix.
+    const introducer = expression.charAt(start - 1);
+    if (introducer === '#' || introducer === '@') {
+      start--;
+    } else if (introducer === '(' && expression.charAt(start - 2) === 'T') {
+      start -= 2;
+    }
+    return expression.slice(start, position);
   }
 
   /**
