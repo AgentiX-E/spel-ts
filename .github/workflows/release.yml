@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       # npm 10.x (bundled with node 22) uses .npmrc authToken instead of
       # OIDC token for the PUT to registry, causing E404 after successful
