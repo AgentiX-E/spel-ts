@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-09-14
+
+### Fixed
+
+- **`String.format('%c', ...)` returned the argument's digits.** The conversion is documented as
+  supported and models Java's, but was implemented as `String(argument)` — which is `%s`. Java
+  reads an integral argument as a code point, so `String.format('%c', 65)` is `'A'` and this
+  returned `'65'`. An integral argument is now read as a code point, and a character passes
+  through. **This changes what that call returns**, which is the point: a caller receiving `'65'`
+  was receiving the wrong value, silently, because the conversion was documented as working.
+- **The completion prefix was found with a scan that was quadratic in the input.** `getPrefixAt`
+  matched `/(#|@|T\()?[\w.]*$/` against everything before the cursor. On text that ends in a long
+  run of name characters the end anchor rejects, the engine retries the quantified class from every
+  offset: measured at 615 ms for 32 000 characters, four times the work for twice the input. Since
+  the text is whatever the caller passes as the expression, a large document cost seconds per
+  completion. It is a single backward pass now, and the prefixes it produces are unchanged.
+
+### Changed
+
+- The development toolchain moved to `vitest` 4 for the advisory closure its patched release
+  carries. Nothing under `dist/` changed for it, and no shipped dependency changed.
+
 ## [2.0.1] - 2026-09-13
 
 ### Fixed
