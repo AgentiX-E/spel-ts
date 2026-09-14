@@ -135,7 +135,14 @@ function javaStringFormat(template: string, args: readonly unknown[]): string {
           rendered = String(Boolean(argument));
           break;
         case 'c':
-          rendered = String(argument);
+          // Java's `%c` renders the argument as a character: an integral argument is a code
+          // point and a character passes through. Rendering it verbatim made `%c` behave like
+          // `%s`, so `String.format('%c', 65)` produced the two digits '65' where Java produces
+          // 'A' — silently, since the conversion was documented as supported.
+          rendered =
+            typeof argument === 'string'
+              ? argument.charAt(0)
+              : String.fromCodePoint(toNumber(argument, 'format'));
           break;
         default:
           throw new SpelEvaluationException(
