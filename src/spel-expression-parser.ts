@@ -65,11 +65,16 @@ import { OpDec } from './ast/operator/op-dec.js';
  * Parallels Spring SpelExpressionParser — public API entry point
  */
 export class SpelExpressionParser {
-  constructor(configuration?: SpelParserConfiguration) {
-    // configuration is accepted for Spring API compatibility;
-    // currently unused as all expressions are parsed with defaults.
-    void configuration;
-  }
+  /**
+   * Spring's `SpelExpressionParser` accepts a `SpelParserConfiguration`, so the signature stays
+   * for API compatibility while every expression parses with the defaults and the argument is
+   * not applied. The parameter is underscore-prefixed because that is the spelling TypeScript's
+   * `noUnusedParameters` recognises as deliberate, and it cannot be dropped — deleting the
+   * constructor would take the argument out of the public type, so `new
+   * SpelExpressionParser(config)` would stop compiling for callers Spring accepts.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor, @typescript-eslint/no-empty-function
+  constructor(_configuration?: SpelParserConfiguration) {}
 
   public parseExpression(expressionString: string): SpelExpression {
     const parser = new InternalSpelExpressionParser(expressionString);
